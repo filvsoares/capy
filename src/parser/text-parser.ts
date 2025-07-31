@@ -54,68 +54,97 @@ function isOperator(s: string) {
   return true;
 }
 
-export const WORD = 0;
-export const OPERATOR = 1;
-export const BRACKET = 2;
-export const NUMBER = 3;
-export const STRING = 4;
-export const WHITESPACE = 5;
+export abstract class Token {
+  lineStart = 0;
+  columnStart = 0;
+  lineEnd = 0;
+  columnEnd = 0;
 
-export type BaseToken = {
-  type: number;
-  lineStart: number;
-  columnStart: number;
-  lineEnd: number;
-  columnEnd: number;
-};
+  setStart(line: number, column: number) {
+    this.lineStart = line;
+    this.columnStart = column;
+    if (this.lineEnd < line || (this.lineEnd === line && this.columnEnd <= column)) {
+      this.lineEnd = line;
+      this.columnEnd = column + 1;
+    }
+  }
 
-function isToken(val: Token | number): val is Token {
-  return typeof val === 'object';
+  setEnd(line: number, column: number) {
+    this.lineEnd = line;
+    this.columnEnd = column;
+  }
+
+  abstract toString(): string;
+
+  static toString(token: Token | undefined) {
+    return token?.toString() ?? 'nothing';
+  }
 }
 
-export type Word = BaseToken & {
-  type: typeof WORD;
+export class Word extends Token {
   value: string;
-};
 
-export type Operator = BaseToken & {
-  type: typeof OPERATOR;
+  constructor(value: string) {
+    super();
+    this.value = value;
+  }
+
+  toString(): string {
+    return `word "${this.value}"`;
+  }
+}
+
+export class Operator extends Token {
   value: string;
-};
 
-export type Bracket = BaseToken & {
-  type: typeof BRACKET;
+  constructor(value: string) {
+    super();
+    this.value = value;
+  }
+
+  toString(): string {
+    return `operator "${this.value}"`;
+  }
+}
+
+export class Bracket extends Token {
   value: string;
   tokenList: Token[];
-};
 
-export type Number = BaseToken & {
-  type: typeof NUMBER;
-  value: string;
-};
-
-export type String = BaseToken & {
-  type: typeof STRING;
-  value: string;
-};
-
-export type Token = Word | Operator | String | Bracket | Number;
-
-export function tokenToString(t: Token | undefined) {
-  if (!t) {
-    return 'EOF';
+  constructor(value: string, tokenList: Token[]) {
+    super();
+    this.value = value;
+    this.tokenList = tokenList;
   }
-  switch (t.type) {
-    case BRACKET:
-      return `bracket "${t.value}"`;
-    case NUMBER:
-      return `number "${t.value}"`;
-    case STRING:
-      return `string "${t.value}"`;
-    case OPERATOR:
-      return `operator "${t.value}"`;
-    case WORD:
-      return `word "${t.value}"`;
+
+  toString(): string {
+    return `bracket "${this.value}"`;
+  }
+}
+
+export class Number extends Token {
+  value: string;
+
+  constructor(value: string) {
+    super();
+    this.value = value;
+  }
+
+  toString(): string {
+    return `number "${this.value}"`;
+  }
+}
+
+export class String extends Token {
+  value: string;
+
+  constructor(value: string) {
+    super();
+    this.value = value;
+  }
+
+  toString(): string {
+    return `string "${this.value}"`;
   }
 }
 
@@ -145,124 +174,89 @@ function readWord(ctx: ParseContext): Word | undefined {
   if (!isWordStart(ctx.current)) {
     return;
   }
-  const word: Word = {
-    type: WORD,
-    value: ctx.current,
-    lineStart: ctx.line,
-    columnStart: ctx.column,
-    lineEnd: ctx.line,
-    columnEnd: ctx.column,
-  };
+  const val = new Word(ctx.current);
+  val.setStart(ctx.line, ctx.column);
   while (isWordMiddle(ctx.next())) {
-    word.value += ctx.current;
-    word.lineEnd = ctx.line;
-    word.columnEnd = ctx.column;
+    val.value += ctx.current;
+    val.setEnd(ctx.line, ctx.column + 1);
   }
-  return word;
+  return val;
 }
 
 function readNumber(ctx: ParseContext): Number | undefined {
   if (!isNumberStart(ctx.current)) {
     return;
   }
-  const number: Number = {
-    type: NUMBER,
-    value: ctx.current,
-    lineStart: ctx.line,
-    columnStart: ctx.column,
-    lineEnd: ctx.line,
-    columnEnd: ctx.column,
-  };
+  const val = new Number(ctx.current);
+  val.setStart(ctx.line, ctx.column);
   while (isNumberMiddle(ctx.next())) {
-    number.value += ctx.current;
-    number.lineEnd = ctx.line;
-    number.columnEnd = ctx.column;
+    val.value += ctx.current;
+    val.setEnd(ctx.line, ctx.column + 1);
   }
-  return number;
+  return val;
 }
 
-function readWhitespace(ctx: ParseContext): typeof WHITESPACE | undefined {
+function readWhitespace(ctx: ParseContext): true | undefined {
   if (!isWhitespace(ctx.current)) {
     return;
   }
   while (isWhitespace(ctx.next())) {}
-  return WHITESPACE;
+  return true;
 }
 
 function readOperator(ctx: ParseContext): Operator | undefined {
   if (!isOperator(ctx.current)) {
     return;
   }
-  const operator: Operator = {
-    type: OPERATOR,
-    value: ctx.current,
-    lineStart: ctx.line,
-    columnStart: ctx.column,
-    lineEnd: ctx.line,
-    columnEnd: ctx.column,
-  };
-  while (ctx.next() && isOperator(operator.value + ctx.current)) {
-    operator.value += ctx.current;
-    operator.lineEnd = ctx.line;
-    operator.columnEnd = ctx.column;
+  const val = new Operator(ctx.current);
+  val.setStart(ctx.line, ctx.column);
+  while (ctx.next() && isOperator(val.value + ctx.current)) {
+    val.value += ctx.current;
+    val.setEnd(ctx.line, ctx.column + 1);
   }
-  return operator;
+  return val;
 }
 
 function readBracket(ctx: ParseContext): Bracket | undefined {
   if (!isBracketStart(ctx.current)) {
     return;
   }
-  const bracketStart = ctx.current;
-  const lineStart = ctx.line;
-  const columnStart = ctx.column;
+
+  const val = new Bracket(ctx.current, []);
+  val.setStart(ctx.line, ctx.column);
+
   if (!ctx.next()) {
     throw new ParseError('Unexpected EOF', ctx.line, ctx.column);
   }
 
-  const tokenList: Token[] = [];
   while (true) {
     if (isBracketEnd(ctx.current)) {
       break;
     }
-    const val = readSomething(ctx);
-    if (isToken(val)) {
-      tokenList.push(val);
+    const token = read(ctx);
+    if (token instanceof Token) {
+      val.tokenList.push(token);
     }
   }
 
   const bracketEnd = ctx.current;
-  const expectedBracketEnd = bracketStart === '(' ? ')' : bracketStart === '[' ? ']' : bracketStart === '{' ? '}' : '';
+  const expectedBracketEnd = val.value === '(' ? ')' : val.value === '[' ? ']' : val.value === '{' ? '}' : '';
   if (bracketEnd !== expectedBracketEnd) {
     throw new ParseError(`Expected "${expectedBracketEnd}" but found ${bracketEnd}`, ctx.line, ctx.column);
   }
-
-  const bracket: Bracket = {
-    type: BRACKET,
-    value: bracketStart,
-    lineStart,
-    columnStart,
-    lineEnd: ctx.line,
-    columnEnd: ctx.column,
-    tokenList,
-  };
+  val.setEnd(ctx.line, ctx.column + 1);
 
   ctx.next();
-  return bracket;
+  return val;
 }
 
 function readString(ctx: ParseContext): String | undefined {
   if (ctx.current !== '"') {
     return;
   }
-  const string: String = {
-    type: STRING,
-    value: '',
-    lineStart: ctx.line,
-    columnStart: ctx.column,
-    lineEnd: ctx.line,
-    columnEnd: ctx.column,
-  };
+  const val = new String('');
+  val.setStart(ctx.line, ctx.column);
+
   while (true) {
     if (!ctx.next()) {
       throw new ParseError('Unexpected EOF', ctx.line, ctx.column);
@@ -270,15 +264,13 @@ function readString(ctx: ParseContext): String | undefined {
     if (ctx.current === '"') {
       break;
     }
-    string.value += ctx.current;
-    string.lineEnd = ctx.line;
-    string.columnEnd = ctx.column;
+    val.setEnd(ctx.line, ctx.column + 1);
   }
   ctx.next();
-  return string;
+  return val;
 }
 
-function readSomething(ctx: ParseContext): Token | number {
+function read(ctx: ParseContext): Token | true {
   const result =
     readWhitespace(ctx) || readWord(ctx) || readOperator(ctx) || readBracket(ctx) || readNumber(ctx) || readString(ctx);
 
@@ -318,9 +310,9 @@ export function parseText(s: string) {
 
   const tokenList: Token[] = [];
   while (ctx.current) {
-    const val = readSomething(ctx);
-    if (isToken(val)) {
-      tokenList.push(val);
+    const token = read(ctx);
+    if (token instanceof Token) {
+      tokenList.push(token);
     }
   }
   return tokenList;

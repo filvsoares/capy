@@ -7,7 +7,7 @@ def global: string;
 
 def start() {
   write("Hello! What is your name?");
-  def name = read();
+  def name = read();;
 }
 
 def sin(x: number): number {
