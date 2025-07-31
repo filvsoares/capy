@@ -1,16 +1,4 @@
-import {
-  BRACKET,
-  Bracket,
-  Operator,
-  OPERATOR,
-  ParseError,
-  String,
-  STRING,
-  Token,
-  tokenToString,
-  Word,
-  WORD,
-} from './text-parser';
+import { Bracket, Operator, ParseError, String, Token, Word } from './text-parser';
 
 type ParseContext = {
   current: Token | undefined;
@@ -18,57 +6,91 @@ type ParseContext = {
 };
 
 function isWord(token: Token | undefined, value?: string): token is Word {
-  return !!token && token.type === WORD && (value === undefined || token.value === value);
+  return !!token && token instanceof Word && (value === undefined || token.value === value);
 }
 
 function isString(token: Token | undefined, value?: string): token is String {
-  return !!token && token.type === STRING && (value === undefined || token.value === value);
+  return !!token && token instanceof String && (value === undefined || token.value === value);
 }
 
 function isOperator(token: Token | undefined, value?: string): token is Operator {
-  return !!token && token.type === OPERATOR && (value === undefined || token.value === value);
+  return !!token && token instanceof Operator && (value === undefined || token.value === value);
 }
 
 function isBracket(token: Token | undefined, value?: string): token is Bracket {
-  return !!token && token.type === BRACKET && (value === undefined || token.value === value);
+  return !!token && token instanceof Bracket && (value === undefined || token.value === value);
 }
 
-type BaseToplevel = {
-  type: number;
-  lineStart: number;
-  columnStart: number;
-  lineEnd: number;
-  columnEnd: number;
-};
-
-export const USE = 1;
-export const METHOD = 2;
-export const VARIABLE = 3;
-export const TYPE = 4;
-
-export type Use = BaseToplevel & {
-  type: typeof USE;
+export class Use extends Token {
   value: string;
-};
 
-export type Method = BaseToplevel & {
-  type: typeof METHOD;
+  constructor(value: string) {
+    super();
+    this.value = value;
+  }
+
+  toString(): string {
+    return `use "${this.value}"`;
+  }
+}
+
+export class Method extends Token {
   name: string;
   returnType?: Type;
-};
+  statementList: Token[];
 
-export type Variable = BaseToplevel & {
-  type: typeof VARIABLE;
+  constructor(name: string, returnType?: Type, statementList: Token[]) {
+    super();
+    this.name = name;
+    this.returnType = returnType;
+    this.statementList = statementList;
+  }
+
+  toString(): string {
+    return `method "${this.name}"`;
+  }
+}
+
+export class Variable extends Token {
   name: string;
-  varType: Type;
-};
+  type: Type;
 
-export type Type = BaseToplevel & {
-  type: typeof TYPE;
-  value: string;
-};
+  constructor(name: string, type: Type) {
+    super();
+    this.name = name;
+    this.type = type;
+  }
 
-export type Toplevel = Use | Method | Variable | Type;
+  toString(): string {
+    return `variable "${this.name}"`;
+  }
+}
+
+export class Type extends Token {
+  name: string;
+
+  constructor(name: string) {
+    super();
+    this.name = name;
+  }
+
+  toString(): string {
+    return `type "${this.name}"`;
+  }
+}
+
+export class Expression extends Token {
+  tokenList: Token[];
+
+  constructor(tokenList: Token[]) {
+    super();
+    this.tokenList = tokenList;
+  }
+
+  toString(): string {
+    return `expression`;
+  }
+}
 
 function readUse(ctx: ParseContext): Use | undefined {
   const t1 = ctx.current;
@@ -100,14 +122,10 @@ function readUse(ctx: ParseContext): Use | undefined {
 
   ctx.next();
 
-  return {
-    type: USE,
-    lineStart: t1.lineStart,
-    columnStart: t1.columnStart,
-    lineEnd: t3.lineEnd,
-    columnEnd: t3.columnEnd,
-    value: t2.value,
-  };
+  const val = new Use(t2.value);
+  val.setStart(t1.lineStart, t1.columnStart);
+  val.setEnd(t3.lineEnd, t3.columnEnd);
+  return val;
 }
 
 function readDef(ctx: ParseContext): Method | Variable | undefined {
@@ -135,7 +153,7 @@ function readDef(ctx: ParseContext): Method | Variable | undefined {
   }
 
   throw new ParseError(
-    `Expected "(" or ":" but found ${tokenToString(t3)}`,
+    `Expected "(" or ":" but found ${Token.toString(t3)}`,
     t3?.lineStart ?? t2.lineEnd,
     t3?.columnStart ?? t2.columnEnd,
     t3?.lineEnd,
@@ -153,7 +171,7 @@ function readDefMethod(t1: Word, t2: Word, t3: Bracket, ctx: ParseContext): Meth
     returnType = readType(ctx);
     if (!returnType) {
       throw new ParseError(
-        `Expected return type but found ${tokenToString(t4)}`,
+        `Expected return type but found ${Token.toString(t4)}`,
         t4?.lineStart ?? t3.lineEnd,
         t4?.columnStart ?? t3.columnEnd,
         t4?.lineEnd,
@@ -165,7 +183,7 @@ function readDefMethod(t1: Word, t2: Word, t3: Bracket, ctx: ParseContext): Meth
 
   if (!isBracket(t4, '{')) {
     throw new ParseError(
-      `Expected "{" but found ${tokenToString(t4)}`,
+      `Expected "{" but found ${Token.toString(t4)}`,
       t4?.lineStart ?? t3.lineEnd,
       t4?.columnStart ?? t3.columnEnd,
       t4?.lineEnd,
@@ -175,15 +193,10 @@ function readDefMethod(t1: Word, t2: Word, t3: Bracket, ctx: ParseContext): Meth
 
   ctx.next();
 
-  return {
-    type: METHOD,
-    lineStart: t1.lineStart,
-    columnStart: t1.columnStart,
-    lineEnd: t3.lineEnd,
-    columnEnd: t3.columnEnd,
-    value: t2.value,
-    returnType,
-  };
+  const val = new Method(t2.value, returnType, parseStatements(t4.tokenList));
+  val.setStart(t1.lineStart, t1.columnStart);
+  val.setEnd(t3.lineEnd, t3.columnEnd);
+  return val;
 }
 
 function readType(ctx: ParseContext): Type | undefined {
@@ -194,14 +207,10 @@ function readType(ctx: ParseContext): Type | undefined {
 
   ctx.next();
 
-  return {
-    type: TYPE,
-    lineStart: t1.lineStart,
-    columnStart: t1.columnStart,
-    lineEnd: t1.lineEnd,
-    columnEnd: t1.columnEnd,
-    value: t1.value,
-  };
+  const val = new Type(t1.value);
+  val.setStart(t1.lineStart, t1.columnStart);
+  val.setEnd(t1.lineEnd, t1.columnEnd);
+  return val;
 }
 
 function readDefVariable(t1: Word, t2: Word, t3: Operator, ctx: ParseContext): Variable | undefined {
@@ -209,7 +218,7 @@ function readDefVariable(t1: Word, t2: Word, t3: Operator, ctx: ParseContext): V
   const type = readType(ctx);
   if (!type) {
     throw new ParseError(
-      `Expected type definition but found ${tokenToString(t4)}`,
+      `Expected type definition but found ${Token.toString(t4)}`,
       t4?.lineStart ?? t3.lineEnd,
       t4?.columnStart ?? t3.columnEnd,
       t4?.lineEnd,
@@ -220,7 +229,7 @@ function readDefVariable(t1: Word, t2: Word, t3: Operator, ctx: ParseContext): V
   const t5 = ctx.current;
   if (!isOperator(t5, ';')) {
     throw new ParseError(
-      `Expected ";" but found ${tokenToString(t5)}`,
+      `Expected ";" but found ${Token.toString(t5)}`,
       t3?.lineStart ?? t2.lineEnd,
       t3?.columnStart ?? t2.columnEnd,
       t3?.lineEnd,
@@ -230,23 +239,69 @@ function readDefVariable(t1: Word, t2: Word, t3: Operator, ctx: ParseContext): V
 
   ctx.next();
 
-  return {
-    type: VARIABLE,
-    lineStart: t1.lineStart,
-    columnStart: t1.columnStart,
-    lineEnd: t3.lineEnd,
-    columnEnd: t3.columnEnd,
-    name: t2.value,
-    varType: type,
-  };
+  const val = new Variable(t2.value, type);
+  val.setStart(t1.lineStart, t1.columnStart);
+  val.setEnd(t3.lineEnd, t3.columnEnd);
+  return val;
 }
 
-function readSomething(ctx: ParseContext): Toplevel {
+function readExpression(ctx: ParseContext): Expression | undefined {
+  const t1 = ctx.current;
+  if (!t1) {
+    return;
+  }
+
+  const val = new Expression([]);
+  val.setStart(t1.lineStart, t1.columnStart);
+  let t: Token | undefined = t1;
+  while (t && (!isOperator(t) || (t.value !== ';' && t.value !== ','))) {
+    val.tokenList.push(t);
+    val.setEnd(t.lineEnd, t.columnEnd);
+    t = ctx.next();
+  }
+
+  return val;
+}
+
+function readExpressionStatement(ctx: ParseContext): Expression | undefined {
+  const val = readExpression(ctx);
+  if (!val) {
+    return;
+  }
+
+  const t = ctx.current;
+  if (!isOperator(t, ';')) {
+    throw new ParseError(
+      `Expected ";" but found ${Token.toString(t)}`,
+      t?.lineStart ?? val.lineEnd,
+      t?.columnStart ?? val.columnEnd,
+      t?.lineEnd,
+      t?.columnEnd
+    );
+  }
+
+  ctx.next();
+
+  return val;
+}
+
+function readToplevel(ctx: ParseContext): Token {
   const result = readUse(ctx) || readDef(ctx);
 
-  const t = ctx.current!;
   if (!result) {
-    throw new ParseError(`Unexpected token "${tokenToString(t)}"`, t.lineStart, t.columnStart, t.lineEnd, t.columnEnd);
+    const t = ctx.current!;
+    throw new ParseError(`Unexpected token "${Token.toString(t)}"`, t.lineStart, t.columnStart, t.lineEnd, t.columnEnd);
+  }
+
+  return result;
+}
+
+function readStatement(ctx: ParseContext): Token {
+  const result = readExpressionStatement(ctx);
+
+  if (!result) {
+    const t = ctx.current!;
+    throw new ParseError(`Unexpected token "${Token.toString(t)}"`, t.lineStart, t.columnStart, t.lineEnd, t.columnEnd);
   }
 
   return result;
@@ -265,9 +320,29 @@ export function parseToplevel(tokenList: Token[]) {
     },
   };
 
-  const toplevelList: Toplevel[] = [];
+  const outList: Token[] = [];
   while (ctx.current) {
-    toplevelList.push(readSomething(ctx));
+    outList.push(readToplevel(ctx));
   }
-  return toplevelList;
+  return outList;
+}
+
+export function parseStatements(tokenList: Token[]) {
+  let pos = 0;
+
+  const ctx: ParseContext = {
+    current: tokenList[0],
+    next: () => {
+      if (!ctx.current) {
+        return;
+      }
+      return (ctx.current = tokenList[++pos]);
+    },
+  };
+
+  const outList: Token[] = [];
+  while (ctx.current) {
+    outList.push(readStatement(ctx));
+  }
+  return outList;
 }
