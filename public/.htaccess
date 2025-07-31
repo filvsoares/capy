@@ -1,0 +1,11 @@
+Options -MultiViews
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.html [QSA,L]
+
+<Files "index.html">
+  Header set X-Frame-Options DENY
+  Header set X-Content-Type-Options nosniff
+  Header set Strict-Transport-Security max-age=63072000
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+</Files>
