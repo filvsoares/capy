@@ -1,3 +1,5 @@
+import { Bracket, Number, Operator, ParseError, String, Token, Word } from './token';
+
 function isWordStart(c: string) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
 }
@@ -36,6 +38,8 @@ const operatorMap: OperatorMap = {
   '/': true,
   ';': true,
   ':': true,
+  ',': true,
+  '.': true,
 };
 
 function isOperator(s: string) {
@@ -54,121 +58,12 @@ function isOperator(s: string) {
   return true;
 }
 
-export abstract class Token {
-  lineStart = 0;
-  columnStart = 0;
-  lineEnd = 0;
-  columnEnd = 0;
-
-  setStart(line: number, column: number) {
-    this.lineStart = line;
-    this.columnStart = column;
-    if (this.lineEnd < line || (this.lineEnd === line && this.columnEnd <= column)) {
-      this.lineEnd = line;
-      this.columnEnd = column + 1;
-    }
-  }
-
-  setEnd(line: number, column: number) {
-    this.lineEnd = line;
-    this.columnEnd = column;
-  }
-
-  abstract toString(): string;
-
-  static toString(token: Token | undefined) {
-    return token?.toString() ?? 'nothing';
-  }
-}
-
-export class Word extends Token {
-  value: string;
-
-  constructor(value: string) {
-    super();
-    this.value = value;
-  }
-
-  toString(): string {
-    return `word "${this.value}"`;
-  }
-}
-
-export class Operator extends Token {
-  value: string;
-
-  constructor(value: string) {
-    super();
-    this.value = value;
-  }
-
-  toString(): string {
-    return `operator "${this.value}"`;
-  }
-}
-
-export class Bracket extends Token {
-  value: string;
-  tokenList: Token[];
-
-  constructor(value: string, tokenList: Token[]) {
-    super();
-    this.value = value;
-    this.tokenList = tokenList;
-  }
-
-  toString(): string {
-    return `bracket "${this.value}"`;
-  }
-}
-
-export class Number extends Token {
-  value: string;
-
-  constructor(value: string) {
-    super();
-    this.value = value;
-  }
-
-  toString(): string {
-    return `number "${this.value}"`;
-  }
-}
-
-export class String extends Token {
-  value: string;
-
-  constructor(value: string) {
-    super();
-    this.value = value;
-  }
-
-  toString(): string {
-    return `string "${this.value}"`;
-  }
-}
-
 type ParseContext = {
   line: number;
   column: number;
   current: string;
   next: () => string;
 };
-
-export class ParseError extends Error {
-  lineStart: number;
-  columnStart: number;
-  lineEnd: number;
-  columnEnd: number;
-
-  constructor(message: string, lineStart: number, columnStart: number, lineEnd?: number, columnEnd?: number) {
-    super(`[${lineStart}:${columnStart} - ${lineEnd}:${columnEnd}] ${message}`);
-    this.lineStart = lineStart;
-    this.columnStart = columnStart;
-    this.lineEnd = lineEnd ?? lineStart;
-    this.columnEnd = columnEnd ?? columnStart;
-  }
-}
 
 function readWord(ctx: ParseContext): Word | undefined {
   if (!isWordStart(ctx.current)) {
@@ -222,7 +117,10 @@ function readBracket(ctx: ParseContext): Bracket | undefined {
     return;
   }
 
-  const val = new Bracket(ctx.current, []);
+  const bracketStart = ctx.current;
+  const expectedBracketEnd = bracketStart === '(' ? ')' : bracketStart === '[' ? ']' : bracketStart === '{' ? '}' : '';
+
+  const val = new Bracket(bracketStart, expectedBracketEnd, []);
   val.setStart(ctx.line, ctx.column);
 
   if (!ctx.next()) {
@@ -234,13 +132,15 @@ function readBracket(ctx: ParseContext): Bracket | undefined {
       break;
     }
     const token = read(ctx);
+    if (!token) {
+      throw new ParseError(`Unexpected char "${ctx.current}"`, ctx.line, ctx.column);
+    }
     if (token instanceof Token) {
       val.tokenList.push(token);
     }
   }
 
   const bracketEnd = ctx.current;
-  const expectedBracketEnd = val.value === '(' ? ')' : val.value === '[' ? ']' : val.value === '{' ? '}' : '';
   if (bracketEnd !== expectedBracketEnd) {
     throw new ParseError(`Expected "${expectedBracketEnd}" but found ${bracketEnd}`, ctx.line, ctx.column);
   }
@@ -264,21 +164,17 @@ function readString(ctx: ParseContext): String | undefined {
     if (ctx.current === '"') {
       break;
     }
+    val.value += ctx.current;
     val.setEnd(ctx.line, ctx.column + 1);
   }
   ctx.next();
   return val;
 }
 
-function read(ctx: ParseContext): Token | true {
-  const result =
-    readWhitespace(ctx) || readWord(ctx) || readOperator(ctx) || readBracket(ctx) || readNumber(ctx) || readString(ctx);
-
-  if (!result) {
-    throw new ParseError(`Unexpected char "${ctx.current}"`, ctx.line, ctx.column);
-  }
-
-  return result;
+function read(ctx: ParseContext): Token | true | undefined {
+  return (
+    readWhitespace(ctx) || readWord(ctx) || readOperator(ctx) || readBracket(ctx) || readNumber(ctx) || readString(ctx)
+  );
 }
 
 export function parseText(s: string) {
@@ -311,6 +207,9 @@ export function parseText(s: string) {
   const tokenList: Token[] = [];
   while (ctx.current) {
     const token = read(ctx);
+    if (!token) {
+      throw new ParseError(`Unexpected char "${ctx.current}"`, ctx.line, ctx.column);
+    }
     if (token instanceof Token) {
       tokenList.push(token);
     }
