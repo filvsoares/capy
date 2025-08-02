@@ -1,4 +1,18 @@
-import { Bracket, Operator, ParseError, String, Token, Word } from './text-parser';
+import {
+  ArraySubscripting,
+  Bracket,
+  MemberAccess,
+  Method,
+  MethodCall,
+  Operator,
+  ParseError,
+  String,
+  Token,
+  Type,
+  Use,
+  Variable,
+  Word,
+} from './token';
 
 type ParseContext = {
   current: Token | undefined;
@@ -18,78 +32,7 @@ function isOperator(token: Token | undefined, value?: string): token is Operator
 }
 
 function isBracket(token: Token | undefined, value?: string): token is Bracket {
-  return !!token && token instanceof Bracket && (value === undefined || token.value === value);
-}
-
-export class Use extends Token {
-  value: string;
-
-  constructor(value: string) {
-    super();
-    this.value = value;
-  }
-
-  toString(): string {
-    return `use "${this.value}"`;
-  }
-}
-
-export class Method extends Token {
-  name: string;
-  returnType?: Type;
-  statementList: Token[];
-
-  constructor(name: string, returnType?: Type, statementList: Token[]) {
-    super();
-    this.name = name;
-    this.returnType = returnType;
-    this.statementList = statementList;
-  }
-
-  toString(): string {
-    return `method "${this.name}"`;
-  }
-}
-
-export class Variable extends Token {
-  name: string;
-  type: Type;
-
-  constructor(name: string, type: Type) {
-    super();
-    this.name = name;
-    this.type = type;
-  }
-
-  toString(): string {
-    return `variable "${this.name}"`;
-  }
-}
-
-export class Type extends Token {
-  name: string;
-
-  constructor(name: string) {
-    super();
-    this.name = name;
-  }
-
-  toString(): string {
-    return `type "${this.name}"`;
-  }
-}
-
-export class Expression extends Token {
-  tokenList: Token[];
-
-  constructor(tokenList: Token[]) {
-    super();
-    this.tokenList = tokenList;
-  }
-
-  toString(): string {
-    return `expression`;
-  }
+  return !!token && token instanceof Bracket && (value === undefined || token.start === value);
 }
 
 function readUse(ctx: ParseContext): Use | undefined {
@@ -245,25 +188,87 @@ function readDefVariable(t1: Word, t2: Word, t3: Operator, ctx: ParseContext): V
   return val;
 }
 
-function readExpression(ctx: ParseContext): Expression | undefined {
+function processOperator1(list: Token[]): Token[] {
+  const result: Token[] = [];
+
+  let t1: Token = list[0];
+  let i = 1;
+  while (i < list.length) {
+    const t2 = list[i];
+    const t3 = list[i + 1];
+
+    if (isOperand(t1) && isBracket(t2, '(')) {
+      t1 = new MethodCall(unwrapOperand(t1), parseExpressionList(t2.tokenList));
+      i++;
+      continue;
+    }
+
+    if (isOperand(t1) && isBracket(t2, '[')) {
+      const value = parseExpressionList(t2.tokenList);
+      if (value.length !== 1) {
+        throw new ParseError(`Only 1 expression accepted`, t2.lineStart, t2.columnStart);
+      }
+      t1 = new ArraySubscripting(unwrapOperand(t1), value[0]);
+      i++;
+      continue;
+    }
+
+    if (isOperand(t1) && isOperator(t2, '.') && isOperand(t3)) {
+      t1 = new MemberAccess(unwrapOperand(t1), unwrapOperand(t3));
+      i += 2;
+      continue;
+    }
+
+    result.push(t1);
+    t1 = t2;
+    i++;
+  }
+  result.push(t1);
+  return result;
+}
+
+function isOperand(token: Token) {
+  return token.isExpression() || isBracket(token, '(');
+}
+
+function unwrapOperand(token: Token): Token {
+  if (!isBracket(token, '(')) {
+    return token;
+  }
+  const subexprs = parseExpressionList(token.tokenList);
+  if (subexprs.length !== 1) {
+    throw new ParseError(`Expected 1 expression here`, token.lineStart, token.columnStart);
+  }
+  return subexprs[0];
+}
+
+function readExpression(ctx: ParseContext): Token | undefined {
   const t1 = ctx.current;
   if (!t1) {
     return;
   }
 
-  const val = new Expression([]);
-  val.setStart(t1.lineStart, t1.columnStart);
+  let list: Token[] = [];
+
   let t: Token | undefined = t1;
-  while (t && (!isOperator(t) || (t.value !== ';' && t.value !== ','))) {
-    val.tokenList.push(t);
-    val.setEnd(t.lineEnd, t.columnEnd);
+  while (t) {
+    if (isOperator(t) && (t.value === ';' || t.value === ',')) {
+      break;
+    }
+    list.push(t);
     t = ctx.next();
   }
 
-  return val;
+  list = processOperator1(list);
+
+  if (list.length > 1) {
+    throw new ParseError(`Unexpected ${list[1].toString()}`, list[1].lineStart, list[1].columnStart);
+  }
+
+  return unwrapOperand(list[0]);
 }
 
-function readExpressionStatement(ctx: ParseContext): Expression | undefined {
+function readExpressionStatement(ctx: ParseContext): Token | undefined {
   const val = readExpression(ctx);
   if (!val) {
     return;
@@ -285,26 +290,12 @@ function readExpressionStatement(ctx: ParseContext): Expression | undefined {
   return val;
 }
 
-function readToplevel(ctx: ParseContext): Token {
-  const result = readUse(ctx) || readDef(ctx);
-
-  if (!result) {
-    const t = ctx.current!;
-    throw new ParseError(`Unexpected token "${Token.toString(t)}"`, t.lineStart, t.columnStart, t.lineEnd, t.columnEnd);
-  }
-
-  return result;
+function readToplevel(ctx: ParseContext): Token | undefined {
+  return readUse(ctx) || readDef(ctx);
 }
 
-function readStatement(ctx: ParseContext): Token {
-  const result = readExpressionStatement(ctx);
-
-  if (!result) {
-    const t = ctx.current!;
-    throw new ParseError(`Unexpected token "${Token.toString(t)}"`, t.lineStart, t.columnStart, t.lineEnd, t.columnEnd);
-  }
-
-  return result;
+function readStatement(ctx: ParseContext): Token | undefined {
+  return readExpressionStatement(ctx);
 }
 
 export function parseToplevel(tokenList: Token[]) {
@@ -322,7 +313,20 @@ export function parseToplevel(tokenList: Token[]) {
 
   const outList: Token[] = [];
   while (ctx.current) {
-    outList.push(readToplevel(ctx));
+    const val = readToplevel(ctx);
+
+    if (!val) {
+      const t = ctx.current!;
+      throw new ParseError(
+        `Unexpected token "${Token.toString(t)}"`,
+        t.lineStart,
+        t.columnStart,
+        t.lineEnd,
+        t.columnEnd
+      );
+    }
+
+    outList.push(val);
   }
   return outList;
 }
@@ -342,7 +346,59 @@ export function parseStatements(tokenList: Token[]) {
 
   const outList: Token[] = [];
   while (ctx.current) {
-    outList.push(readStatement(ctx));
+    const val = readStatement(ctx);
+    if (!val) {
+      const t = ctx.current!;
+      throw new ParseError(
+        `Unexpected token "${Token.toString(t)}"`,
+        t.lineStart,
+        t.columnStart,
+        t.lineEnd,
+        t.columnEnd
+      );
+    }
+    outList.push(val);
+  }
+  return outList;
+}
+
+export function parseExpressionList(tokenList: Token[]) {
+  let pos = 0;
+
+  const ctx: ParseContext = {
+    current: tokenList[0],
+    next: () => {
+      if (!ctx.current) {
+        return;
+      }
+      return (ctx.current = tokenList[++pos]);
+    },
+  };
+
+  const outList: Token[] = [];
+  while (ctx.current) {
+    const val = readExpression(ctx);
+    if (!val) {
+      throw new ParseError(`Unexpected ${Token.toString(ctx.current)}`, ctx.current.lineStart, ctx.current.lineEnd);
+    }
+    outList.push(val);
+    if (!ctx.current) {
+      break;
+    }
+    const t = ctx.current;
+    if (!isOperator(t, ',')) {
+      throw new ParseError(
+        `Expected "," but found ${Token.toString(t)}`,
+        t?.lineStart ?? val.lineEnd,
+        t?.columnStart ?? val.columnEnd,
+        t?.lineEnd,
+        t?.columnEnd
+      );
+    }
+    ctx.next();
+    if (!ctx.current) {
+      throw new ParseError(`Expected expression after ","`, t.lineStart, t.lineEnd);
+    }
   }
   return outList;
 }
