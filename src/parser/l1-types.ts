@@ -1,4 +1,4 @@
-import { Base } from './base';
+import { Base, Pos } from './base';
 import { indent } from './util';
 
 export abstract class L1Base extends Base {
@@ -7,11 +7,19 @@ export abstract class L1Base extends Base {
   }
 }
 
-export class L1Word extends L1Base {
+export abstract class L1BasePos extends L1Base {
+  pos: Pos;
+  constructor(pos: Pos) {
+    super();
+    this.pos = pos;
+  }
+}
+
+export class L1Word extends L1BasePos {
   value: string;
 
-  constructor(value: string) {
-    super();
+  constructor(value: string, pos: Pos) {
+    super(pos);
     this.value = value;
   }
 
@@ -24,11 +32,11 @@ export class L1Word extends L1Base {
   }
 }
 
-export class L1Operator extends L1Base {
+export class L1Operator extends L1BasePos {
   value: string;
 
-  constructor(value: string) {
-    super();
+  constructor(value: string, pos: Pos) {
+    super(pos);
     this.value = value;
   }
 
@@ -41,13 +49,13 @@ export class L1Operator extends L1Base {
   }
 }
 
-export class L1Bracket extends L1Base {
+export class L1Bracket extends L1BasePos {
   start: string;
   end: string;
-  tokenList: L1Base[];
+  tokenList: L1BasePos[];
 
-  constructor(start: string, end: string, tokenList: L1Base[]) {
-    super();
+  constructor(start: string, end: string, tokenList: L1BasePos[], pos: Pos) {
+    super(pos);
     this.start = start;
     this.end = end;
     this.tokenList = tokenList;
@@ -64,11 +72,11 @@ export class L1Bracket extends L1Base {
   }
 }
 
-export class L1Number extends L1Base {
+export class L1Number extends L1BasePos {
   value: string;
 
-  constructor(value: string) {
-    super();
+  constructor(value: string, pos: Pos) {
+    super(pos);
     this.value = value;
   }
 
@@ -81,11 +89,11 @@ export class L1Number extends L1Base {
   }
 }
 
-export class L1String extends L1Base {
+export class L1String extends L1BasePos {
   value: string;
 
-  constructor(value: string) {
-    super();
+  constructor(value: string, pos: Pos) {
+    super(pos);
     this.value = value;
   }
 

@@ -1,5 +1,6 @@
 import { Base } from './base';
 import { L2Base } from './l2-types';
+import { Runner } from './runner';
 import { indent } from './util';
 
 export abstract class L3Base extends Base {
@@ -7,11 +8,63 @@ export abstract class L3Base extends Base {
     return true;
   }
 }
-export class L3String extends L3Base {
+
+export type L3PrimitiveType = 'void' | 'string' | 'number';
+
+export abstract class L3Type extends L3Base {}
+
+export class L3SimpleType extends L3Type {
+  primitive: L3PrimitiveType;
+
+  constructor(primitive: L3PrimitiveType) {
+    super();
+    this.primitive = primitive;
+  }
+
+  toString(): string {
+    return `${this.primitive}`;
+  }
+
+  debugPrint(): string {
+    return `[L3SimpleType]\n  primitive: ${this.primitive}`;
+  }
+}
+
+export const voidType = new L3SimpleType('void');
+export const stringType = new L3SimpleType('string');
+export const numberType = new L3SimpleType('number');
+
+export class L3CallableType extends L3Type {
+  returnType?: L3Type;
+
+  constructor(returnType?: L3Type) {
+    super();
+    this.returnType = returnType;
+  }
+
+  toString(): string {
+    return `callable`;
+  }
+
+  debugPrint(): string {
+    return `[L3CallableType]\n  returnType: ${indent(this.returnType?.debugPrint() ?? '(void)', 2)}`;
+  }
+}
+
+export abstract class L3Expression extends L3Base {
+  type: L3Type;
+
+  constructor(type: L3Type) {
+    super();
+    this.type = type;
+  }
+}
+
+export class L3String extends L3Expression {
   value: string;
 
   constructor(value: string) {
-    super();
+    super(stringType);
     this.value = value;
   }
 
@@ -24,11 +77,11 @@ export class L3String extends L3Base {
   }
 }
 
-export class L3Number extends L3Base {
+export class L3Number extends L3Expression {
   value: string;
 
   constructor(value: string) {
-    super();
+    super(numberType);
     this.value = value;
   }
 
@@ -41,33 +94,24 @@ export class L3Number extends L3Base {
   }
 }
 
-export class L3Identifier extends L3Base {
-  value: string;
+export class L3Reference extends L3Expression {
+  name: string;
 
-  constructor(value: string) {
-    super();
-    this.value = value;
+  constructor(name: string, type: L3Type) {
+    super(type);
+    this.name = name;
   }
 
   toString(): string {
-    return `identifier "${this.value}"`;
+    return `identifier "${this.name}"`;
   }
 
   debugPrint(): string {
-    return `[L3Identifier]\n  value: ${this.value}`;
+    return `[L3Reference]\n  name: ${this.name}\n  type: ${indent(this.type.debugPrint(), 2)}`;
   }
 }
 
-export type L3Type = 'string' | 'number';
-
-export class L3Definition extends L3Base {
-  toString(): string {
-    return '';
-  }
-  debugPrint(): string {
-    return '';
-  }
-}
+export abstract class L3Definition extends L3Base {}
 
 export class L3Variable extends L3Definition {
   type: L3Type;
@@ -77,23 +121,44 @@ export class L3Variable extends L3Definition {
     this.type = type;
   }
 
+  toString(): string {
+    return 'variable';
+  }
+
   debugPrint(): string {
-    return `[L3Variable]\n  type: ${this.type}`;
+    return `[L3Variable]\n  type: ${indent(this.type.debugPrint(), 2)}`;
   }
 }
 
 export abstract class L3Statement extends L3Base {}
 
+export class L3ExpressionStatement extends L3Statement {
+  expr: L3Expression;
+
+  constructor(expr: L3Expression) {
+    super();
+    this.expr = expr;
+  }
+
+  toString(): string {
+    return 'expression';
+  }
+
+  debugPrint(): string {
+    return `[L3ExpressionStatement]\n  expr: ${indent(this.expr.debugPrint(), 2)}`;
+  }
+}
+
 export abstract class L3Object extends L3Base {}
 
 export abstract class L3OperationStep extends L3Base {}
 
-export class L3Operation extends L3Statement {
+export class L3Operation extends L3Expression {
   operand: L3Object;
   steps: L3OperationStep[];
 
-  constructor(operand: L3Object, steps: L3OperationStep[]) {
-    super();
+  constructor(operand: L3Object, steps: L3OperationStep[], type: L3Type) {
+    super(type);
     this.operand = operand;
     this.steps = steps;
   }
@@ -103,29 +168,61 @@ export class L3Operation extends L3Statement {
   }
 
   debugPrint(): string {
-    return `[L3Operation]`;
+    return `[L3Operation]\n  operand: ${indent(this.operand.debugPrint(), 2)}\n  steps:${this.steps
+      .map((item) => `\n    - ${indent(item.debugPrint(), 6)}`)
+      .join('')}`;
   }
 }
 
-export class L3Method extends L3Definition {
-  returnType: L3Type | undefined;
+export class L3Method extends L3Variable {
   statements: L3Base[];
-  constructor(returnType: L3Type | undefined, statements: L3Base[]) {
-    super();
-    this.returnType = returnType;
+  constructor(type: L3CallableType, statements: L3Base[]) {
+    super(type);
     this.statements = statements;
   }
   debugPrint(): string {
-    return `[L3Method]\n  returnType: ${this.returnType ?? '(void)'}\n  statements:\n${this.statements.map(
-      (item) => `    - ${indent(item.debugPrint(), 6)}`
-    )}`;
+    return `[L3Method]\n  type: ${indent(this.type.debugPrint(), 2)}\n  statements:${this.statements
+      .map((item) => `\n    - ${indent(item.debugPrint(), 6)}`)
+      .join('')}`;
+  }
+}
+
+export class L3LibraryMethod extends L3Variable {
+  callback: (args: any[], runner: Runner) => any;
+  constructor(type: L3CallableType, callback: (args: any[], runner: Runner) => any) {
+    super(type);
+    this.callback = callback;
+  }
+  debugPrint(): string {
+    return `[L3Method]\n  type: ${indent(this.type.debugPrint(), 2)}\n  callback: (native)`;
+  }
+}
+
+export class L3MethodCall extends L3OperationStep {
+  argList: L3Base[];
+
+  constructor(argList: L3Base[]) {
+    super();
+    this.argList = argList;
+  }
+
+  toString(): string {
+    return 'method call';
+  }
+
+  debugPrint(): string {
+    return `[L3MethodCall]\n  argList:${this.argList
+      .map((item) => `\n    - ${indent(item.debugPrint(), 6)}`)
+      .join('')}`;
   }
 }
 
 export class Runnable {
   symbols: { [name: string]: L3Definition };
-  constructor(symbols: { [name: string]: L3Definition }) {
+  initialStatements: L3Statement[];
+  constructor(symbols: { [name: string]: L3Definition }, initialStatements: L3Statement[]) {
     this.symbols = symbols;
+    this.initialStatements = initialStatements;
   }
 
   debugPrint() {
