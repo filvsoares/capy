@@ -1,6 +1,8 @@
 import { Base } from './base';
 import {
+  L2Addition,
   L2Base,
+  L2Expression,
   L2Identifier,
   L2Method,
   L2MethodCall,
@@ -31,6 +33,10 @@ import {
   L3ExpressionStatement,
   voidType,
   L3Expression,
+  isStringType,
+  L3Dereference,
+  stringType,
+  L3StringConcat,
 } from './l3-types';
 import { indent } from './util';
 
@@ -81,7 +87,9 @@ export function link(list: L2Base[], libs: { [name: string]: L3Library }) {
     task();
   }
   const initialStatements = [
-    new L3ExpressionStatement(new L3Operation(processReference('start', symbols), [new L3MethodCall([])], voidType)),
+    new L3ExpressionStatement(
+      new L3Operation(processReference('start', symbols), [new L3MethodCall([])], voidType, false)
+    ),
   ];
   return new L3Runnable(symbols, initialStatements);
 }
@@ -96,7 +104,7 @@ function processStatements(method: L3Method, origin: L2Method, symbols: { [name:
   }
 }
 
-function processExpression(src: L2Base, symbols: { [name: string]: L3Definition }): L3Expression {
+function processExpression(src: L2Expression, symbols: { [name: string]: L3Definition }): L3Expression {
   if (src instanceof L2String) {
     return new L3String(src.value);
   }
@@ -112,23 +120,48 @@ function processExpression(src: L2Base, symbols: { [name: string]: L3Definition 
   throw new Error(`Unknown expression ${src}`);
 }
 
+function dereference(obj: L3Expression) {
+  if (!obj.isReference()) {
+    return obj;
+  }
+  if (obj instanceof L3Operation) {
+    obj.steps.push(new L3Dereference());
+    return obj;
+  }
+  return new L3Operation(obj, [new L3Dereference()], obj.type, false);
+}
+
 function processOperation(src: L2Operation, symbols: { [name: string]: L3Definition }) {
   const operand = processExpression(src.operand, symbols);
   let type = operand.type;
+  let reference = operand.isReference();
   const steps: L3OperationStep[] = [];
   for (const step of src.steps) {
     if (step instanceof L2MethodCall) {
-      const argList: L3Base[] = [];
+      const argList: L3Expression[] = [];
       for (const arg of step.argList) {
         argList.push(processExpression(arg, symbols));
       }
       steps.push(new L3MethodCall(argList));
       type = voidType;
+      reference = false;
+    } else if (step instanceof L2Addition) {
+      const other = processExpression(step.operand, symbols);
+      if (isStringType(type) && isStringType(other.type)) {
+        if (reference) {
+          steps.push(new L3Dereference());
+        }
+        steps.push(new L3StringConcat(dereference(other)));
+        type = stringType;
+        reference = false;
+      } else {
+        throw new Error(`Cannot apply addition to ${type} and ${other.type}`);
+      }
     } else {
       throw new Error(`Unexpected ${step}`);
     }
   }
-  return new L3Operation(operand, steps, type);
+  return new L3Operation(operand, steps, type, reference);
 }
 
 function processReference(name: string, symbols: { [name: string]: L3Definition }) {

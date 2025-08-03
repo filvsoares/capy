@@ -5,6 +5,7 @@ import {
   L2ArraySubscripting,
   L2Base,
   L2Division,
+  L2Expression,
   L2Identifier,
   L2MemberAccess,
   L2Method,
@@ -189,9 +190,9 @@ function readDefVariable(t1: L1Word, t2: L1Word, t3: L1Operator, ctx: ParseConte
   return val;
 }
 
-function isOperand(token: L1Base | L2Base | undefined) {
+function isOperand(token: L1Base | L2Expression | undefined) {
   return (
-    token instanceof L2Base ||
+    token instanceof L2Expression ||
     token instanceof L1Word ||
     token instanceof L1Number ||
     token instanceof L1String ||
@@ -199,8 +200,8 @@ function isOperand(token: L1Base | L2Base | undefined) {
   );
 }
 
-function unwrapOperand(token: L1Base | L2Base): L2Base {
-  if (token instanceof L2Base) {
+function unwrapOperand(token: L1Base | L2Expression): L2Expression {
+  if (token instanceof L2Expression) {
     return token;
   }
   if (token instanceof L1Word) {
@@ -222,7 +223,7 @@ function unwrapOperand(token: L1Base | L2Base): L2Base {
   throw new Error(`Unexpected ${Base.toString(token)}`);
 }
 
-function createOperation(t1: L1Base | L2Base, step: L2OperationStep) {
+function createOperation(t1: L1Base | L2Expression, step: L2OperationStep) {
   if (t1 instanceof L2Operation) {
     t1.steps.push(step);
     return t1;
@@ -231,10 +232,10 @@ function createOperation(t1: L1Base | L2Base, step: L2OperationStep) {
   return op;
 }
 
-function processOperator1(list: (L1BasePos | L2Base)[]) {
-  const result: (L1BasePos | L2Base)[] = [];
+function processOperator1(list: (L1BasePos | L2Expression)[]) {
+  const result: (L1BasePos | L2Expression)[] = [];
 
-  let t1: L1BasePos | L2Base = list[0];
+  let t1: L1BasePos | L2Expression = list[0];
   let i = 1;
   while (i < list.length) {
     const t2 = list[i];
@@ -273,12 +274,12 @@ function processOperator1(list: (L1BasePos | L2Base)[]) {
   return result;
 }
 
-function processOperator2(list: (L1BasePos | L2Base)[]) {
+function processOperator2(list: (L1BasePos | L2Expression)[]) {
   list = [...list].reverse();
 
-  const result: (L1BasePos | L2Base)[] = [];
+  const result: (L1BasePos | L2Expression)[] = [];
 
-  let t1: L1BasePos | L2Base = list[0];
+  let t1: L1BasePos | L2Expression = list[0];
   let i = 1;
   while (i < list.length) {
     const t2 = list[i];
@@ -305,10 +306,10 @@ function processOperator2(list: (L1BasePos | L2Base)[]) {
   return result;
 }
 
-function processOperator3(list: (L1BasePos | L2Base)[]) {
-  const result: (L1BasePos | L2Base)[] = [];
+function processOperator3(list: (L1BasePos | L2Expression)[]) {
+  const result: (L1BasePos | L2Expression)[] = [];
 
-  let t1: L1BasePos | L2Base = list[0];
+  let t1: L1BasePos | L2Expression = list[0];
   let i = 1;
   while (i < list.length) {
     const t2 = list[i];
@@ -340,10 +341,10 @@ function processOperator3(list: (L1BasePos | L2Base)[]) {
   return result;
 }
 
-function processOperator4(list: (L1BasePos | L2Base)[]) {
-  const result: (L1BasePos | L2Base)[] = [];
+function processOperator4(list: (L1BasePos | L2Expression)[]) {
+  const result: (L1BasePos | L2Expression)[] = [];
 
-  let t1: L1BasePos | L2Base = list[0];
+  let t1: L1BasePos | L2Expression = list[0];
   let i = 1;
   while (i < list.length) {
     const t2 = list[i];
@@ -369,13 +370,13 @@ function processOperator4(list: (L1BasePos | L2Base)[]) {
   return result;
 }
 
-function readExpression(ctx: ParseContext): L2Base | undefined {
+function readExpression(ctx: ParseContext): L2Expression | undefined {
   const t1 = ctx.current;
   if (!t1) {
     return;
   }
 
-  let list: (L1BasePos | L2Base)[] = [];
+  let list: (L1BasePos | L2Expression)[] = [];
 
   let t: L1BasePos | undefined = t1;
   while (t) {
@@ -487,7 +488,7 @@ export function parseExpressionList(tokenList: L1BasePos[]) {
     },
   };
 
-  const outList: L2Base[] = [];
+  const outList: L2Expression[] = [];
   while (ctx.current) {
     const val = readExpression(ctx);
     if (!val) {

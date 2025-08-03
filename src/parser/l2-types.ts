@@ -7,9 +7,15 @@ export abstract class L2Base extends Base {
   }
 }
 
+export abstract class L2Expression extends L2Base {
+  isL2Expression() {
+    return true;
+  }
+}
+
 export abstract class L2OperationStep extends L2Base {}
 
-export class L2String extends L2Base {
+export class L2String extends L2Expression {
   value: string;
 
   constructor(value: string) {
@@ -26,7 +32,7 @@ export class L2String extends L2Base {
   }
 }
 
-export class L2Number extends L2Base {
+export class L2Number extends L2Expression {
   value: string;
 
   constructor(value: string) {
@@ -43,7 +49,7 @@ export class L2Number extends L2Base {
   }
 }
 
-export class L2Identifier extends L2Base {
+export class L2Identifier extends L2Expression {
   value: string;
 
   constructor(value: string) {
@@ -61,9 +67,9 @@ export class L2Identifier extends L2Base {
 }
 
 export class L2MethodCall extends L2OperationStep {
-  argList: L2Base[];
+  argList: L2Expression[];
 
-  constructor(argList: L2Base[]) {
+  constructor(argList: L2Expression[]) {
     super();
     this.argList = argList;
   }
@@ -111,11 +117,11 @@ export class L2MemberAccess extends L2OperationStep {
   }
 }
 
-export class L2Operation extends L2Base {
-  operand: L2Base;
+export class L2Operation extends L2Expression {
+  operand: L2Expression;
   steps: L2OperationStep[];
 
-  constructor(operand: L2Base, steps: L2OperationStep[]) {
+  constructor(operand: L2Expression, steps: L2OperationStep[]) {
     super();
     this.operand = operand;
     this.steps = steps;
@@ -161,9 +167,9 @@ export class L2UnaryPlus extends L2OperationStep {
 }
 
 export class L2Addition extends L2OperationStep {
-  operand: L2Base;
+  operand: L2Expression;
 
-  constructor(operand: L2Base) {
+  constructor(operand: L2Expression) {
     super();
     this.operand = operand;
   }
@@ -178,9 +184,9 @@ export class L2Addition extends L2OperationStep {
 }
 
 export class L2Subtraction extends L2OperationStep {
-  operand: L2Base;
+  operand: L2Expression;
 
-  constructor(operand: L2Base) {
+  constructor(operand: L2Expression) {
     super();
     this.operand = operand;
   }
@@ -195,9 +201,9 @@ export class L2Subtraction extends L2OperationStep {
 }
 
 export class L2Multiplication extends L2OperationStep {
-  operand: L2Base;
+  operand: L2Expression;
 
-  constructor(operand: L2Base) {
+  constructor(operand: L2Expression) {
     super();
     this.operand = operand;
   }
@@ -212,9 +218,9 @@ export class L2Multiplication extends L2OperationStep {
 }
 
 export class L2Division extends L2OperationStep {
-  operand: L2Base;
+  operand: L2Expression;
 
-  constructor(operand: L2Base) {
+  constructor(operand: L2Expression) {
     super();
     this.operand = operand;
   }
@@ -229,9 +235,9 @@ export class L2Division extends L2OperationStep {
 }
 
 export class L2Remainder extends L2OperationStep {
-  operand: L2Base;
+  operand: L2Expression;
 
-  constructor(operand: L2Base) {
+  constructor(operand: L2Expression) {
     super();
     this.operand = operand;
   }
