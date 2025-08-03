@@ -1,23 +1,4 @@
 export abstract class Base {
-  lineStart = 0;
-  columnStart = 0;
-  lineEnd = 0;
-  columnEnd = 0;
-
-  setStart(line: number, column: number) {
-    this.lineStart = line;
-    this.columnStart = column;
-    if (this.lineEnd < line || (this.lineEnd === line && this.columnEnd <= column)) {
-      this.lineEnd = line;
-      this.columnEnd = column + 1;
-    }
-  }
-
-  setEnd(line: number, column: number) {
-    this.lineEnd = line;
-    this.columnEnd = column;
-  }
-
   abstract toString(): string;
 
   static toString(token: Base | undefined) {
@@ -38,17 +19,24 @@ export abstract class Base {
   }
 }
 
-export class ParseError extends Error {
-  lineStart: number;
-  columnStart: number;
-  lineEnd: number;
-  columnEnd: number;
+export type Pos = {
+  lin1: number;
+  col1: number;
+  lin2: number;
+  col2: number;
+};
 
-  constructor(message: string, lineStart: number, columnStart: number, lineEnd?: number, columnEnd?: number) {
-    super(`[${lineStart}:${columnStart} - ${lineEnd}:${columnEnd}] ${message}`);
-    this.lineStart = lineStart;
-    this.columnStart = columnStart;
-    this.lineEnd = lineEnd ?? lineStart;
-    this.columnEnd = columnEnd ?? columnStart;
+export class ParseError extends Error {
+  lin1: number;
+  col1: number;
+  lin2: number;
+  col2: number;
+
+  constructor(message: string, lin1: number, col1: number, lin2?: number, col2?: number) {
+    super(`[${lin1}:${col1} - ${lin2}:${col2}] ${message}`);
+    this.lin1 = lin1;
+    this.col1 = col1;
+    this.lin2 = lin2 ?? lin1;
+    this.col2 = col2 ?? col1;
   }
 }

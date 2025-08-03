@@ -15,4 +15,6 @@
 .result {
   white-space: pre-wrap;
   font-family: monospace;
+  font-size: 14px;
+  overflow-y: auto;
 }
