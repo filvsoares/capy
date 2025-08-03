@@ -1,10 +1,12 @@
-import { parseText } from '@/parser/text-parser';
-import { parseToplevel } from './parser/toplevel-parser';
+import { layer1Parse } from '@/parser/l1-parser';
+import { parseToplevel as layer2Parse } from './parser/l2-parser';
 import { ChangeEventHandler, useEffect, useState } from 'react';
 import classes from './app.module.css';
-import { Token } from './parser/token';
+import { Base } from './parser/base';
+import { L3Definition, L3Library } from './parser/l3-types';
+import { link as layer3Parse } from './parser/l3-parser';
 
-const initialCode = `use "chat";
+const initialCode = `use "io";
 
 def global: string;
 
@@ -16,6 +18,14 @@ def sin(x: number): number {
 }
 `;
 
+const libs: { [name: string]: L3Library } = {
+  io: {
+    exported: {
+      write: new L3Definition(),
+    },
+  },
+};
+
 export default function App() {
   const [content, setContent] = useState(initialCode);
   const [result, setResult] = useState('');
@@ -26,9 +36,10 @@ export default function App() {
 
   useEffect(() => {
     try {
-      const p1 = parseText(content);
-      const p2 = parseToplevel(p1);
-      setResult(Token.debugPrintList(p2));
+      const p1 = layer1Parse(content);
+      const p2 = layer2Parse(p1);
+      const p3 = layer3Parse(p2, libs);
+      setResult(Base.debugPrintList(p2) + '\n\n---\n\n' + p3.debugPrint());
     } catch (err: any) {
       setResult(err.stack);
     }

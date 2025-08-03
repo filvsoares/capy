@@ -1,4 +1,5 @@
-import { Bracket, Number, Operator, ParseError, String, Token, Word } from './token';
+import { ParseError } from './base';
+import { L1Bracket, L1Number, L1Operator, L1String, L1Base, L1Word } from './l1-types';
 
 function isWordStart(c: string) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
@@ -65,11 +66,11 @@ type ParseContext = {
   next: () => string;
 };
 
-function readWord(ctx: ParseContext): Word | undefined {
+function readWord(ctx: ParseContext): L1Word | undefined {
   if (!isWordStart(ctx.current)) {
     return;
   }
-  const val = new Word(ctx.current);
+  const val = new L1Word(ctx.current);
   val.setStart(ctx.line, ctx.column);
   while (isWordMiddle(ctx.next())) {
     val.value += ctx.current;
@@ -78,11 +79,11 @@ function readWord(ctx: ParseContext): Word | undefined {
   return val;
 }
 
-function readNumber(ctx: ParseContext): Number | undefined {
+function readNumber(ctx: ParseContext): L1Number | undefined {
   if (!isNumberStart(ctx.current)) {
     return;
   }
-  const val = new Number(ctx.current);
+  const val = new L1Number(ctx.current);
   val.setStart(ctx.line, ctx.column);
   while (isNumberMiddle(ctx.next())) {
     val.value += ctx.current;
@@ -99,11 +100,11 @@ function readWhitespace(ctx: ParseContext): true | undefined {
   return true;
 }
 
-function readOperator(ctx: ParseContext): Operator | undefined {
+function readOperator(ctx: ParseContext): L1Operator | undefined {
   if (!isOperator(ctx.current)) {
     return;
   }
-  const val = new Operator(ctx.current);
+  const val = new L1Operator(ctx.current);
   val.setStart(ctx.line, ctx.column);
   while (ctx.next() && isOperator(val.value + ctx.current)) {
     val.value += ctx.current;
@@ -112,7 +113,7 @@ function readOperator(ctx: ParseContext): Operator | undefined {
   return val;
 }
 
-function readBracket(ctx: ParseContext): Bracket | undefined {
+function readBracket(ctx: ParseContext): L1Bracket | undefined {
   if (!isBracketStart(ctx.current)) {
     return;
   }
@@ -120,7 +121,7 @@ function readBracket(ctx: ParseContext): Bracket | undefined {
   const bracketStart = ctx.current;
   const expectedBracketEnd = bracketStart === '(' ? ')' : bracketStart === '[' ? ']' : bracketStart === '{' ? '}' : '';
 
-  const val = new Bracket(bracketStart, expectedBracketEnd, []);
+  const val = new L1Bracket(bracketStart, expectedBracketEnd, []);
   val.setStart(ctx.line, ctx.column);
 
   if (!ctx.next()) {
@@ -135,7 +136,7 @@ function readBracket(ctx: ParseContext): Bracket | undefined {
     if (!token) {
       throw new ParseError(`Unexpected char "${ctx.current}"`, ctx.line, ctx.column);
     }
-    if (token instanceof Token) {
+    if (token instanceof L1Base) {
       val.tokenList.push(token);
     }
   }
@@ -150,11 +151,11 @@ function readBracket(ctx: ParseContext): Bracket | undefined {
   return val;
 }
 
-function readString(ctx: ParseContext): String | undefined {
+function readString(ctx: ParseContext): L1String | undefined {
   if (ctx.current !== '"') {
     return;
   }
-  const val = new String('');
+  const val = new L1String('');
   val.setStart(ctx.line, ctx.column);
 
   while (true) {
@@ -171,13 +172,13 @@ function readString(ctx: ParseContext): String | undefined {
   return val;
 }
 
-function read(ctx: ParseContext): Token | true | undefined {
+function read(ctx: ParseContext): L1Base | true | undefined {
   return (
     readWhitespace(ctx) || readWord(ctx) || readOperator(ctx) || readBracket(ctx) || readNumber(ctx) || readString(ctx)
   );
 }
 
-export function parseText(s: string) {
+export function layer1Parse(s: string) {
   let pos = 0;
 
   const ctx: ParseContext = {
@@ -204,13 +205,13 @@ export function parseText(s: string) {
     },
   };
 
-  const tokenList: Token[] = [];
+  const tokenList: L1Base[] = [];
   while (ctx.current) {
     const token = read(ctx);
     if (!token) {
       throw new ParseError(`Unexpected char "${ctx.current}"`, ctx.line, ctx.column);
     }
-    if (token instanceof Token) {
+    if (token instanceof L1Base) {
       tokenList.push(token);
     }
   }
