@@ -34,6 +34,10 @@ export const voidType = new L3SimpleType('void');
 export const stringType = new L3SimpleType('string');
 export const numberType = new L3SimpleType('number');
 
+export function isStringType(type: L3Type) {
+  return type instanceof L3SimpleType && type.primitive === 'string';
+}
+
 export class L3CallableType extends L3Type {
   returnType?: L3Type;
 
@@ -58,6 +62,8 @@ export abstract class L3Expression extends L3Base {
     super();
     this.type = type;
   }
+
+  abstract isReference(): boolean;
 }
 
 export class L3String extends L3Expression {
@@ -66,6 +72,10 @@ export class L3String extends L3Expression {
   constructor(value: string) {
     super(stringType);
     this.value = value;
+  }
+
+  isReference(): boolean {
+    return false;
   }
 
   toString(): string {
@@ -85,6 +95,10 @@ export class L3Number extends L3Expression {
     this.value = value;
   }
 
+  isReference(): boolean {
+    return false;
+  }
+
   toString(): string {
     return `number`;
   }
@@ -100,6 +114,10 @@ export class L3Reference extends L3Expression {
   constructor(name: string, type: L3Type) {
     super(type);
     this.name = name;
+  }
+
+  isReference(): boolean {
+    return true;
   }
 
   toString(): string {
@@ -149,18 +167,22 @@ export class L3ExpressionStatement extends L3Statement {
   }
 }
 
-export abstract class L3Object extends L3Base {}
-
 export abstract class L3OperationStep extends L3Base {}
 
 export class L3Operation extends L3Expression {
-  operand: L3Object;
+  operand: L3Expression;
   steps: L3OperationStep[];
+  reference: boolean;
 
-  constructor(operand: L3Object, steps: L3OperationStep[], type: L3Type) {
+  constructor(operand: L3Expression, steps: L3OperationStep[], type: L3Type, reference: boolean) {
     super(type);
     this.operand = operand;
+    this.reference = reference;
     this.steps = steps;
+  }
+
+  isReference(): boolean {
+    return this.reference;
   }
 
   toString(): string {
@@ -198,10 +220,24 @@ export class L3LibraryMethod extends L3Variable {
   }
 }
 
-export class L3MethodCall extends L3OperationStep {
-  argList: L3Base[];
+export class L3Dereference extends L3OperationStep {
+  constructor() {
+    super();
+  }
 
-  constructor(argList: L3Base[]) {
+  toString(): string {
+    return 'dereference';
+  }
+
+  debugPrint(): string {
+    return `[L3Dereference]`;
+  }
+}
+
+export class L3MethodCall extends L3OperationStep {
+  argList: L3Expression[];
+
+  constructor(argList: L3Expression[]) {
     super();
     this.argList = argList;
   }
@@ -214,6 +250,23 @@ export class L3MethodCall extends L3OperationStep {
     return `[L3MethodCall]\n  argList:${this.argList
       .map((item) => `\n    - ${indent(item.debugPrint(), 6)}`)
       .join('')}`;
+  }
+}
+
+export class L3StringConcat extends L3OperationStep {
+  other: L3Expression;
+
+  constructor(other: L3Expression) {
+    super();
+    this.other = other;
+  }
+
+  toString(): string {
+    return 'string concat';
+  }
+
+  debugPrint(): string {
+    return `[L3StringConcat]\n  other:${indent(this.other.debugPrint(), 2)}`;
   }
 }
 
