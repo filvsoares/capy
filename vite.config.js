@@ -15,6 +15,6 @@ export default defineConfig((command, mode) => {
     },
     plugins: [react()],
     server: { port: 3000 },
-    envPrefix: 'REACT_APP_',
+    base: '',
   };
 });
