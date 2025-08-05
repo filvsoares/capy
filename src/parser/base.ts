@@ -46,6 +46,19 @@ export type Pos = {
   col2: number;
 };
 
+export interface WithPos {
+  pos: Pos;
+}
+
+export const WARNING = 1;
+export const ERROR = 2;
+
+export type ParseError1 = {
+  level: typeof WARNING | typeof ERROR;
+  pos?: Pos;
+  message: string;
+};
+
 export class ParseError extends Error {
   lin1: number;
   col1: number;

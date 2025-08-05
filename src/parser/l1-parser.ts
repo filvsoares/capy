@@ -18,8 +18,8 @@
  * @file Layer-1 parser implementation.
  */
 
-import { ParseError } from './base';
-import { L1Bracket, L1Number, L1Operator, L1String, L1Base, L1Word, L1BasePos } from './l1-types';
+import { ERROR, ParseError, ParseError1 } from './base';
+import { L1Bracket, L1Number, L1Operator, L1String, L1Base, L1Word, L1BasePos, L1ParseResult } from './l1-types';
 
 function isWordStart(c: string) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
@@ -79,178 +79,216 @@ function isOperator(s: string) {
   return true;
 }
 
-type ParseContext = {
-  line: number;
-  column: number;
-  current: string;
-  next: () => string;
-};
+class L1Parser {
+  s: string = '';
+  pos: number = 0;
+  lin: number = 0;
+  col: number = 0;
+  current: string = '';
+  errors: ParseError1[] = [];
 
-function readWord(ctx: ParseContext): L1Word | undefined {
-  if (!isWordStart(ctx.current)) {
-    return;
-  }
-  let value = ctx.current;
-  const lin1 = ctx.line;
-  const col1 = ctx.column;
-  let lin2 = ctx.line;
-  let col2 = ctx.column + 1;
-  while (isWordMiddle(ctx.next())) {
-    value += ctx.current;
-    lin2 = ctx.line;
-    col2 = ctx.column + 1;
-  }
-  return new L1Word(value, { lin1, col1, lin2, col2 });
-}
-
-function readNumber(ctx: ParseContext): L1Number | undefined {
-  if (!isNumberStart(ctx.current)) {
-    return;
-  }
-  let value = ctx.current;
-  const lin1 = ctx.line;
-  const col1 = ctx.column;
-  let lin2 = ctx.line;
-  let col2 = ctx.column + 1;
-  while (isNumberMiddle(ctx.next())) {
-    value += ctx.current;
-    lin2 = ctx.line;
-    col2 = ctx.column + 1;
-  }
-  return new L1Number(value, { lin1, col1, lin2, col2 });
-}
-
-function readWhitespace(ctx: ParseContext): true | undefined {
-  if (!isWhitespace(ctx.current)) {
-    return;
-  }
-  while (isWhitespace(ctx.next())) {}
-  return true;
-}
-
-function readOperator(ctx: ParseContext): L1Operator | undefined {
-  if (!isOperator(ctx.current)) {
-    return;
-  }
-  let value = ctx.current;
-  const lin1 = ctx.line;
-  const col1 = ctx.column;
-  let lin2 = ctx.line;
-  let col2 = ctx.column + 1;
-  while (ctx.next() && isOperator(value + ctx.current)) {
-    value += ctx.current;
-    lin2 = ctx.line;
-    col2 = ctx.column + 1;
-  }
-  return new L1Operator(value, { lin1, col1, lin2, col2 });
-}
-
-function readBracket(ctx: ParseContext): L1Bracket | undefined {
-  if (!isBracketStart(ctx.current)) {
-    return;
-  }
-
-  const bracketStart = ctx.current;
-  const expectedBracketEnd = bracketStart === '(' ? ')' : bracketStart === '[' ? ']' : bracketStart === '{' ? '}' : '';
-  const lin1 = ctx.line;
-  const col1 = ctx.column;
-
-  if (!ctx.next()) {
-    throw new ParseError('Unexpected EOF', ctx.line, ctx.column);
-  }
-
-  const list: L1BasePos[] = [];
-  while (true) {
-    if (isBracketEnd(ctx.current)) {
-      break;
+  next() {
+    if (!this.current) {
+      return '';
     }
-    const token = read(ctx);
-    if (!token) {
-      throw new ParseError(`Unexpected char "${ctx.current}"`, ctx.line, ctx.column);
+    this.pos++;
+    if (this.pos >= this.s.length) {
+      this.current = '';
+      return '';
     }
-    if (token instanceof L1Base) {
-      list.push(token);
+    if (this.current === '\n') {
+      this.col = 1;
+      this.lin++;
+    } else {
+      this.col++;
     }
+    this.current = this.s[this.pos];
+    return this.current;
   }
 
-  const bracketEnd = ctx.current;
-  if (bracketEnd !== expectedBracketEnd) {
-    throw new ParseError(`Expected "${expectedBracketEnd}" but found ${bracketEnd}`, ctx.line, ctx.column);
-  }
-  const lin2 = ctx.line;
-  const col2 = ctx.column + 1;
-
-  ctx.next();
-  return new L1Bracket(bracketStart, expectedBracketEnd, list, { lin1, col1, lin2, col2 });
-}
-
-function readString(ctx: ParseContext): L1String | undefined {
-  if (ctx.current !== '"') {
-    return;
-  }
-  let value = '';
-  const lin1 = ctx.line;
-  const col1 = ctx.column;
-  let lin2 = ctx.line;
-  let col2 = ctx.column + 1;
-
-  while (true) {
-    if (!ctx.next()) {
-      throw new ParseError('Unexpected EOF', ctx.line, ctx.column);
+  readWord(): L1Word | undefined {
+    if (!isWordStart(this.current)) {
+      return;
     }
-    if (ctx.current === '"') {
-      break;
+    let value = this.current;
+    const lin1 = this.lin;
+    const col1 = this.col;
+    let lin2 = this.lin;
+    let col2 = this.col + 1;
+    while (isWordMiddle(this.next())) {
+      value += this.current;
+      lin2 = this.lin;
+      col2 = this.col + 1;
     }
-    value += ctx.current;
-    lin2 = ctx.line;
-    col2 = ctx.column + 1;
+    return new L1Word(value, { lin1, col1, lin2, col2 });
   }
-  ctx.next();
-  return new L1String(value, { lin1, col1, lin2, col2 });
-}
 
-function read(ctx: ParseContext): L1BasePos | true | undefined {
-  return (
-    readWhitespace(ctx) || readWord(ctx) || readOperator(ctx) || readBracket(ctx) || readNumber(ctx) || readString(ctx)
-  );
-}
+  readNumber(): L1Number | undefined {
+    if (!isNumberStart(this.current)) {
+      return;
+    }
+    let value = this.current;
+    const lin1 = this.lin;
+    const col1 = this.col;
+    let lin2 = this.lin;
+    let col2 = this.col + 1;
+    while (isNumberMiddle(this.next())) {
+      value += this.current;
+      lin2 = this.lin;
+      col2 = this.col + 1;
+    }
+    return new L1Number(value, { lin1, col1, lin2, col2 });
+  }
 
-export function layer1Parse(s: string): L1BasePos[] {
-  let pos = 0;
+  readWhitespace(): true | undefined {
+    if (!isWhitespace(this.current)) {
+      return;
+    }
+    while (isWhitespace(this.next())) {}
+    return true;
+  }
 
-  const ctx: ParseContext = {
-    current: s[0],
-    line: 1,
-    column: 1,
-    next: () => {
-      if (!ctx.current) {
-        return '';
+  readOperator(): L1Operator | undefined {
+    if (!isOperator(this.current)) {
+      return;
+    }
+    let value = this.current;
+    const lin1 = this.lin;
+    const col1 = this.col;
+    let lin2 = this.lin;
+    let col2 = this.col + 1;
+    while (this.next() && isOperator(value + this.current)) {
+      value += this.current;
+      lin2 = this.lin;
+      col2 = this.col + 1;
+    }
+    return new L1Operator(value, { lin1, col1, lin2, col2 });
+  }
+
+  readBracket(): L1Bracket | undefined {
+    if (!isBracketStart(this.current)) {
+      return;
+    }
+
+    const bracketStart = this.current;
+    const expectedBracketEnd =
+      bracketStart === '(' ? ')' : bracketStart === '[' ? ']' : bracketStart === '{' ? '}' : '';
+    const lin1 = this.lin;
+    const col1 = this.col;
+
+    this.next();
+
+    const list: L1BasePos[] = [];
+    while (true) {
+      if (!this.current) {
+        this.errors.push({
+          level: ERROR,
+          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col },
+          message: `Unexpected end of content`,
+        });
+        break;
       }
-      pos++;
-      if (pos >= s.length) {
-        ctx.current = '';
-        return '';
+      if (isBracketEnd(this.current)) {
+        break;
       }
-      if (ctx.current === '\n') {
-        ctx.column = 1;
-        ctx.line++;
-      } else {
-        ctx.column++;
+      const item = this.read();
+      if (!item) {
+        this.errors.push({
+          level: ERROR,
+          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
+          message: `Unexpected char "${this.current}"`,
+        });
+        this.next();
       }
-      ctx.current = s[pos];
-      return ctx.current;
-    },
-  };
+      if (item instanceof L1Base) {
+        list.push(item);
+      }
+    }
 
-  const tokenList: L1BasePos[] = [];
-  while (ctx.current) {
-    const token = read(ctx);
-    if (!token) {
-      throw new ParseError(`Unexpected char "${ctx.current}"`, ctx.line, ctx.column);
+    if (this.current) {
+      if (this.current !== expectedBracketEnd) {
+        this.errors.push({
+          level: ERROR,
+          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
+          message: `Expected "${expectedBracketEnd}" but found ${this.current}`,
+        });
+      }
+      this.next();
     }
-    if (token instanceof L1BasePos) {
-      tokenList.push(token);
-    }
+
+    const lin2 = this.lin;
+    const col2 = this.col + 1;
+
+    return new L1Bracket(bracketStart, expectedBracketEnd, list, { lin1, col1, lin2, col2 });
   }
-  return tokenList;
+
+  readString(): L1String | undefined {
+    if (this.current !== '"') {
+      return;
+    }
+    let value = '';
+    const lin1 = this.lin;
+    const col1 = this.col;
+    let lin2 = this.lin;
+    let col2 = this.col + 1;
+
+    while (true) {
+      if (!this.next()) {
+        this.errors.push({
+          level: ERROR,
+          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col },
+          message: `Unexpected end of content`,
+        });
+        break;
+      }
+      if (this.current === '"') {
+        break;
+      }
+      value += this.current;
+      lin2 = this.lin;
+      col2 = this.col + 1;
+    }
+    this.next();
+    return new L1String(value, { lin1, col1, lin2, col2 });
+  }
+
+  read(): L1BasePos | true | undefined {
+    return (
+      this.readWhitespace() ||
+      this.readWord() ||
+      this.readOperator() ||
+      this.readBracket() ||
+      this.readNumber() ||
+      this.readString()
+    );
+  }
+
+  parse(s: string): L1ParseResult {
+    this.s = s;
+    this.pos = 0;
+    this.current = s[0];
+    this.lin = 1;
+    this.col = 1;
+
+    const list: L1BasePos[] = [];
+    while (this.current) {
+      const item = this.read();
+      if (!item) {
+        this.errors.push({
+          level: ERROR,
+          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
+          message: `Unexpected char "${this.current}"`,
+        });
+        this.next();
+      }
+      if (item instanceof L1BasePos) {
+        list.push(item);
+      }
+    }
+    return { list, errors: this.errors };
+  }
+}
+
+export function layer1Parse(s: string): L1ParseResult {
+  return new L1Parser().parse(s);
 }
