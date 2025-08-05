@@ -18,7 +18,7 @@
  * @file Type definitions for layer-1 parser.
  */
 
-import { Base, Pos } from './base';
+import { Base, ParseError1, Pos, WithPos } from './base';
 import { indent } from './util';
 
 /**
@@ -33,7 +33,7 @@ export abstract class L1Base extends Base {
   }
 }
 
-export abstract class L1BasePos extends L1Base {
+export abstract class L1BasePos extends L1Base implements WithPos {
   pos: Pos;
   constructor(pos: Pos) {
     super();
@@ -131,3 +131,8 @@ export class L1String extends L1BasePos {
     return `[L1String]\n  value: ${this.value}`;
   }
 }
+
+export type L1ParseResult = {
+  list: L1BasePos[];
+  errors: ParseError1[];
+};

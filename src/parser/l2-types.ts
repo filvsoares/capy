@@ -18,7 +18,7 @@
  * @file Type definitions for layer-2 parser.
  */
 
-import { Base } from './base';
+import { Base, ParseError1, Pos, WithPos } from './base';
 import { indent } from './util';
 
 export abstract class L2Base extends Base {
@@ -27,9 +27,21 @@ export abstract class L2Base extends Base {
   }
 }
 
-export abstract class L2Expression extends L2Base {
+export abstract class L2BasePos extends L2Base implements WithPos {
+  pos: Pos;
+  constructor(pos: Pos) {
+    super();
+    this.pos = pos;
+  }
+}
+
+export abstract class L2Expression extends L2BasePos {
   isL2Expression() {
     return true;
+  }
+
+  constructor(pos: Pos) {
+    super(pos);
   }
 }
 
@@ -38,8 +50,8 @@ export abstract class L2OperationStep extends L2Base {}
 export class L2String extends L2Expression {
   value: string;
 
-  constructor(value: string) {
-    super();
+  constructor(value: string, pos: Pos) {
+    super(pos);
     this.value = value;
   }
 
@@ -55,8 +67,8 @@ export class L2String extends L2Expression {
 export class L2Number extends L2Expression {
   value: string;
 
-  constructor(value: string) {
-    super();
+  constructor(value: string, pos: Pos) {
+    super(pos);
     this.value = value;
   }
 
@@ -72,8 +84,8 @@ export class L2Number extends L2Expression {
 export class L2Identifier extends L2Expression {
   value: string;
 
-  constructor(value: string) {
-    super();
+  constructor(value: string, pos: Pos) {
+    super(pos);
     this.value = value;
   }
 
@@ -141,8 +153,8 @@ export class L2Operation extends L2Expression {
   operand: L2Expression;
   steps: L2OperationStep[];
 
-  constructor(operand: L2Expression, steps: L2OperationStep[]) {
-    super();
+  constructor(operand: L2Expression, steps: L2OperationStep[], pos: Pos) {
+    super(pos);
     this.operand = operand;
     this.steps = steps;
   }
@@ -346,3 +358,13 @@ export class L2Type extends L2Base {
     return `[L2Type] ${this.name}`;
   }
 }
+
+export type L2ParseExpressionListResult = {
+  list: L2Expression[];
+  errors: ParseError1[];
+};
+
+export type L2ParseToplevelResult = {
+  list: L2Base[];
+  errors: ParseError1[];
+};

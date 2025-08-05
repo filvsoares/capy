@@ -18,7 +18,7 @@
  * @file Layer-2 parser implementation.
  */
 
-import { Base, ParseError } from './base';
+import { Base, ERROR, ParseError, ParseError1, WithPos } from './base';
 import { L1Bracket, L1Operator, L1String, L1Base, L1Word, L1Number, L1BasePos } from './l1-types';
 import {
   L2Addition,
@@ -34,6 +34,8 @@ import {
   L2Number,
   L2Operation,
   L2OperationStep,
+  L2ParseExpressionListResult,
+  L2ParseToplevelResult as L2ParseResult,
   L2Remainder,
   L2String,
   L2Subtraction,
@@ -43,11 +45,7 @@ import {
   L2Use,
   L2Variable,
 } from './l2-types';
-
-type ParseContext = {
-  current: L1BasePos | undefined;
-  next: () => L1BasePos | undefined;
-};
+import { L3Type } from './l3-types';
 
 function isWord(token: any, value?: string): token is L1Word {
   return token instanceof L1Word && (value === undefined || token.value === value);
@@ -65,151 +63,6 @@ function isBracket(token: any, value?: string): token is L1Bracket {
   return token instanceof L1Bracket && (value === undefined || token.start === value);
 }
 
-function readUse(ctx: ParseContext): L2Use | undefined {
-  const t1 = ctx.current;
-  if (!isWord(t1, 'use')) {
-    return;
-  }
-
-  const t2 = ctx.next();
-  if (!isString(t2)) {
-    throw new ParseError(
-      `Expected string`,
-      t2?.pos.lin1 ?? t1.pos.lin2,
-      t2?.pos.col1 ?? t1.pos.col2,
-      t2?.pos.lin2,
-      t2?.pos.col2
-    );
-  }
-
-  const t3 = ctx.next();
-  if (!isOperator(t3, ';')) {
-    throw new ParseError(
-      `Expected ";"`,
-      t3?.pos.lin1 ?? t2.pos.lin2,
-      t3?.pos.col1 ?? t2.pos.col2,
-      t3?.pos.lin2,
-      t3?.pos.col2
-    );
-  }
-
-  ctx.next();
-
-  const val = new L2Use(t2.value);
-  return val;
-}
-
-function readDef(ctx: ParseContext): L2Method | L2Variable | undefined {
-  const t1 = ctx.current;
-  if (!isWord(t1, 'def')) {
-    return;
-  }
-
-  const t2 = ctx.next();
-  if (!isWord(t2)) {
-    throw new ParseError(
-      `Expected definition name`,
-      t2?.pos.lin1 ?? t1.pos.lin2,
-      t2?.pos.col1 ?? t1.pos.col2,
-      t2?.pos.lin2,
-      t2?.pos.col2
-    );
-  }
-
-  const t3 = ctx.next();
-  if (isBracket(t3, '(')) {
-    return readDefMethod(t1, t2, t3, ctx);
-  } else if (isOperator(t3, ':')) {
-    return readDefVariable(t1, t2, t3, ctx);
-  }
-
-  throw new ParseError(
-    `Expected "(" or ":" but found ${Base.toString(t3)}`,
-    t3?.pos.lin1 ?? t2.pos.lin2,
-    t3?.pos.col1 ?? t2.pos.col2,
-    t3?.pos.lin2,
-    t3?.pos.col2
-  );
-}
-
-function readDefMethod(t1: L1Word, t2: L1Word, t3: L1Bracket, ctx: ParseContext): L2Method | undefined {
-  let returnType: L2Type | undefined;
-
-  let t4 = ctx.next();
-
-  if (isOperator(t4, ':')) {
-    ctx.next();
-    returnType = readType(ctx);
-    if (!returnType) {
-      throw new ParseError(
-        `Expected return type but found ${Base.toString(t4)}`,
-        t4?.pos.lin1 ?? t3.pos.lin2,
-        t4?.pos.col1 ?? t3.pos.col2,
-        t4?.pos.lin2,
-        t4?.pos.col2
-      );
-    }
-    t4 = ctx.current;
-  }
-
-  if (!isBracket(t4, '{')) {
-    throw new ParseError(
-      `Expected "{" but found ${Base.toString(t4)}`,
-      t4?.pos.lin1 ?? t3.pos.lin2,
-      t4?.pos.col1 ?? t3.pos.col2,
-      t4?.pos.lin2,
-      t4?.pos.col2
-    );
-  }
-
-  ctx.next();
-
-  const val = new L2Method(t2.value, returnType, parseStatements(t4.tokenList));
-  return val;
-}
-
-function readType(ctx: ParseContext): L2Type | undefined {
-  const t1 = ctx.current;
-  if (!isWord(t1)) {
-    return undefined;
-  }
-
-  ctx.next();
-
-  const val = new L2Type(t1.value);
-  return val;
-}
-
-function readDefVariable(t1: L1Word, t2: L1Word, t3: L1Operator, ctx: ParseContext): L2Variable | undefined {
-  const t4 = ctx.next();
-  const type = readType(ctx);
-  if (!type) {
-    throw new ParseError(
-      `Expected type definition but found ${Base.toString(t4)}`,
-      t4?.pos.lin1 ?? t3.pos.lin2,
-      t4?.pos.col1 ?? t3.pos.col2,
-      t4?.pos.lin2,
-      t4?.pos.col2
-    );
-  }
-
-  const t5 = ctx.current;
-  if (!isOperator(t5, ';')) {
-    throw new ParseError(
-      `Expected ";" but found ${Base.toString(t5)}`,
-      t3?.pos.lin1 ?? t2.pos.lin2,
-      t3?.pos.col1 ?? t2.pos.col2,
-      t3?.pos.lin2,
-      t3?.pos.col2
-    );
-  }
-
-  ctx.next();
-
-  const val = new L2Variable(t2.value, type);
-  return val;
-}
-
 function isOperand(token: L1Base | L2Expression | undefined) {
   return (
     token instanceof L2Expression ||
@@ -220,312 +73,682 @@ function isOperand(token: L1Base | L2Expression | undefined) {
   );
 }
 
-function unwrapOperand(token: L1Base | L2Expression): L2Expression {
-  if (token instanceof L2Expression) {
-    return token;
-  }
-  if (token instanceof L1Word) {
-    return new L2Identifier(token.value);
-  }
-  if (token instanceof L1Number) {
-    return new L2Number(token.value);
-  }
-  if (token instanceof L1String) {
-    return new L2String(token.value);
-  }
-  if (token instanceof L1Bracket && token.start === '(') {
-    const subexprs = parseExpressionList(token.tokenList);
-    if (subexprs.length !== 1) {
-      throw new ParseError(`Expected 1 expression here`, token.pos.lin1, token.pos.col1);
-    }
-    return subexprs[0];
-  }
-  throw new Error(`Unexpected ${Base.toString(token)}`);
+function isExpressionEnd(t: L1BasePos | undefined) {
+  return !t || (isOperator(t) && (t.value === ';' || t.value === ','));
 }
 
-function createOperation(t1: L1Base | L2Expression, step: L2OperationStep) {
-  if (t1 instanceof L2Operation) {
-    t1.steps.push(step);
-    return t1;
-  }
-  const op = new L2Operation(unwrapOperand(t1), [step]);
-  return op;
-}
-
-function processOperator1(list: (L1BasePos | L2Expression)[]) {
-  const result: (L1BasePos | L2Expression)[] = [];
-
-  let t1: L1BasePos | L2Expression = list[0];
-  let i = 1;
-  while (i < list.length) {
-    const t2 = list[i];
-    const t3 = list[i + 1];
-
-    if (isOperand(t1) && isBracket(t2, '(')) {
-      t1 = createOperation(t1, new L2MethodCall(parseExpressionList(t2.tokenList)));
-      i++;
-      continue;
-    }
-
-    if (isOperand(t1) && isBracket(t2, '[')) {
-      const value = parseExpressionList(t2.tokenList);
-      if (value.length !== 1) {
-        throw new ParseError(`Only 1 expression accepted`, t2.pos.lin1, t2.pos.col1);
-      }
-      t1 = createOperation(t1, new L2ArraySubscripting(value[0]));
-      i++;
-      continue;
-    }
-
-    if (isOperand(t1) && isOperator(t2, '.') && isOperand(t3)) {
-      if (!(t3 instanceof L1Word)) {
-        throw new Error(`Expected identifier but found ${Base.toString(t3)}`);
-      }
-      t1 = createOperation(t1, new L2MemberAccess(t3.value));
-      i += 2;
-      continue;
-    }
-
-    result.push(t1);
-    t1 = t2;
-    i++;
-  }
-  result.push(t1);
-  return result;
-}
-
-function processOperator2(list: (L1BasePos | L2Expression)[]) {
-  list = [...list].reverse();
-
-  const result: (L1BasePos | L2Expression)[] = [];
-
-  let t1: L1BasePos | L2Expression = list[0];
-  let i = 1;
-  while (i < list.length) {
-    const t2 = list[i];
-    const t3 = list[i + 1];
-
-    if (isOperand(t1) && isOperator(t2, '-') && !isOperand(t3)) {
-      t1 = createOperation(t1, new L2UnaryMinus());
-      i++;
-      continue;
-    }
-
-    if (isOperand(t1) && isOperator(t2, '+') && !isOperand(t3)) {
-      t1 = createOperation(t1, new L2UnaryPlus());
-      i++;
-      continue;
-    }
-
-    result.push(t1);
-    t1 = t2;
-    i++;
-  }
-  result.push(t1);
-  result.reverse();
-  return result;
-}
-
-function processOperator3(list: (L1BasePos | L2Expression)[]) {
-  const result: (L1BasePos | L2Expression)[] = [];
-
-  let t1: L1BasePos | L2Expression = list[0];
-  let i = 1;
-  while (i < list.length) {
-    const t2 = list[i];
-    const t3 = list[i + 1];
-
-    if (isOperand(t1) && isOperator(t2, '*') && isOperand(t3)) {
-      t1 = createOperation(t1, new L2Multiplication(unwrapOperand(t3)));
-      i += 2;
-      continue;
-    }
-
-    if (isOperand(t1) && isOperator(t2, '/') && isOperand(t3)) {
-      t1 = createOperation(t1, new L2Division(unwrapOperand(t3)));
-      i += 2;
-      continue;
-    }
-
-    if (isOperand(t1) && isOperator(t2, '%') && isOperand(t3)) {
-      t1 = createOperation(t1, new L2Remainder(unwrapOperand(t3)));
-      i += 2;
-      continue;
-    }
-
-    result.push(t1);
-    t1 = t2;
-    i++;
-  }
-  result.push(t1);
-  return result;
-}
-
-function processOperator4(list: (L1BasePos | L2Expression)[]) {
-  const result: (L1BasePos | L2Expression)[] = [];
-
-  let t1: L1BasePos | L2Expression = list[0];
-  let i = 1;
-  while (i < list.length) {
-    const t2 = list[i];
-    const t3 = list[i + 1];
-
-    if (isOperand(t1) && isOperator(t2, '+') && isOperand(t3)) {
-      t1 = createOperation(t1, new L2Addition(unwrapOperand(t3)));
-      i += 2;
-      continue;
-    }
-
-    if (isOperand(t1) && isOperator(t2, '-') && isOperand(t3)) {
-      t1 = createOperation(t1, new L2Subtraction(unwrapOperand(t3)));
-      i += 2;
-      continue;
-    }
-
-    result.push(t1);
-    t1 = t2;
-    i++;
-  }
-  result.push(t1);
-  return result;
-}
-
-function readExpression(ctx: ParseContext): L2Expression | undefined {
-  const t1 = ctx.current;
-  if (!t1) {
-    return;
-  }
-
-  let list: (L1BasePos | L2Expression)[] = [];
-
-  let t: L1BasePos | undefined = t1;
-  while (t) {
-    if (isOperator(t) && (t.value === ';' || t.value === ',')) {
-      break;
-    }
-    list.push(t);
-    t = ctx.next();
-  }
-
-  list = processOperator1(list);
-  list = processOperator2(list);
-  list = processOperator3(list);
-  list = processOperator4(list);
-
-  if (list.length > 1) {
-    throw new Error(`Unexpected ${list[1].toString()}`);
-  }
-
-  return unwrapOperand(list[0]);
-}
-
-function readExpressionStatement(ctx: ParseContext): L2Base | undefined {
-  const val = readExpression(ctx);
-  if (!val) {
-    return;
-  }
-
-  const t = ctx.current;
-  if (!isOperator(t, ';')) {
-    throw new Error(`Expected ";" but found ${Base.toString(t)}`);
-  }
-
-  ctx.next();
-
-  return val;
-}
-
-function readToplevel(ctx: ParseContext): L2Base | undefined {
-  return readUse(ctx) || readDef(ctx);
-}
-
-function readStatement(ctx: ParseContext): L2Base | undefined {
-  return readExpressionStatement(ctx);
-}
-
-export function parseToplevel(tokenList: L1BasePos[]) {
-  let pos = 0;
-
-  const ctx: ParseContext = {
-    current: tokenList[0],
-    next: () => {
-      if (!ctx.current) {
-        return;
-      }
-      return (ctx.current = tokenList[++pos]);
-    },
+function makePos(t: WithPos | undefined, tBefore: WithPos) {
+  return {
+    lin1: t?.pos.lin1 ?? tBefore.pos.lin2,
+    col1: t?.pos.col1 ?? tBefore.pos.col2,
+    lin2: t?.pos.lin2 ?? tBefore.pos.lin2,
+    col2: t?.pos.col2 ?? tBefore.pos.col2,
   };
-
-  const outList: L2Base[] = [];
-  while (ctx.current) {
-    const val = readToplevel(ctx);
-
-    if (!val) {
-      const t = ctx.current!;
-      throw new ParseError(`Unexpected token "${Base.toString(t)}"`, t.pos.lin1, t.pos.col1, t.pos.lin2, t.pos.col2);
-    }
-
-    outList.push(val);
-  }
-  return outList;
 }
 
-export function parseStatements(tokenList: L1BasePos[]) {
-  let pos = 0;
+const INVALID = 1;
+type Invalid = typeof INVALID;
+type ReadResult<T> = T | Invalid | undefined;
 
-  const ctx: ParseContext = {
-    current: tokenList[0],
-    next: () => {
-      if (!ctx.current) {
-        return;
-      }
-      return (ctx.current = tokenList[++pos]);
-    },
-  };
+class L2Parser {
+  pos: number = 0;
+  list: L1BasePos[] = [];
+  current: L1BasePos | undefined;
+  errors: ParseError1[] = [];
 
-  const outList: L2Base[] = [];
-  while (ctx.current) {
-    const val = readStatement(ctx);
-    if (!val) {
-      const t = ctx.current!;
-      throw new ParseError(`Unexpected token "${Base.toString(t)}"`, t.pos.lin1, t.pos.col1, t.pos.lin2, t.pos.col2);
+  next() {
+    if (!this.current) {
+      return;
     }
-    outList.push(val);
+    return (this.current = this.list[++this.pos]);
   }
-  return outList;
+
+  readUse(): ReadResult<L2Use> {
+    const t1 = this.current;
+    if (!isWord(t1, 'use')) {
+      return;
+    }
+
+    const t2 = this.next();
+    if (!isString(t2)) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected string`,
+        pos: makePos(t2, t1),
+      });
+      return INVALID;
+    }
+
+    const t3 = this.next();
+    if (!isOperator(t3, ';')) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected ";"`,
+        pos: makePos(t3, t2),
+      });
+      return INVALID;
+    }
+
+    this.next();
+
+    return new L2Use(t2.value);
+  }
+
+  readDef(): ReadResult<L2Method | L2Variable> {
+    const t1 = this.current;
+    if (!isWord(t1, 'def')) {
+      return;
+    }
+
+    const t2 = this.next();
+
+    if (!isWord(t2)) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected string`,
+        pos: makePos(t2, t1),
+      });
+      return INVALID;
+    }
+
+    const t3 = this.next();
+    if (isBracket(t3, '(')) {
+      return this.readDefMethod(t1, t2, t3);
+    }
+    if (isOperator(t3, ':')) {
+      return this.readDefVariable(t1, t2, t3);
+    }
+
+    this.errors.push({
+      level: ERROR,
+      message: `Expected "(" or ":"`,
+      pos: makePos(t3, t2),
+    });
+    return INVALID;
+  }
+
+  readDefMethod(t1: L1Word, t2: L1Word, t3: L1Bracket): ReadResult<L2Method> {
+    let returnType: L2Type | undefined;
+
+    let t4 = this.next();
+    let t5 = t4;
+    let t6 = t4;
+
+    if (isOperator(t4, ':')) {
+      t5 = this.next();
+      const _returnType = t5 && this.readType();
+      if (_returnType === INVALID) {
+        return INVALID;
+      }
+      if (!_returnType) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected return type`,
+          pos: makePos(t5, t4),
+        });
+        return INVALID;
+      }
+      returnType = _returnType;
+      t6 = this.current;
+    }
+
+    if (!isBracket(t6, '{')) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected "{"`,
+        pos: makePos(t6, t5!),
+      });
+      return INVALID;
+    }
+
+    this.next();
+
+    const r = new L2Parser().parseStatements(t6.tokenList);
+    if (r.errors.length > 0) {
+      this.errors.push(...r.errors);
+      return INVALID;
+    }
+
+    return new L2Method(t2.value, returnType, r.list);
+  }
+
+  readType(): ReadResult<L2Type> {
+    const t1 = this.current;
+    if (!isWord(t1)) {
+      return;
+    }
+
+    this.next();
+
+    return new L2Type(t1.value);
+  }
+
+  readDefVariable(t1: L1Word, t2: L1Word, t3: L1Operator): ReadResult<L2Variable> {
+    const t4 = this.next();
+    const type = t4 && this.readType();
+    if (type === INVALID) {
+      return INVALID;
+    }
+    if (!type) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected type`,
+        pos: makePos(t4, t3),
+      });
+      return INVALID;
+    }
+
+    const t5 = this.current;
+    if (!isOperator(t5, ';')) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected ";"`,
+        pos: makePos(t5, t4),
+      });
+      return INVALID;
+    }
+
+    this.next();
+
+    return new L2Variable(t2.value, type);
+  }
+
+  readToplevel(): ReadResult<L2Base> {
+    return this.readUse() || this.readDef();
+  }
+
+  unwrapOperand(operand: L1BasePos | L2Expression): L2Expression | Invalid {
+    if (operand instanceof L2Expression) {
+      return operand;
+    }
+    if (operand instanceof L1Word) {
+      return new L2Identifier(operand.value, operand.pos);
+    }
+    if (operand instanceof L1Number) {
+      return new L2Number(operand.value, operand.pos);
+    }
+    if (operand instanceof L1String) {
+      return new L2String(operand.value, operand.pos);
+    }
+    if (operand instanceof L1Bracket && operand.start === '(') {
+      const r = new L2Parser().parseExpressionList(operand.tokenList);
+      if (r.errors.length > 0) {
+        this.errors.push(...r.errors);
+        return INVALID;
+      }
+      if (r.list.length === 0) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected expression`,
+          pos: operand.pos,
+        });
+        return INVALID;
+      }
+      if (r.list.length > 1) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected ")"`,
+          pos: r.list[1].pos,
+        });
+        return INVALID;
+      }
+      return r.list[0];
+    }
+    this.errors.push({
+      level: ERROR,
+      message: `Expected expression`,
+      pos: operand.pos,
+    });
+    return INVALID;
+  }
+
+  createOperation(t1: L1BasePos | L2Expression, step: L2OperationStep): L2Operation | Invalid {
+    if (t1 instanceof L2Operation) {
+      t1.steps.push(step);
+      return t1;
+    }
+    const operand = this.unwrapOperand(t1);
+    if (operand === INVALID) {
+      return INVALID;
+    }
+    return new L2Operation(operand, [step], operand.pos);
+  }
+
+  processOperator1(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
+    const result: (L1BasePos | L2Expression)[] = [];
+
+    let t1: L1BasePos | L2Expression = list[0];
+    let i = 1;
+    while (i < list.length) {
+      const t2 = list[i];
+      const t3 = list[i + 1];
+
+      if (isOperand(t1) && isBracket(t2, '(')) {
+        const r = new L2Parser().parseExpressionList(t2.tokenList);
+        if (r.errors.length > 0) {
+          this.errors.push(...r.errors);
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2MethodCall(r.list));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i++;
+        continue;
+      }
+
+      if (isOperand(t1) && isBracket(t2, '[')) {
+        const r = new L2Parser().parseExpressionList(t2.tokenList);
+        if (r.errors.length > 0) {
+          this.errors.push(...r.errors);
+          return INVALID;
+        }
+        if (r.list.length === 0) {
+          this.errors.push({
+            level: ERROR,
+            message: `Expected expression`,
+            pos: t2.pos,
+          });
+          return INVALID;
+        }
+        if (r.list.length > 1) {
+          this.errors.push({
+            level: ERROR,
+            message: `Expected ")"`,
+            pos: r.list[1].pos,
+          });
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2ArraySubscripting(r.list[0]));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i++;
+        continue;
+      }
+
+      if (isOperand(t1) && isOperator(t2, '.') && isOperand(t3)) {
+        if (!(t3 instanceof L1Word)) {
+          this.errors.push({
+            level: ERROR,
+            message: `Expected identifier`,
+            pos: t3.pos,
+          });
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2MemberAccess(t3.value));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i += 2;
+        continue;
+      }
+
+      result.push(t1);
+      t1 = t2;
+      i++;
+    }
+    result.push(t1);
+    return result;
+  }
+
+  processOperator2(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
+    list = [...list].reverse();
+
+    const result: (L1BasePos | L2Expression)[] = [];
+
+    let t1: L1BasePos | L2Expression = list[0];
+    let i = 1;
+    while (i < list.length) {
+      const t2 = list[i];
+      const t3 = list[i + 1];
+
+      if (isOperand(t1) && isOperator(t2, '-') && !isOperand(t3)) {
+        const operation = this.createOperation(t1, new L2UnaryMinus());
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i++;
+        continue;
+      }
+
+      if (isOperand(t1) && isOperator(t2, '+') && !isOperand(t3)) {
+        const operation = this.createOperation(t1, new L2UnaryPlus());
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i++;
+        continue;
+      }
+
+      result.push(t1);
+      t1 = t2;
+      i++;
+    }
+    result.push(t1);
+    result.reverse();
+    return result;
+  }
+
+  processOperator3(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
+    const result: (L1BasePos | L2Expression)[] = [];
+
+    let t1: L1BasePos | L2Expression = list[0];
+    let i = 1;
+    while (i < list.length) {
+      const t2 = list[i];
+      const t3 = list[i + 1];
+
+      if (isOperand(t1) && isOperator(t2, '*') && isOperand(t3)) {
+        const operand = this.unwrapOperand(t3);
+        if (operand === INVALID) {
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2Multiplication(operand));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i += 2;
+        continue;
+      }
+
+      if (isOperand(t1) && isOperator(t2, '/') && isOperand(t3)) {
+        const operand = this.unwrapOperand(t3);
+        if (operand === INVALID) {
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2Division(operand));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i += 2;
+        continue;
+      }
+
+      if (isOperand(t1) && isOperator(t2, '%') && isOperand(t3)) {
+        const operand = this.unwrapOperand(t3);
+        if (operand === INVALID) {
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2Remainder(operand));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i += 2;
+        continue;
+      }
+
+      result.push(t1);
+      t1 = t2;
+      i++;
+    }
+    result.push(t1);
+    return result;
+  }
+
+  processOperator4(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
+    const result: (L1BasePos | L2Expression)[] = [];
+
+    let t1: L1BasePos | L2Expression = list[0];
+    let i = 1;
+    while (i < list.length) {
+      const t2 = list[i];
+      const t3 = list[i + 1];
+
+      if (isOperand(t1) && isOperator(t2, '+') && isOperand(t3)) {
+        const operand = this.unwrapOperand(t3);
+        if (operand === INVALID) {
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2Addition(operand));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i += 2;
+        continue;
+      }
+
+      if (isOperand(t1) && isOperator(t2, '-') && isOperand(t3)) {
+        const operand = this.unwrapOperand(t3);
+        if (operand === INVALID) {
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2Subtraction(operand));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i += 2;
+        continue;
+      }
+
+      result.push(t1);
+      t1 = t2;
+      i++;
+    }
+    result.push(t1);
+    return result;
+  }
+
+  readExpression(): ReadResult<L2Expression> {
+    const t1 = this.current;
+    if (isExpressionEnd(t1)) {
+      return;
+    }
+
+    let list: (L1BasePos | L2Expression)[] = [];
+
+    let t: L1BasePos | undefined = t1;
+    do {
+      list.push(t!);
+      t = this.next();
+    } while (!isExpressionEnd(t));
+
+    const p1 = this.processOperator1(list);
+    if (p1 === INVALID) {
+      return INVALID;
+    }
+    const p2 = this.processOperator2(p1);
+    if (p2 === INVALID) {
+      return INVALID;
+    }
+    const p3 = this.processOperator3(p2);
+    if (p3 === INVALID) {
+      return INVALID;
+    }
+    const p4 = this.processOperator4(p3);
+    if (p4 === INVALID) {
+      return INVALID;
+    }
+
+    if (p4.length > 1) {
+      this.errors.push({
+        level: ERROR,
+        message: `Unexpected token2`,
+        pos: p4[1].pos,
+      });
+      return INVALID;
+    }
+
+    return this.unwrapOperand(p4[0]);
+  }
+
+  readExpressionStatement(): ReadResult<L2Base> {
+    const val = this.readExpression();
+    if (val === INVALID) {
+      return INVALID;
+    }
+    if (!val) {
+      return;
+    }
+
+    const t = this.current;
+    if (!isOperator(t, ';')) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected ";"`,
+        pos: makePos(t, val),
+      });
+      return INVALID;
+    }
+
+    this.next();
+
+    return val;
+  }
+
+  readStatement(): ReadResult<L2Base> {
+    return this.readExpressionStatement();
+  }
+
+  parseStatements(list: L1BasePos[]): L2ParseResult {
+    this.pos = 0;
+    this.list = list;
+    this.current = list[0];
+
+    const outList: L2Base[] = [];
+    let error = false;
+    while (this.current) {
+      const val = this.readStatement();
+      if (val === INVALID) {
+        error = true;
+        continue;
+      }
+      if (!val) {
+        if (!error) {
+          error = true;
+          const t = this.current!;
+          this.errors.push({
+            level: ERROR,
+            message: `Unexpected token3`,
+            pos: t.pos,
+          });
+        }
+        this.next();
+        continue;
+      }
+      error = false;
+      outList.push(val);
+    }
+
+    return { list: outList, errors: this.errors };
+  }
+
+  parseExpressionList(list: L1BasePos[]): L2ParseExpressionListResult {
+    this.pos = 0;
+    this.list = list;
+    this.current = list[0];
+
+    const outList: L2Expression[] = [];
+    let error = false;
+    while (this.current) {
+      const val = this.readExpression();
+      if (val === INVALID) {
+        error = true;
+        continue;
+      }
+      if (!val) {
+        if (!error) {
+          error = true;
+          const t = this.current!;
+          this.errors.push({
+            level: ERROR,
+            message: `Unexpected token4`,
+            pos: {
+              lin1: t.pos.lin1,
+              col1: t.pos.col1,
+              lin2: t.pos.lin2,
+              col2: t.pos.col2,
+            },
+          });
+        }
+        this.next();
+        continue;
+      }
+      outList.push(val);
+      error = false;
+      if (!this.current) {
+        break;
+      }
+      const t = this.current;
+      if (!isOperator(t, ',')) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected ","`,
+          pos: {
+            lin1: t.pos.lin1,
+            col1: t.pos.col1,
+            lin2: t.pos.lin2,
+            col2: t.pos.col2,
+          },
+        });
+        this.next();
+        continue;
+      }
+      this.next();
+      if (!this.current) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected expression after ","`,
+          pos: {
+            lin1: t.pos.lin2,
+            col1: t.pos.col2,
+            lin2: t.pos.lin2,
+            col2: t.pos.col2,
+          },
+        });
+      }
+    }
+    return { list: outList, errors: this.errors };
+  }
+
+  parse(list: L1BasePos[]): L2ParseResult {
+    this.pos = 0;
+    this.list = list;
+    this.current = list[0];
+
+    const outList: L2Base[] = [];
+    let error = false;
+    while (this.current) {
+      const val = this.readToplevel();
+      if (val === INVALID) {
+        error = true;
+        continue;
+      }
+      if (!val) {
+        if (!error) {
+          error = true;
+          const t = this.current;
+          this.errors.push({
+            level: ERROR,
+            message: `Unexpected token1`,
+            pos: {
+              lin1: t.pos.lin1,
+              col1: t.pos.col1,
+              lin2: t.pos.lin2,
+              col2: t.pos.col2,
+            },
+          });
+        }
+        this.next();
+        continue;
+      }
+      error = false;
+      outList.push(val);
+    }
+    return { list: outList, errors: this.errors };
+  }
 }
 
-export function parseExpressionList(tokenList: L1BasePos[]) {
-  let pos = 0;
-
-  const ctx: ParseContext = {
-    current: tokenList[0],
-    next: () => {
-      if (!ctx.current) {
-        return;
-      }
-      return (ctx.current = tokenList[++pos]);
-    },
-  };
-
-  const outList: L2Expression[] = [];
-  while (ctx.current) {
-    const val = readExpression(ctx);
-    if (!val) {
-      throw new ParseError(`Unexpected ${Base.toString(ctx.current)}`, ctx.current.pos.lin1, ctx.current.pos.lin2);
-    }
-    outList.push(val);
-    if (!ctx.current) {
-      break;
-    }
-    const t = ctx.current;
-    if (!isOperator(t, ',')) {
-      throw new Error(`Expected "," but found ${Base.toString(t)}`);
-    }
-    ctx.next();
-    if (!ctx.current) {
-      throw new ParseError(`Expected expression after ","`, t.pos.lin1, t.pos.lin2);
-    }
-  }
-  return outList;
+export function layer2Parse(list: L1BasePos[]) {
+  return new L2Parser().parse(list);
 }
