@@ -18,7 +18,7 @@
  * @file Layer-1 parser implementation.
  */
 
-import { ERROR, ParseError, ParseError1 } from './base';
+import { ERROR, ParseError } from './base';
 import { L1Bracket, L1Number, L1Operator, L1String, L1Base, L1Word, L1BasePos, L1ParseResult } from './l1-types';
 
 function isWordStart(c: string) {
@@ -85,7 +85,7 @@ class L1Parser {
   lin: number = 0;
   col: number = 0;
   current: string = '';
-  errors: ParseError1[] = [];
+  errors: ParseError[] = [];
 
   next() {
     if (!this.current) {
@@ -184,7 +184,7 @@ class L1Parser {
         this.errors.push({
           level: ERROR,
           pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col },
-          message: `Unexpected end of content`,
+          message: `Expected "${expectedBracketEnd}"`,
         });
         break;
       }
@@ -237,7 +237,7 @@ class L1Parser {
         this.errors.push({
           level: ERROR,
           pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col },
-          message: `Unexpected end of content`,
+          message: `Unterminated string`,
         });
         break;
       }

@@ -25,17 +25,8 @@ export abstract class Base {
     return token?.toString() ?? 'nothing';
   }
 
-  abstract debugPrint(): string;
-
-  static debugPrintList(list: Base[]) {
-    let s = '';
-    for (const item of list) {
-      if (s) {
-        s += '\n';
-      }
-      s += item.debugPrint();
-    }
-    return s;
+  debugPrint(out: string[], prefix: string) {
+    out.push(`[${this.constructor.name}]:\n`);
   }
 }
 
@@ -53,23 +44,8 @@ export interface WithPos {
 export const WARNING = 1;
 export const ERROR = 2;
 
-export type ParseError1 = {
+export type ParseError = {
   level: typeof WARNING | typeof ERROR;
   pos?: Pos;
   message: string;
 };
-
-export class ParseError extends Error {
-  lin1: number;
-  col1: number;
-  lin2: number;
-  col2: number;
-
-  constructor(message: string, lin1: number, col1: number, lin2?: number, col2?: number) {
-    super(`[${lin1}:${col1} - ${lin2}:${col2}] ${message}`);
-    this.lin1 = lin1;
-    this.col1 = col1;
-    this.lin2 = lin2 ?? lin1;
-    this.col2 = col2 ?? col1;
-  }
-}

@@ -22,7 +22,7 @@ import { layer1Parse } from '@/parser/l1-parser';
 import { layer2Parse } from './parser/l2-parser';
 import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
-import { Base, ParseError1 } from './parser/base';
+import { Base, ParseError } from './parser/base';
 import { L3CallableType, L3Definition, L3Library, L3LibraryMethod, L3Method } from './parser/l3-types';
 import { link as layer3Parse } from './parser/l3-parser';
 import { Runner } from './parser/runner';
@@ -54,41 +54,41 @@ export default function App() {
   };
 
   useEffect(() => {
-    let s = '';
+    const out: string[] = [];
     try {
-      const errors: ParseError1[] = [];
+      const errors: ParseError[] = [];
       try {
         const p1 = layer1Parse(content);
         errors.push(...p1.errors);
-        //s += Base.debugPrintList(p1.list);
+        //p1.list.forEach((val) => val.debugPrint(out, ''));
         const p2 = layer2Parse(p1.list);
         errors.push(...p2.errors);
-        s += '\n---\n' + Base.debugPrintList(p2.list);
+        out.push('---\n');
+        p2.list.forEach((val) => val.debugPrint(out, ''));
         const p3 = layer3Parse(p2.list, libs);
-        s += '\n---\n' + p3.debugPrint();
+        out.push('---\n');
+        p3.debugPrint(out, '');
         if (errors.length == 0) {
           const r = new Runner(p3);
           r.run();
-          s += '\n---\n' + r.stdout;
+          out.push('---\n');
+          out.push(r.stdout);
         }
       } finally {
         if (errors.length > 0) {
-          s +=
-            '\n---\n' +
-            errors
-              .map(
-                (item) =>
-                  `[${item.level} ${
-                    item.pos && `${item.pos.lin1}:${item.pos.col1} ${item.pos.lin2}:${item.pos.col2}] `
-                  }${item.message}`
-              )
-              .join('\n');
+          out.push('---\n');
+          errors.forEach((item) =>
+            out.push(
+              `[${item.pos && `${item.pos.lin1}:${item.pos.col1}-${item.pos.lin2}:${item.pos.col2}] `}${item.message}`
+            )
+          );
         }
       }
     } catch (err: any) {
-      s += '\n---\n' + err.stack;
+      out.push('---');
+      out.push(err.stack);
     }
-    setResult(s);
+    setResult(out.join(''));
   });
 
   useEffect(() => {
