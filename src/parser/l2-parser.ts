@@ -18,8 +18,8 @@
  * @file Layer-2 parser implementation.
  */
 
-import { Base, ERROR, ParseError, WithPos } from './base';
-import { L1Bracket, L1Operator, L1String, L1Base, L1Word, L1Number, L1BasePos } from './l1-types';
+import { Base, combinePos, ERROR, fallbackPos, ParseError } from './base';
+import { L1Bracket, L1Operator, L1String, L1Base, L1Keyword, L1Number, L1Identifier, L1Separator } from './l1-types';
 import {
   L2Addition,
   L2ArraySubscripting,
@@ -35,7 +35,7 @@ import {
   L2Operation,
   L2OperationStep,
   L2ParseExpressionListResult,
-  L2ParseToplevelResult as L2ParseResult,
+  L2ParseResult,
   L2Remainder,
   L2String,
   L2Subtraction,
@@ -47,8 +47,12 @@ import {
 } from './l2-types';
 import { L3Type } from './l3-types';
 
-function isWord(token: any, value?: string): token is L1Word {
-  return token instanceof L1Word && (value === undefined || token.value === value);
+function isKeyword(token: any, value?: string): token is L1Keyword {
+  return token instanceof L1Keyword && (value === undefined || token.name === value);
+}
+
+function isIdentifier(token: any, value?: string): token is L1Identifier {
+  return token instanceof L1Identifier && (value === undefined || token.name === value);
 }
 
 function isString(token: any, value?: string): token is L1String {
@@ -59,6 +63,10 @@ function isOperator(token: any, value?: string): token is L1Operator {
   return token instanceof L1Operator && (value === undefined || token.value === value);
 }
 
+function isSeparator(token: any, value?: string): token is L1Separator {
+  return token instanceof L1Separator && (value === undefined || token.value === value);
+}
+
 function isBracket(token: any, value?: string): token is L1Bracket {
   return token instanceof L1Bracket && (value === undefined || token.start === value);
 }
@@ -66,49 +74,15 @@ function isBracket(token: any, value?: string): token is L1Bracket {
 function isOperand(token: L1Base | L2Expression | undefined) {
   return (
     token instanceof L2Expression ||
-    token instanceof L1Word ||
+    token instanceof L1Identifier ||
     token instanceof L1Number ||
     token instanceof L1String ||
     (token instanceof L1Bracket && token.start === '(')
   );
 }
 
-function isExpressionEnd(t: L1BasePos | undefined) {
-  return !t || (isOperator(t) && (t.value === ';' || t.value === ','));
-}
-
-function growPos(a: WithPos, b: WithPos) {
-  let lin1, col1, lin2, col2;
-  if (a.pos.lin1 < b.pos.lin1) {
-    lin1 = a.pos.lin1;
-    col1 = a.pos.col1;
-  } else if (b.pos.lin1 < a.pos.lin1) {
-    lin1 = b.pos.lin1;
-    col1 = b.pos.col1;
-  } else {
-    lin1 = a.pos.lin1;
-    col1 = Math.min(a.pos.col1, b.pos.col1);
-  }
-  if (a.pos.lin2 > b.pos.lin2) {
-    lin2 = a.pos.lin2;
-    col2 = a.pos.col2;
-  } else if (b.pos.lin2 > a.pos.lin2) {
-    lin2 = b.pos.lin2;
-    col2 = b.pos.col2;
-  } else {
-    lin2 = a.pos.lin2;
-    col2 = Math.max(a.pos.col2, b.pos.col2);
-  }
-  return { lin1, col1, lin2, col2 };
-}
-
-function tokenOrBefore(t: WithPos | undefined, tBefore: WithPos) {
-  return {
-    lin1: t?.pos.lin1 ?? tBefore.pos.lin2,
-    col1: t?.pos.col1 ?? tBefore.pos.col2,
-    lin2: t?.pos.lin2 ?? tBefore.pos.lin2,
-    col2: t?.pos.col2 ?? tBefore.pos.col2,
-  };
+function isExpressionEnd(t: L1Base | undefined) {
+  return !t || !(isOperand(t) || isOperator(t));
 }
 
 const INVALID = 1;
@@ -117,8 +91,8 @@ type ReadResult<T> = T | Invalid | undefined;
 
 class L2Parser {
   pos: number = 0;
-  list: L1BasePos[] = [];
-  current: L1BasePos | undefined;
+  list: L1Base[] = [];
+  current: L1Base | undefined;
   errors: ParseError[] = [];
 
   next() {
@@ -130,7 +104,7 @@ class L2Parser {
 
   readUse(): ReadResult<L2Use> {
     const t1 = this.current;
-    if (!isWord(t1, 'use')) {
+    if (!isKeyword(t1, 'use')) {
       return;
     }
 
@@ -139,38 +113,38 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected string`,
-        pos: tokenOrBefore(t2, t1),
+        pos: fallbackPos(t2?.pos, t1.pos),
       });
       return INVALID;
     }
 
     const t3 = this.next();
-    if (!isOperator(t3, ';')) {
+    if (!isSeparator(t3, ';')) {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
-        pos: tokenOrBefore(t3, t2),
+        pos: fallbackPos(t3?.pos, t2.pos),
       });
       return INVALID;
     }
 
     this.next();
 
-    return new L2Use(t2.value);
+    return new L2Use(t2.value, combinePos(t1.pos, t3.pos));
   }
 
   readDef(): ReadResult<L2Method | L2Variable> {
     const t1 = this.current;
-    if (!isWord(t1, 'def')) {
+    if (!isKeyword(t1, 'def')) {
       return;
     }
 
     const t2 = this.next();
-    if (!isWord(t2)) {
+    if (!isIdentifier(t2)) {
       this.errors.push({
         level: ERROR,
         message: `Expected string`,
-        pos: tokenOrBefore(t2, t1),
+        pos: fallbackPos(t2?.pos, t1.pos),
       });
       return INVALID;
     }
@@ -186,12 +160,12 @@ class L2Parser {
     this.errors.push({
       level: ERROR,
       message: `Expected "(" or ":"`,
-      pos: tokenOrBefore(t3, t2),
+      pos: fallbackPos(t3?.pos, t2.pos),
     });
     return INVALID;
   }
 
-  readDefMethod(t1: L1Word, t2: L1Word, t3: L1Bracket): ReadResult<L2Method> {
+  readDefMethod(t1: L1Keyword, t2: L1Keyword, t3: L1Bracket): ReadResult<L2Method> {
     let returnType: L2Type | undefined;
 
     let t4 = this.next();
@@ -208,7 +182,7 @@ class L2Parser {
         this.errors.push({
           level: ERROR,
           message: `Expected return type`,
-          pos: tokenOrBefore(t5, t4),
+          pos: fallbackPos(t5?.pos, t4.pos),
         });
         return INVALID;
       }
@@ -220,7 +194,7 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected "{"`,
-        pos: tokenOrBefore(t6, t5!),
+        pos: fallbackPos(t6?.pos, t5!.pos),
       });
       return INVALID;
     }
@@ -233,21 +207,21 @@ class L2Parser {
       return INVALID;
     }
 
-    return new L2Method(t2.value, returnType, r.list);
+    return new L2Method(t2.name, returnType, r.list, combinePos(t1.pos, t6.pos));
   }
 
   readType(): ReadResult<L2Type> {
     const t1 = this.current;
-    if (!isWord(t1)) {
+    if (!(isKeyword(t1) || isIdentifier(t1))) {
       return;
     }
 
     this.next();
 
-    return new L2Type(t1.value);
+    return new L2Type(t1.name, t1.pos);
   }
 
-  readDefVariable(t1: L1Word, t2: L1Word, t3: L1Operator): ReadResult<L2Variable> {
+  readDefVariable(t1: L1Keyword, t2: L1Keyword, t3: L1Operator): ReadResult<L2Variable> {
     const t4 = this.next();
     const type = t4 && this.readType();
     if (type === INVALID) {
@@ -257,36 +231,36 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected type`,
-        pos: tokenOrBefore(t4, t3),
+        pos: fallbackPos(t4?.pos, t3.pos),
       });
       return INVALID;
     }
 
     const t5 = this.current;
-    if (!isOperator(t5, ';')) {
+    if (!isSeparator(t5, ';')) {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
-        pos: tokenOrBefore(t5, t4),
+        pos: fallbackPos(t5?.pos, t4.pos),
       });
       return INVALID;
     }
 
     this.next();
 
-    return new L2Variable(t2.value, type);
+    return new L2Variable(t2.name, type, combinePos(t1.pos, t5.pos));
   }
 
   readToplevel(): ReadResult<L2Base> {
     return this.readUse() || this.readDef();
   }
 
-  unwrapOperand(operand: L1BasePos | L2Expression): L2Expression | Invalid {
+  unwrapOperand(operand: L1Base | L2Expression): L2Expression | Invalid {
     if (operand instanceof L2Expression) {
       return operand;
     }
-    if (operand instanceof L1Word) {
-      return new L2Identifier(operand.value, operand.pos);
+    if (operand instanceof L1Identifier) {
+      return new L2Identifier(operand.name, operand.pos);
     }
     if (operand instanceof L1Number) {
       return new L2Number(operand.value, operand.pos);
@@ -303,7 +277,7 @@ class L2Parser {
       if (r.list.length === 0) {
         this.errors.push({
           level: ERROR,
-          message: `Expected expression`,
+          message: `Expected expression1`,
           pos: operand.pos,
         });
         return INVALID;
@@ -318,15 +292,16 @@ class L2Parser {
       }
       return r.list[0];
     }
+    console.trace();
     this.errors.push({
       level: ERROR,
-      message: `Expected expression`,
+      message: `Expected expression but found ${operand}`,
       pos: operand.pos,
     });
     return INVALID;
   }
 
-  createOperation(t1: L1BasePos | L2Expression, step: L2OperationStep): L2Operation | Invalid {
+  createOperation(t1: L1Base | L2Expression, step: L2OperationStep): L2Operation | Invalid {
     if (t1 instanceof L2Operation) {
       t1.steps.push(step);
       t1.pos = step.pos;
@@ -339,10 +314,10 @@ class L2Parser {
     return new L2Operation(operand, [step], step.pos);
   }
 
-  processOperator1(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
-    const result: (L1BasePos | L2Expression)[] = [];
+  processOperator1(list: (L1Base | L2Expression)[]): (L1Base | L2Expression)[] | Invalid {
+    const result: (L1Base | L2Expression)[] = [];
 
-    let t1: L1BasePos | L2Expression = list[0];
+    let t1: L1Base | L2Expression = list[0];
     let i = 1;
     while (i < list.length) {
       const t2 = list[i];
@@ -354,7 +329,7 @@ class L2Parser {
           this.errors.push(...r.errors);
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2MethodCall(r.list, growPos(t1, t2)));
+        const operation = this.createOperation(t1, new L2MethodCall(r.list, combinePos(t1.pos, t2.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -372,7 +347,7 @@ class L2Parser {
         if (r.list.length === 0) {
           this.errors.push({
             level: ERROR,
-            message: `Expected expression`,
+            message: `Expected expression3`,
             pos: t2.pos,
           });
           return INVALID;
@@ -385,7 +360,7 @@ class L2Parser {
           });
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2ArraySubscripting(r.list[0], growPos(t1, t2)));
+        const operation = this.createOperation(t1, new L2ArraySubscripting(r.list[0], combinePos(t1.pos, t2.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -395,7 +370,7 @@ class L2Parser {
       }
 
       if (isOperand(t1) && isOperator(t2, '.') && isOperand(t3)) {
-        if (!(t3 instanceof L1Word)) {
+        if (!(t3 instanceof L1Keyword)) {
           this.errors.push({
             level: ERROR,
             message: `Expected identifier`,
@@ -403,7 +378,7 @@ class L2Parser {
           });
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2MemberAccess(t3.value, growPos(t1, t3)));
+        const operation = this.createOperation(t1, new L2MemberAccess(t3.name, combinePos(t1.pos, t3.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -420,19 +395,19 @@ class L2Parser {
     return result;
   }
 
-  processOperator2(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
+  processOperator2(list: (L1Base | L2Expression)[]): (L1Base | L2Expression)[] | Invalid {
     list = [...list].reverse();
 
-    const result: (L1BasePos | L2Expression)[] = [];
+    const result: (L1Base | L2Expression)[] = [];
 
-    let t1: L1BasePos | L2Expression = list[0];
+    let t1: L1Base | L2Expression = list[0];
     let i = 1;
     while (i < list.length) {
       const t2 = list[i];
       const t3 = list[i + 1];
 
       if (isOperand(t1) && isOperator(t2, '-') && !isOperand(t3)) {
-        const operation = this.createOperation(t1, new L2UnaryMinus(growPos(t1, t2)));
+        const operation = this.createOperation(t1, new L2UnaryMinus(combinePos(t1.pos, t2.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -442,7 +417,7 @@ class L2Parser {
       }
 
       if (isOperand(t1) && isOperator(t2, '+') && !isOperand(t3)) {
-        const operation = this.createOperation(t1, new L2UnaryPlus(growPos(t1, t2)));
+        const operation = this.createOperation(t1, new L2UnaryPlus(combinePos(t1.pos, t2.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -460,10 +435,10 @@ class L2Parser {
     return result;
   }
 
-  processOperator3(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
-    const result: (L1BasePos | L2Expression)[] = [];
+  processOperator3(list: (L1Base | L2Expression)[]): (L1Base | L2Expression)[] | Invalid {
+    const result: (L1Base | L2Expression)[] = [];
 
-    let t1: L1BasePos | L2Expression = list[0];
+    let t1: L1Base | L2Expression = list[0];
     let i = 1;
     while (i < list.length) {
       const t2 = list[i];
@@ -474,7 +449,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Multiplication(operand, growPos(t1, t3)));
+        const operation = this.createOperation(t1, new L2Multiplication(operand, combinePos(t1.pos, t3.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -488,7 +463,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Division(operand, growPos(t1, t3)));
+        const operation = this.createOperation(t1, new L2Division(operand, combinePos(t1.pos, t3.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -502,7 +477,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Remainder(operand, growPos(t1, t3)));
+        const operation = this.createOperation(t1, new L2Remainder(operand, combinePos(t1.pos, t3.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -519,10 +494,10 @@ class L2Parser {
     return result;
   }
 
-  processOperator4(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
-    const result: (L1BasePos | L2Expression)[] = [];
+  processOperator4(list: (L1Base | L2Expression)[]): (L1Base | L2Expression)[] | Invalid {
+    const result: (L1Base | L2Expression)[] = [];
 
-    let t1: L1BasePos | L2Expression = list[0];
+    let t1: L1Base | L2Expression = list[0];
     let i = 1;
     while (i < list.length) {
       const t2 = list[i];
@@ -533,7 +508,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Addition(operand, growPos(t1, t3)));
+        const operation = this.createOperation(t1, new L2Addition(operand, combinePos(t1.pos, t3.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -547,7 +522,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Subtraction(operand, growPos(t1, t3)));
+        const operation = this.createOperation(t1, new L2Subtraction(operand, combinePos(t1.pos, t3.pos)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -570,9 +545,9 @@ class L2Parser {
       return;
     }
 
-    let list: (L1BasePos | L2Expression)[] = [];
+    let list: (L1Base | L2Expression)[] = [];
 
-    let t: L1BasePos | undefined = t1;
+    let t: L1Base | undefined = t1;
     do {
       list.push(t!);
       t = this.next();
@@ -617,11 +592,11 @@ class L2Parser {
     }
 
     const t = this.current;
-    if (!isOperator(t, ';')) {
+    if (!isSeparator(t, ';')) {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
-        pos: tokenOrBefore(t, val),
+        pos: fallbackPos(t?.pos, val.pos),
       });
       return INVALID;
     }
@@ -635,7 +610,7 @@ class L2Parser {
     return this.readExpressionStatement();
   }
 
-  parseStatements(list: L1BasePos[]): L2ParseResult {
+  parseStatements(list: L1Base[]): L2ParseResult {
     this.pos = 0;
     this.list = list;
     this.current = list[0];
@@ -668,7 +643,7 @@ class L2Parser {
     return { list: outList, errors: this.errors };
   }
 
-  parseExpressionList(list: L1BasePos[]): L2ParseExpressionListResult {
+  parseExpressionList(list: L1Base[]): L2ParseExpressionListResult {
     this.pos = 0;
     this.list = list;
     this.current = list[0];
@@ -705,7 +680,7 @@ class L2Parser {
         break;
       }
       const t = this.current;
-      if (!isOperator(t, ',')) {
+      if (!isSeparator(t, ',')) {
         this.errors.push({
           level: ERROR,
           message: `Expected ","`,
@@ -736,7 +711,7 @@ class L2Parser {
     return { list: outList, errors: this.errors };
   }
 
-  parse(list: L1BasePos[]): L2ParseResult {
+  parse(list: L1Base[]): L2ParseResult {
     this.pos = 0;
     this.list = list;
     this.current = list[0];
@@ -774,6 +749,6 @@ class L2Parser {
   }
 }
 
-export function layer2Parse(list: L1BasePos[]) {
+export function layer2Parse(list: L1Base[]) {
   return new L2Parser().parse(list);
 }

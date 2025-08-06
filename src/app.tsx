@@ -24,8 +24,10 @@ import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
 import { Base, ParseError } from './parser/base';
 import { L3CallableType, L3Definition, L3Library, L3LibraryMethod, L3Method } from './parser/l3-types';
-import { link as layer3Parse } from './parser/l3-parser';
 import { Runner } from './parser/runner';
+import AceEditor from 'react-ace';
+import 'ace-builds/src-noconflict/mode-yaml';
+import { layer3Parse } from './parser/l3-parser';
 
 const initialCode = `use "io";
 
@@ -49,8 +51,8 @@ export default function App() {
   const [result, setResult] = useState('');
   const resultRef = useRef<HTMLDivElement>(null);
 
-  const onContentChange: ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-    setContent(e.target.value);
+  const onContentChange = (value: string) => {
+    setContent(value);
   };
 
   useEffect(() => {
@@ -60,32 +62,48 @@ export default function App() {
       try {
         const p1 = layer1Parse(content);
         errors.push(...p1.errors);
-        //p1.list.forEach((val) => val.debugPrint(out, ''));
+        out.push('# ---\n');
+        out.push('Layer1Result:\n');
+        p1.list.forEach((val) => {
+          out.push('  - ');
+          val.debugPrint(out, '    ');
+        });
+
         const p2 = layer2Parse(p1.list);
         errors.push(...p2.errors);
-        out.push('---\n');
-        p2.list.forEach((val) => val.debugPrint(out, ''));
+        out.push('# ---\n');
+        out.push('Layer2Result:\n');
+        p2.list.forEach((val) => {
+          out.push('  - ');
+          val.debugPrint(out, '    ');
+        });
+
         const p3 = layer3Parse(p2.list, libs);
-        out.push('---\n');
-        p3.debugPrint(out, '');
-        if (errors.length == 0) {
-          const r = new Runner(p3);
+        errors.push(...p3.errors);
+        out.push('# ---\n');
+        out.push('Layer3Result:\n');
+        p3.runnable.debugPrint(out, '');
+
+        if (errors.length === 0) {
+          const r = new Runner(p3.runnable);
           r.run();
-          out.push('---\n');
+          out.push('# ---\n');
           out.push(r.stdout);
         }
       } finally {
         if (errors.length > 0) {
-          out.push('---\n');
+          out.push('# ---\nErrors:\n');
           errors.forEach((item) =>
             out.push(
-              `[${item.pos && `${item.pos.lin1}:${item.pos.col1}-${item.pos.lin2}:${item.pos.col2}] `}${item.message}`
+              `- [${item.pos && `${item.pos.lin1}:${item.pos.col1}-${item.pos.lin2}:${item.pos.col2}] `}${
+                item.message
+              }\n`
             )
           );
         }
       }
     } catch (err: any) {
-      out.push('---');
+      out.push('# ---\n');
       out.push(err.stack);
     }
     setResult(out.join(''));
@@ -101,10 +119,23 @@ export default function App() {
 
   return (
     <div className={classes.container}>
-      <textarea value={content} onChange={onContentChange}></textarea>
-      <div ref={resultRef} className={classes.result}>
-        {result}
-      </div>
+      <AceEditor
+        className={classes.editor}
+        value={content}
+        onChange={onContentChange}
+        width=''
+        height=''
+        fontSize={16}
+      />
+      <AceEditor
+        className={classes.result}
+        mode='yaml'
+        value={result}
+        readOnly={true}
+        width=''
+        height=''
+        fontSize={16}
+      />
     </div>
   );
 }
