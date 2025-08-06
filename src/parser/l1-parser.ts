@@ -19,7 +19,18 @@
  */
 
 import { ERROR, ParseError } from './base';
-import { L1Bracket, L1Number, L1Operator, L1String, L1Base, L1Word, L1BasePos, L1ParseResult } from './l1-types';
+import {
+  L1Bracket,
+  L1Number,
+  L1Operator,
+  L1String,
+  L1Keyword,
+  L1Base,
+  L1ParseResult,
+  L1Identifier,
+  KEYWORDS,
+  L1Separator,
+} from './l1-types';
 
 function isWordStart(c: string) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
@@ -49,6 +60,10 @@ function isNumberMiddle(c: string) {
   return (c >= '0' && c <= '9') || c == '.';
 }
 
+function isSeparator(c: string) {
+  return c === ';' || c === ',';
+}
+
 type OperatorMap = { [name: string]: true | OperatorMap };
 
 const operatorMap: OperatorMap = {
@@ -57,9 +72,7 @@ const operatorMap: OperatorMap = {
   '-': true,
   '*': true,
   '/': true,
-  ';': true,
   ':': true,
-  ',': true,
   '.': true,
 };
 
@@ -106,7 +119,7 @@ class L1Parser {
     return this.current;
   }
 
-  readWord(): L1Word | undefined {
+  readWord(): L1Keyword | L1Identifier | undefined {
     if (!isWordStart(this.current)) {
       return;
     }
@@ -120,7 +133,9 @@ class L1Parser {
       lin2 = this.lin;
       col2 = this.col + 1;
     }
-    return new L1Word(value, { lin1, col1, lin2, col2 });
+    return KEYWORDS.has(value)
+      ? new L1Keyword(value, { lin1, col1, lin2, col2 })
+      : new L1Identifier(value, { lin1, col1, lin2, col2 });
   }
 
   readNumber(): L1Number | undefined {
@@ -165,6 +180,19 @@ class L1Parser {
     return new L1Operator(value, { lin1, col1, lin2, col2 });
   }
 
+  readSeparator(): L1Operator | undefined {
+    if (!isSeparator(this.current)) {
+      return;
+    }
+    let value = this.current;
+    const lin1 = this.lin;
+    const col1 = this.col;
+    const lin2 = this.lin;
+    const col2 = this.col + 1;
+    this.next();
+    return new L1Separator(value, { lin1, col1, lin2, col2 });
+  }
+
   readBracket(): L1Bracket | undefined {
     if (!isBracketStart(this.current)) {
       return;
@@ -178,7 +206,7 @@ class L1Parser {
 
     this.next();
 
-    const list: L1BasePos[] = [];
+    const list: L1Base[] = [];
     while (true) {
       if (!this.current) {
         this.errors.push({
@@ -205,6 +233,9 @@ class L1Parser {
       }
     }
 
+    const lin2 = this.lin;
+    const col2 = this.col + 1;
+
     if (this.current) {
       if (this.current !== expectedBracketEnd) {
         this.errors.push({
@@ -215,9 +246,6 @@ class L1Parser {
       }
       this.next();
     }
-
-    const lin2 = this.lin;
-    const col2 = this.col + 1;
 
     return new L1Bracket(bracketStart, expectedBracketEnd, list, { lin1, col1, lin2, col2 });
   }
@@ -252,11 +280,12 @@ class L1Parser {
     return new L1String(value, { lin1, col1, lin2, col2 });
   }
 
-  read(): L1BasePos | true | undefined {
+  read(): L1Base | true | undefined {
     return (
       this.readWhitespace() ||
       this.readWord() ||
       this.readOperator() ||
+      this.readSeparator() ||
       this.readBracket() ||
       this.readNumber() ||
       this.readString()
@@ -270,7 +299,7 @@ class L1Parser {
     this.lin = 1;
     this.col = 1;
 
-    const list: L1BasePos[] = [];
+    const list: L1Base[] = [];
     while (this.current) {
       const item = this.read();
       if (!item) {
@@ -281,7 +310,7 @@ class L1Parser {
         });
         this.next();
       }
-      if (item instanceof L1BasePos) {
+      if (item instanceof L1Base) {
         list.push(item);
       }
     }

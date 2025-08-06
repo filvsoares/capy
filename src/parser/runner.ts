@@ -31,15 +31,15 @@ import {
   L3Statement,
   L3String,
   L3StringConcat,
-  Runnable,
+  L3Runnable,
 } from './l3-types';
 
 export class Runner {
-  r: Runnable;
+  r: L3Runnable;
   symbolValues: { [name: string]: any } = {};
   stdout: string = '';
 
-  constructor(r: Runnable) {
+  constructor(r: L3Runnable) {
     this.r = r;
   }
 

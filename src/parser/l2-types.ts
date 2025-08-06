@@ -18,7 +18,7 @@
  * @file Type definitions for layer-2 parser.
  */
 
-import { Base, ParseError, Pos, WithPos } from './base';
+import { Base, ParseError, Pos } from './base';
 import { indent } from './util';
 
 export abstract class L2Base extends Base {
@@ -27,20 +27,7 @@ export abstract class L2Base extends Base {
   }
 }
 
-export abstract class L2BasePos extends L2Base implements WithPos {
-  pos: Pos;
-
-  constructor(pos: Pos) {
-    super();
-    this.pos = pos;
-  }
-
-  debugPrint(out: string[], prefix: string): void {
-    out.push(`[${this.constructor.name} ${this.pos.lin1}:${this.pos.col1}-${this.pos.lin2}:${this.pos.col2}]:\n`);
-  }
-}
-
-export abstract class L2Expression extends L2BasePos {
+export abstract class L2Expression extends L2Base {
   isL2Expression() {
     return true;
   }
@@ -50,7 +37,7 @@ export abstract class L2Expression extends L2BasePos {
   }
 }
 
-export abstract class L2OperationStep extends L2BasePos {
+export abstract class L2OperationStep extends L2Base {
   constructor(pos: Pos) {
     super(pos);
   }
@@ -267,8 +254,8 @@ export class L2Remainder extends L2OperationStep {
 export class L2Use extends L2Base {
   value: string;
 
-  constructor(value: string) {
-    super();
+  constructor(value: string, pos: Pos) {
+    super(pos);
     this.value = value;
   }
 
@@ -287,8 +274,8 @@ export class L2Method extends L2Base {
   returnType: L2Type | undefined;
   statementList: L2Base[];
 
-  constructor(name: string, returnType: L2Type | undefined, statementList: L2Base[]) {
-    super();
+  constructor(name: string, returnType: L2Type | undefined, statementList: L2Base[], pos: Pos) {
+    super(pos);
     this.name = name;
     this.returnType = returnType;
     this.statementList = statementList;
@@ -315,8 +302,8 @@ export class L2Variable extends L2Base {
   name: string;
   type: L2Type;
 
-  constructor(name: string, type: L2Type) {
-    super();
+  constructor(name: string, type: L2Type, pos: Pos) {
+    super(pos);
     this.name = name;
     this.type = type;
   }
@@ -329,8 +316,8 @@ export class L2Variable extends L2Base {
 export class L2Type extends L2Base {
   name: string;
 
-  constructor(name: string) {
-    super();
+  constructor(name: string, pos: Pos) {
+    super(pos);
     this.name = name;
   }
 
@@ -344,7 +331,7 @@ export type L2ParseExpressionListResult = {
   errors: ParseError[];
 };
 
-export type L2ParseToplevelResult = {
+export type L2ParseResult = {
   list: L2Base[];
   errors: ParseError[];
 };
