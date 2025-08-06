@@ -180,7 +180,7 @@ export class L3Parser {
       return new L3Number(src.value, src.pos);
     }
     if (src instanceof L2Identifier) {
-      return this.processReference(src.value);
+      return this.processReference(src.value, src.pos);
     }
     if (src instanceof L2Operation) {
       return this.processOperation(src);

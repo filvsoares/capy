@@ -26,8 +26,12 @@ import { Base, ParseError } from './parser/base';
 import { L3CallableType, L3Definition, L3Library, L3LibraryMethod, L3Method } from './parser/l3-types';
 import { Runner } from './parser/runner';
 import AceEditor from 'react-ace';
+import 'ace-builds/src-noconflict/mode-java';
 import 'ace-builds/src-noconflict/mode-yaml';
+import 'ace-builds/src-noconflict/theme-cloud_editor';
 import { layer3Parse } from './parser/l3-parser';
+import { Tile } from './ui/tile';
+import { compile, CompileResult } from './parser/compiler';
 
 const initialCode = `use "io";
 
@@ -48,94 +52,45 @@ const libs: { [name: string]: L3Library } = {
 
 export default function App() {
   const [content, setContent] = useState(initialCode);
-  const [result, setResult] = useState('');
-  const resultRef = useRef<HTMLDivElement>(null);
+  const [compileResult, setCompileResult] = useState<CompileResult>();
 
   const onContentChange = (value: string) => {
     setContent(value);
   };
 
   useEffect(() => {
-    const out: string[] = [];
-    try {
-      const errors: ParseError[] = [];
-      try {
-        const p1 = layer1Parse(content);
-        errors.push(...p1.errors);
-        out.push('# ---\n');
-        out.push('Layer1Result:\n');
-        p1.list.forEach((val) => {
-          out.push('  - ');
-          val.debugPrint(out, '    ');
-        });
-
-        const p2 = layer2Parse(p1.list);
-        errors.push(...p2.errors);
-        out.push('# ---\n');
-        out.push('Layer2Result:\n');
-        p2.list.forEach((val) => {
-          out.push('  - ');
-          val.debugPrint(out, '    ');
-        });
-
-        const p3 = layer3Parse(p2.list, libs);
-        errors.push(...p3.errors);
-        out.push('# ---\n');
-        out.push('Layer3Result:\n');
-        p3.runnable.debugPrint(out, '');
-
-        if (errors.length === 0) {
-          const r = new Runner(p3.runnable);
-          r.run();
-          out.push('# ---\n');
-          out.push(r.stdout);
-        }
-      } finally {
-        if (errors.length > 0) {
-          out.push('# ---\nErrors:\n');
-          errors.forEach((item) =>
-            out.push(
-              `- [${item.pos && `${item.pos.lin1}:${item.pos.col1}-${item.pos.lin2}:${item.pos.col2}] `}${
-                item.message
-              }\n`
-            )
-          );
-        }
-      }
-    } catch (err: any) {
-      out.push('# ---\n');
-      out.push(err.stack);
-    }
-    setResult(out.join(''));
+    setCompileResult(compile(content, libs, { debugL2: true, debugL3: true }));
   });
-
-  useEffect(() => {
-    const div = resultRef.current;
-    if (!div) {
-      return;
-    }
-    div.scrollTop = div.scrollHeight;
-  }, [result]);
 
   return (
     <div className={classes.container}>
-      <AceEditor
-        className={classes.editor}
-        value={content}
-        onChange={onContentChange}
-        width=''
-        height=''
-        fontSize={16}
-      />
-      <AceEditor
-        className={classes.result}
-        mode='yaml'
-        value={result}
-        readOnly={true}
-        width=''
-        height=''
-        fontSize={16}
-      />
+      <Tile className={classes.editor} title='Code editor'>
+        <AceEditor
+          mode='java'
+          theme='cloud_editor'
+          value={content}
+          onChange={onContentChange}
+          width='100%'
+          height='100%'
+          fontSize={16}
+          className={classes.code}
+        />
+      </Tile>
+      <div className={classes.result}>
+        <Tile className={classes.compileOutput} title='Compile output'>
+          <AceEditor
+            mode='yaml'
+            theme='cloud_editor'
+            value={compileResult?.output ?? ''}
+            readOnly={true}
+            width='100%'
+            height='100%'
+            fontSize={16}
+            className={classes.code}
+          />
+        </Tile>
+        <Tile className={classes.terminal} title='Terminal' />
+      </div>
     </div>
   );
 }

@@ -3,22 +3,34 @@
   height: 100vh;
   display: flex;
   align-items: stretch;
-  padding: 8px 8px 8px 0px;
+  padding: 8px;
+  column-gap: 8px;
 }
 
 .editor,
 .result {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin-left: 8px;
   width: 1px;
   flex-grow: 1;
-  resize: both;
+}
+
+.code {
+  font-family: 'Inconsolata', monospace;
+  line-height: 1.5;
 }
 
 .result {
-  white-space: pre-wrap;
-  font-family: monospace;
-  font-size: 14px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  row-gap: 8px;
+}
+
+.compileOutput {
+  height: 70%;
+  flex-grow: 1;
+}
+
+.terminal {
+  height: 30%;
+  flex-grow: 1;
 }
