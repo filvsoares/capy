@@ -84,9 +84,9 @@ export abstract class Base {
 
   debugPrint(out: string[], prefix: string) {
     if (this.pos === INTERNAL) {
-      out.push(`${this.constructor.name}:\n`);
+      out.push(`!!${this.constructor.name}\n`);
     } else {
-      out.push(`${this.constructor.name}: # ${this.pos.lin1}:${this.pos.col1}-${this.pos.lin2}:${this.pos.col2}\n`);
+      out.push(`!!${this.constructor.name} # ${this.pos.lin1}:${this.pos.col1}-${this.pos.lin2}:${this.pos.col2}\n`);
     }
   }
 }
@@ -96,6 +96,6 @@ export const ERROR = 2;
 
 export type ParseError = {
   level: typeof WARNING | typeof ERROR;
-  pos?: Pos;
+  pos: Pos;
   message: string;
 };
