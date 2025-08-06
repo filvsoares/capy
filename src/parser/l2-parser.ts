@@ -18,7 +18,7 @@
  * @file Layer-2 parser implementation.
  */
 
-import { Base, ERROR, ParseError, ParseError1, WithPos } from './base';
+import { Base, ERROR, ParseError, WithPos } from './base';
 import { L1Bracket, L1Operator, L1String, L1Base, L1Word, L1Number, L1BasePos } from './l1-types';
 import {
   L2Addition,
@@ -77,7 +77,32 @@ function isExpressionEnd(t: L1BasePos | undefined) {
   return !t || (isOperator(t) && (t.value === ';' || t.value === ','));
 }
 
-function makePos(t: WithPos | undefined, tBefore: WithPos) {
+function growPos(a: WithPos, b: WithPos) {
+  let lin1, col1, lin2, col2;
+  if (a.pos.lin1 < b.pos.lin1) {
+    lin1 = a.pos.lin1;
+    col1 = a.pos.col1;
+  } else if (b.pos.lin1 < a.pos.lin1) {
+    lin1 = b.pos.lin1;
+    col1 = b.pos.col1;
+  } else {
+    lin1 = a.pos.lin1;
+    col1 = Math.min(a.pos.col1, b.pos.col1);
+  }
+  if (a.pos.lin2 > b.pos.lin2) {
+    lin2 = a.pos.lin2;
+    col2 = a.pos.col2;
+  } else if (b.pos.lin2 > a.pos.lin2) {
+    lin2 = b.pos.lin2;
+    col2 = b.pos.col2;
+  } else {
+    lin2 = a.pos.lin2;
+    col2 = Math.max(a.pos.col2, b.pos.col2);
+  }
+  return { lin1, col1, lin2, col2 };
+}
+
+function tokenOrBefore(t: WithPos | undefined, tBefore: WithPos) {
   return {
     lin1: t?.pos.lin1 ?? tBefore.pos.lin2,
     col1: t?.pos.col1 ?? tBefore.pos.col2,
@@ -94,7 +119,7 @@ class L2Parser {
   pos: number = 0;
   list: L1BasePos[] = [];
   current: L1BasePos | undefined;
-  errors: ParseError1[] = [];
+  errors: ParseError[] = [];
 
   next() {
     if (!this.current) {
@@ -114,7 +139,7 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected string`,
-        pos: makePos(t2, t1),
+        pos: tokenOrBefore(t2, t1),
       });
       return INVALID;
     }
@@ -124,7 +149,7 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
-        pos: makePos(t3, t2),
+        pos: tokenOrBefore(t3, t2),
       });
       return INVALID;
     }
@@ -141,12 +166,11 @@ class L2Parser {
     }
 
     const t2 = this.next();
-
     if (!isWord(t2)) {
       this.errors.push({
         level: ERROR,
         message: `Expected string`,
-        pos: makePos(t2, t1),
+        pos: tokenOrBefore(t2, t1),
       });
       return INVALID;
     }
@@ -162,7 +186,7 @@ class L2Parser {
     this.errors.push({
       level: ERROR,
       message: `Expected "(" or ":"`,
-      pos: makePos(t3, t2),
+      pos: tokenOrBefore(t3, t2),
     });
     return INVALID;
   }
@@ -184,7 +208,7 @@ class L2Parser {
         this.errors.push({
           level: ERROR,
           message: `Expected return type`,
-          pos: makePos(t5, t4),
+          pos: tokenOrBefore(t5, t4),
         });
         return INVALID;
       }
@@ -196,7 +220,7 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected "{"`,
-        pos: makePos(t6, t5!),
+        pos: tokenOrBefore(t6, t5!),
       });
       return INVALID;
     }
@@ -233,7 +257,7 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected type`,
-        pos: makePos(t4, t3),
+        pos: tokenOrBefore(t4, t3),
       });
       return INVALID;
     }
@@ -243,7 +267,7 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
-        pos: makePos(t5, t4),
+        pos: tokenOrBefore(t5, t4),
       });
       return INVALID;
     }
@@ -305,13 +329,14 @@ class L2Parser {
   createOperation(t1: L1BasePos | L2Expression, step: L2OperationStep): L2Operation | Invalid {
     if (t1 instanceof L2Operation) {
       t1.steps.push(step);
+      t1.pos = step.pos;
       return t1;
     }
     const operand = this.unwrapOperand(t1);
     if (operand === INVALID) {
       return INVALID;
     }
-    return new L2Operation(operand, [step], operand.pos);
+    return new L2Operation(operand, [step], step.pos);
   }
 
   processOperator1(list: (L1BasePos | L2Expression)[]): (L1BasePos | L2Expression)[] | Invalid {
@@ -329,7 +354,7 @@ class L2Parser {
           this.errors.push(...r.errors);
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2MethodCall(r.list));
+        const operation = this.createOperation(t1, new L2MethodCall(r.list, growPos(t1, t2)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -360,7 +385,7 @@ class L2Parser {
           });
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2ArraySubscripting(r.list[0]));
+        const operation = this.createOperation(t1, new L2ArraySubscripting(r.list[0], growPos(t1, t2)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -378,7 +403,7 @@ class L2Parser {
           });
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2MemberAccess(t3.value));
+        const operation = this.createOperation(t1, new L2MemberAccess(t3.value, growPos(t1, t3)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -407,7 +432,7 @@ class L2Parser {
       const t3 = list[i + 1];
 
       if (isOperand(t1) && isOperator(t2, '-') && !isOperand(t3)) {
-        const operation = this.createOperation(t1, new L2UnaryMinus());
+        const operation = this.createOperation(t1, new L2UnaryMinus(growPos(t1, t2)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -417,7 +442,7 @@ class L2Parser {
       }
 
       if (isOperand(t1) && isOperator(t2, '+') && !isOperand(t3)) {
-        const operation = this.createOperation(t1, new L2UnaryPlus());
+        const operation = this.createOperation(t1, new L2UnaryPlus(growPos(t1, t2)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -449,7 +474,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Multiplication(operand));
+        const operation = this.createOperation(t1, new L2Multiplication(operand, growPos(t1, t3)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -463,7 +488,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Division(operand));
+        const operation = this.createOperation(t1, new L2Division(operand, growPos(t1, t3)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -477,7 +502,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Remainder(operand));
+        const operation = this.createOperation(t1, new L2Remainder(operand, growPos(t1, t3)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -508,7 +533,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Addition(operand));
+        const operation = this.createOperation(t1, new L2Addition(operand, growPos(t1, t3)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -522,7 +547,7 @@ class L2Parser {
         if (operand === INVALID) {
           return INVALID;
         }
-        const operation = this.createOperation(t1, new L2Subtraction(operand));
+        const operation = this.createOperation(t1, new L2Subtraction(operand, growPos(t1, t3)));
         if (operation === INVALID) {
           return INVALID;
         }
@@ -596,7 +621,7 @@ class L2Parser {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
-        pos: makePos(t, val),
+        pos: tokenOrBefore(t, val),
       });
       return INVALID;
     }

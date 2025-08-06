@@ -18,7 +18,7 @@
  * @file Type definitions for layer-2 parser.
  */
 
-import { Base, ParseError1, Pos, WithPos } from './base';
+import { Base, ParseError, Pos, WithPos } from './base';
 import { indent } from './util';
 
 export abstract class L2Base extends Base {
@@ -29,9 +29,14 @@ export abstract class L2Base extends Base {
 
 export abstract class L2BasePos extends L2Base implements WithPos {
   pos: Pos;
+
   constructor(pos: Pos) {
     super();
     this.pos = pos;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    out.push(`[${this.constructor.name} ${this.pos.lin1}:${this.pos.col1}-${this.pos.lin2}:${this.pos.col2}]:\n`);
   }
 }
 
@@ -45,7 +50,11 @@ export abstract class L2Expression extends L2BasePos {
   }
 }
 
-export abstract class L2OperationStep extends L2Base {}
+export abstract class L2OperationStep extends L2BasePos {
+  constructor(pos: Pos) {
+    super(pos);
+  }
+}
 
 export class L2String extends L2Expression {
   value: string;
@@ -59,8 +68,9 @@ export class L2String extends L2Expression {
     return `string`;
   }
 
-  debugPrint(): string {
-    return `[L2String]\n  value: ${this.value}`;
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  value: ${this.value}\n`);
   }
 }
 
@@ -74,10 +84,6 @@ export class L2Number extends L2Expression {
 
   toString(): string {
     return `number`;
-  }
-
-  debugPrint(): string {
-    return `[L2Number]\n  value: ${this.value}`;
   }
 }
 
@@ -93,16 +99,17 @@ export class L2Identifier extends L2Expression {
     return `identifier "${this.value}"`;
   }
 
-  debugPrint(): string {
-    return `[L2Identifier]\n  value: ${this.value}`;
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  value: ${this.value}\n`);
   }
 }
 
 export class L2MethodCall extends L2OperationStep {
   argList: L2Expression[];
 
-  constructor(argList: L2Expression[]) {
-    super();
+  constructor(argList: L2Expression[], pos: Pos) {
+    super(pos);
     this.argList = argList;
   }
 
@@ -110,42 +117,39 @@ export class L2MethodCall extends L2OperationStep {
     return `call`;
   }
 
-  debugPrint(): string {
-    return `[L2MethodCall]\n  args:\n${this.argList.map((item) => '    - ' + indent(item.debugPrint(), 6)).join('\n')}`;
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  argList:\n`);
+    this.argList.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
   }
 }
 
 export class L2ArraySubscripting extends L2OperationStep {
-  item: L2Base;
+  item: L2Expression;
 
-  constructor(item: L2Base) {
-    super();
+  constructor(item: L2Expression, pos: Pos) {
+    super(pos);
     this.item = item;
   }
 
   toString(): string {
     return 'array';
   }
-
-  debugPrint(): string {
-    return `[L2ArraySubscripting]\n  item: ${indent(this.item.debugPrint(), 2)}`;
-  }
 }
 
 export class L2MemberAccess extends L2OperationStep {
   member: string;
 
-  constructor(member: string) {
-    super();
+  constructor(member: string, pos: Pos) {
+    super(pos);
     this.member = member;
   }
 
   toString(): string {
     return 'member access';
-  }
-
-  debugPrint(): string {
-    return `[L2MemberAccess]\n  member: ${this.member}`;
   }
 }
 
@@ -163,123 +167,100 @@ export class L2Operation extends L2Expression {
     return `operation`;
   }
 
-  debugPrint(): string {
-    return `[L2Operation]\n  operand: ${indent(this.operand.debugPrint(), 2)}\n  steps:\n${this.steps
-      .map((item) => '    - ' + indent(item.debugPrint(), 6))
-      .join('\n')}`;
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  operand: `);
+    this.operand.debugPrint(out, `${prefix}  `);
+    out.push(`${prefix}  steps:\n`);
+    this.steps.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
   }
 }
 
 export class L2UnaryMinus extends L2OperationStep {
-  constructor() {
-    super();
+  constructor(pos: Pos) {
+    super(pos);
   }
 
   toString(): string {
     return `operation`;
-  }
-
-  debugPrint(): string {
-    return `[L2UnaryMinus]`;
   }
 }
 
 export class L2UnaryPlus extends L2OperationStep {
-  constructor() {
-    super();
+  constructor(pos: Pos) {
+    super(pos);
   }
 
   toString(): string {
     return `operation`;
-  }
-
-  debugPrint(): string {
-    return `[L2UnaryPlus]`;
   }
 }
 
 export class L2Addition extends L2OperationStep {
   operand: L2Expression;
 
-  constructor(operand: L2Expression) {
-    super();
+  constructor(operand: L2Expression, pos: Pos) {
+    super(pos);
     this.operand = operand;
   }
 
   toString(): string {
     return `operation`;
-  }
-
-  debugPrint(): string {
-    return `[L2Addition]\n  operand: ${indent(this.operand.debugPrint(), 2)}`;
   }
 }
 
 export class L2Subtraction extends L2OperationStep {
   operand: L2Expression;
 
-  constructor(operand: L2Expression) {
-    super();
+  constructor(operand: L2Expression, pos: Pos) {
+    super(pos);
     this.operand = operand;
   }
 
   toString(): string {
     return `operation`;
-  }
-
-  debugPrint(): string {
-    return `[L2Subtraction]\n  operand: ${indent(this.operand.debugPrint(), 2)}`;
   }
 }
 
 export class L2Multiplication extends L2OperationStep {
   operand: L2Expression;
 
-  constructor(operand: L2Expression) {
-    super();
+  constructor(operand: L2Expression, pos: Pos) {
+    super(pos);
     this.operand = operand;
   }
 
   toString(): string {
     return `operation`;
-  }
-
-  debugPrint(): string {
-    return `[L2Multiplication]\n  operand: ${indent(this.operand.debugPrint(), 2)}`;
   }
 }
 
 export class L2Division extends L2OperationStep {
   operand: L2Expression;
 
-  constructor(operand: L2Expression) {
-    super();
+  constructor(operand: L2Expression, pos: Pos) {
+    super(pos);
     this.operand = operand;
   }
 
   toString(): string {
     return `operation`;
-  }
-
-  debugPrint(): string {
-    return `[L2Division]\n  operand: ${indent(this.operand.debugPrint(), 2)}`;
   }
 }
 
 export class L2Remainder extends L2OperationStep {
   operand: L2Expression;
 
-  constructor(operand: L2Expression) {
-    super();
+  constructor(operand: L2Expression, pos: Pos) {
+    super(pos);
     this.operand = operand;
   }
 
   toString(): string {
     return `operation`;
-  }
-
-  debugPrint(): string {
-    return `[L2Remainder]\n  operand: ${indent(this.operand.debugPrint(), 2)}`;
   }
 }
 
@@ -295,8 +276,9 @@ export class L2Use extends L2Base {
     return `use "${this.value}"`;
   }
 
-  debugPrint(): string {
-    return `[L2Use]\n  value: ${this.value}`;
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  value: ${this.value}\n`);
   }
 }
 
@@ -316,10 +298,16 @@ export class L2Method extends L2Base {
     return `method "${this.name}"`;
   }
 
-  debugPrint(): string {
-    return `[L2Method]\n  name: ${this.name}\n  statements:\n${this.statementList
-      .map((item) => '    - ' + indent(item.debugPrint(), 6))
-      .join('\n')}`;
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}\n`);
+    out.push(`${prefix}  returnType: `);
+    this.returnType ? this.returnType.debugPrint(out, `${prefix}  `) : out.push('(void)\n');
+    out.push(`${prefix}  statementList:\n`);
+    this.statementList.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
   }
 }
 
@@ -336,10 +324,6 @@ export class L2Variable extends L2Base {
   toString(): string {
     return `variable "${this.name}"`;
   }
-
-  debugPrint(): string {
-    return `[L2Variable] ${this.name}: ${this.type.debugPrint()}`;
-  }
 }
 
 export class L2Type extends L2Base {
@@ -353,18 +337,14 @@ export class L2Type extends L2Base {
   toString(): string {
     return `type ${this.name}`;
   }
-
-  debugPrint(): string {
-    return `[L2Type] ${this.name}`;
-  }
 }
 
 export type L2ParseExpressionListResult = {
   list: L2Expression[];
-  errors: ParseError1[];
+  errors: ParseError[];
 };
 
 export type L2ParseToplevelResult = {
   list: L2Base[];
-  errors: ParseError1[];
+  errors: ParseError[];
 };

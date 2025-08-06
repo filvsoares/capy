@@ -44,10 +44,6 @@ export class L3SimpleType extends L3Type {
   toString(): string {
     return `${this.primitive}`;
   }
-
-  debugPrint(): string {
-    return `[L3SimpleType]\n  primitive: ${this.primitive}`;
-  }
 }
 
 export const voidType = new L3SimpleType('void');
@@ -68,10 +64,6 @@ export class L3CallableType extends L3Type {
 
   toString(): string {
     return `callable`;
-  }
-
-  debugPrint(): string {
-    return `[L3CallableType]\n  returnType: ${indent(this.returnType?.debugPrint() ?? '(void)', 2)}`;
   }
 }
 
@@ -101,10 +93,6 @@ export class L3String extends L3Expression {
   toString(): string {
     return `string`;
   }
-
-  debugPrint(): string {
-    return `[L3String]\n  value: ${this.value}`;
-  }
 }
 
 export class L3Number extends L3Expression {
@@ -121,10 +109,6 @@ export class L3Number extends L3Expression {
 
   toString(): string {
     return `number`;
-  }
-
-  debugPrint(): string {
-    return `[L3Number]\n  value: ${this.value}`;
   }
 }
 
@@ -143,10 +127,6 @@ export class L3Reference extends L3Expression {
   toString(): string {
     return `identifier "${this.name}"`;
   }
-
-  debugPrint(): string {
-    return `[L3Reference]\n  name: ${this.name}\n  type: ${indent(this.type.debugPrint(), 2)}`;
-  }
 }
 
 export abstract class L3Definition extends L3Base {}
@@ -162,10 +142,6 @@ export class L3Variable extends L3Definition {
   toString(): string {
     return 'variable';
   }
-
-  debugPrint(): string {
-    return `[L3Variable]\n  type: ${indent(this.type.debugPrint(), 2)}`;
-  }
 }
 
 export abstract class L3Statement extends L3Base {}
@@ -180,10 +156,6 @@ export class L3ExpressionStatement extends L3Statement {
 
   toString(): string {
     return 'expression';
-  }
-
-  debugPrint(): string {
-    return `[L3ExpressionStatement]\n  expr: ${indent(this.expr.debugPrint(), 2)}`;
   }
 }
 
@@ -208,24 +180,14 @@ export class L3Operation extends L3Expression {
   toString(): string {
     return 'operation';
   }
-
-  debugPrint(): string {
-    return `[L3Operation]\n  operand: ${indent(this.operand.debugPrint(), 2)}\n  steps:${this.steps
-      .map((item) => `\n    - ${indent(item.debugPrint(), 6)}`)
-      .join('')}`;
-  }
 }
 
 export class L3Method extends L3Variable {
   statements: L3Base[];
+
   constructor(type: L3CallableType, statements: L3Base[]) {
     super(type);
     this.statements = statements;
-  }
-  debugPrint(): string {
-    return `[L3Method]\n  type: ${indent(this.type.debugPrint(), 2)}\n  statements:${this.statements
-      .map((item) => `\n    - ${indent(item.debugPrint(), 6)}`)
-      .join('')}`;
   }
 }
 
@@ -234,9 +196,6 @@ export class L3LibraryMethod extends L3Variable {
   constructor(type: L3CallableType, callback: (args: any[], runner: Runner) => any) {
     super(type);
     this.callback = callback;
-  }
-  debugPrint(): string {
-    return `[L3Method]\n  type: ${indent(this.type.debugPrint(), 2)}\n  callback: (native)`;
   }
 }
 
@@ -247,10 +206,6 @@ export class L3Dereference extends L3OperationStep {
 
   toString(): string {
     return 'dereference';
-  }
-
-  debugPrint(): string {
-    return `[L3Dereference]`;
   }
 }
 
@@ -265,12 +220,6 @@ export class L3MethodCall extends L3OperationStep {
   toString(): string {
     return 'method call';
   }
-
-  debugPrint(): string {
-    return `[L3MethodCall]\n  argList:${this.argList
-      .map((item) => `\n    - ${indent(item.debugPrint(), 6)}`)
-      .join('')}`;
-  }
 }
 
 export class L3StringConcat extends L3OperationStep {
@@ -284,24 +233,19 @@ export class L3StringConcat extends L3OperationStep {
   toString(): string {
     return 'string concat';
   }
-
-  debugPrint(): string {
-    return `[L3StringConcat]\n  other:${indent(this.other.debugPrint(), 2)}`;
-  }
 }
 
-export class Runnable {
+export class Runnable extends L3Base {
   symbols: { [name: string]: L3Definition };
   initialStatements: L3Statement[];
   constructor(symbols: { [name: string]: L3Definition }, initialStatements: L3Statement[]) {
+    super();
     this.symbols = symbols;
     this.initialStatements = initialStatements;
   }
 
-  debugPrint() {
-    return `[Runnable]\n  symbols:\n${Object.entries(this.symbols)
-      .map(([k, v]) => `    ${k}: ${indent(v.debugPrint(), 4)}`)
-      .join('\n')}`;
+  toString(): string {
+    return 'runnable';
   }
 }
 
