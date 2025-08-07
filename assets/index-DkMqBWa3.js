@@ -36455,16 +36455,16 @@ class L2Parser {
       return INVALID$1;
     }
     const t3 = this.next();
-    if (!isSeparator(t3, ";")) {
+    if (isSeparator(t3, ";")) {
+      this.next();
+    } else {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
         pos: fallbackPos(t3 == null ? void 0 : t3.pos, t2.pos)
       });
-      return INVALID$1;
     }
-    this.next();
-    return new L2Use(t2.value, combinePos(t1.pos, t3.pos));
+    return new L2Use(t2.value, combinePos(t1.pos, (t3 ?? t2).pos));
   }
   readDef() {
     const t1 = this.current;
@@ -36552,7 +36552,9 @@ class L2Parser {
       return INVALID$1;
     }
     const t5 = this.current;
-    if (!isSeparator(t5, ";")) {
+    if (isSeparator(t5, ";")) {
+      this.next();
+    } else {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
@@ -36560,7 +36562,6 @@ class L2Parser {
       });
       return INVALID$1;
     }
-    this.next();
     return new L2Variable(t2.name, type, combinePos(t1.pos, t5.pos));
   }
   readToplevel() {
@@ -36587,7 +36588,7 @@ class L2Parser {
       if (r2.list.length === 0) {
         this.errors.push({
           level: ERROR,
-          message: `Expected expression1`,
+          message: `Expected expression`,
           pos: operand.pos
         });
         return INVALID$1;
@@ -36602,7 +36603,6 @@ class L2Parser {
       }
       return r2.list[0];
     }
-    console.trace();
     this.errors.push({
       level: ERROR,
       message: `Expected expression but found ${operand}`,
@@ -36650,7 +36650,7 @@ class L2Parser {
         if (r2.list.length === 0) {
           this.errors.push({
             level: ERROR,
-            message: `Expected expression3`,
+            message: `Expected expression`,
             pos: t2.pos
           });
           return INVALID$1;
@@ -36870,15 +36870,15 @@ class L2Parser {
       return;
     }
     const t2 = this.current;
-    if (!isSeparator(t2, ";")) {
+    if (isSeparator(t2, ";")) {
+      this.next();
+    } else {
       this.errors.push({
         level: ERROR,
         message: `Expected ";"`,
         pos: fallbackPos(t2 == null ? void 0 : t2.pos, val.pos)
       });
-      return INVALID$1;
     }
-    this.next();
     return val;
   }
   readStatement() {
@@ -36902,7 +36902,7 @@ class L2Parser {
           const t2 = this.current;
           this.errors.push({
             level: ERROR,
-            message: `Unexpected token3`,
+            message: `Unexpected ${t2}`,
             pos: t2.pos
           });
         }
@@ -36932,7 +36932,7 @@ class L2Parser {
           const t22 = this.current;
           this.errors.push({
             level: ERROR,
-            message: `Unexpected token4`,
+            message: `Unexpected ${t22}`,
             pos: {
               lin1: t22.pos.lin1,
               col1: t22.pos.col1,
@@ -36998,7 +36998,7 @@ class L2Parser {
           const t2 = this.current;
           this.errors.push({
             level: ERROR,
-            message: `Unexpected token1`,
+            message: `Unexpected ${t2}`,
             pos: {
               lin1: t2.pos.lin1,
               col1: t2.pos.col1,
