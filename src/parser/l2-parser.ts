@@ -85,6 +85,10 @@ function isExpressionEnd(t: L1Base | undefined) {
   return !t || !(isOperand(t) || isOperator(t));
 }
 
+type ReadExpressionOpts = {
+  unexpectedTokenErrorMsg?: (t: L1Base | L2Expression) => string;
+};
+
 const INVALID = 1;
 type Invalid = typeof INVALID;
 type ReadResult<T> = T | Invalid | undefined;
@@ -201,11 +205,8 @@ class L2Parser {
 
     this.next();
 
-    const r = new L2Parser().parseStatements(t6.tokenList);
-    if (r.errors.length > 0) {
-      this.errors.push(...r.errors);
-      return INVALID;
-    }
+    const r = new L2Parser().parseStatementList(t6.tokenList);
+    this.errors.push(...r.errors);
 
     return new L2Method(t2.name, returnType, r.list, combinePos(t1.pos, t6.pos));
   }
@@ -269,11 +270,10 @@ class L2Parser {
       return new L2String(operand.value, operand.pos);
     }
     if (operand instanceof L1Bracket && operand.start === '(') {
-      const r = new L2Parser().parseExpressionList(operand.tokenList);
-      if (r.errors.length > 0) {
-        this.errors.push(...r.errors);
-        return INVALID;
-      }
+      const r = new L2Parser().parseExpressionList(operand.tokenList, {
+        unexpectedTokenErrorMsg: (t) => `Expected ")" but found ${t}`,
+      });
+      this.errors.push(...r.errors);
       if (r.list.length === 0) {
         this.errors.push({
           level: ERROR,
@@ -324,11 +324,10 @@ class L2Parser {
       const t3 = list[i + 1];
 
       if (isOperand(t1) && isBracket(t2, '(')) {
-        const r = new L2Parser().parseExpressionList(t2.tokenList);
-        if (r.errors.length > 0) {
-          this.errors.push(...r.errors);
-          return INVALID;
-        }
+        const r = new L2Parser().parseExpressionList(t2.tokenList, {
+          unexpectedTokenErrorMsg: (t) => `Expected "," or ")" but found ${t}`,
+        });
+        this.errors.push(...r.errors);
         const operation = this.createOperation(t1, new L2MethodCall(r.list, combinePos(t1.pos, t2.pos)));
         if (operation === INVALID) {
           return INVALID;
@@ -339,11 +338,10 @@ class L2Parser {
       }
 
       if (isOperand(t1) && isBracket(t2, '[')) {
-        const r = new L2Parser().parseExpressionList(t2.tokenList);
-        if (r.errors.length > 0) {
-          this.errors.push(...r.errors);
-          return INVALID;
-        }
+        const r = new L2Parser().parseExpressionList(t2.tokenList, {
+          unexpectedTokenErrorMsg: (t) => `Expected "]" but found ${t}`,
+        });
+        this.errors.push(...r.errors);
         if (r.list.length === 0) {
           this.errors.push({
             level: ERROR,
@@ -539,7 +537,7 @@ class L2Parser {
     return result;
   }
 
-  readExpression(): ReadResult<L2Expression> {
+  readExpression({ unexpectedTokenErrorMsg }: ReadExpressionOpts = {}): ReadResult<L2Expression> {
     const t1 = this.current;
     if (isExpressionEnd(t1)) {
       return;
@@ -573,7 +571,7 @@ class L2Parser {
     if (p4.length > 1) {
       this.errors.push({
         level: ERROR,
-        message: `Unexpected token2`,
+        message: unexpectedTokenErrorMsg?.(p4[1]) ?? `Unexpected ${p4[1]}`,
         pos: p4[1].pos,
       });
       return INVALID;
@@ -583,7 +581,9 @@ class L2Parser {
   }
 
   readExpressionStatement(): ReadResult<L2Base> {
-    const val = this.readExpression();
+    const val = this.readExpression({
+      unexpectedTokenErrorMsg: (t) => `Expected ";" but found ${t}`,
+    });
     if (val === INVALID) {
       return INVALID;
     }
@@ -610,7 +610,7 @@ class L2Parser {
     return this.readExpressionStatement();
   }
 
-  parseStatements(list: L1Base[]): L2ParseResult {
+  parseStatementList(list: L1Base[]): L2ParseResult {
     this.pos = 0;
     this.list = list;
     this.current = list[0];
@@ -643,7 +643,7 @@ class L2Parser {
     return { list: outList, errors: this.errors };
   }
 
-  parseExpressionList(list: L1Base[]): L2ParseExpressionListResult {
+  parseExpressionList(list: L1Base[], opts: ReadExpressionOpts = {}): L2ParseExpressionListResult {
     this.pos = 0;
     this.list = list;
     this.current = list[0];
@@ -651,7 +651,7 @@ class L2Parser {
     const outList: L2Expression[] = [];
     let error = false;
     while (this.current) {
-      const val = this.readExpression();
+      const val = this.readExpression(opts);
       if (val === INVALID) {
         error = true;
         continue;

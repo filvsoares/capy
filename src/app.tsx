@@ -28,10 +28,13 @@ import { Runner } from './parser/runner';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-java';
 import 'ace-builds/src-noconflict/mode-yaml';
-import 'ace-builds/src-noconflict/theme-cloud_editor';
+import 'ace-builds/src-noconflict/theme-github_light_default';
 import { layer3Parse } from './parser/l3-parser';
 import { Tile } from './ui/tile';
 import { compile, CompileResult } from './parser/compiler';
+import { Toolbar } from './ui/toolbar';
+import { ToolButton } from './ui/tool-button';
+import { Play } from 'feather-icons-react';
 
 const initialCode = `use "io";
 
@@ -53,21 +56,28 @@ const libs: { [name: string]: L3Library } = {
 export default function App() {
   const [content, setContent] = useState(initialCode);
   const [compileResult, setCompileResult] = useState<CompileResult>();
+  const [terminalContent, setTerminalContent] = useState<string>();
 
   const onContentChange = (value: string) => {
     setContent(value);
   };
 
-  useEffect(() => {
-    setCompileResult(compile(content, libs, { debugL2: true, debugL3: true }));
-  });
+  const onRunClick = () => {
+    const r = compile(content, libs, { debugL2: true, debugL3: true });
+    setCompileResult(r);
+    if (r.runnable) {
+      const runner = new Runner(r.runnable);
+      runner.run();
+      setTerminalContent(runner.stdout);
+    }
+  };
 
   return (
     <div className={classes.container}>
       <Tile className={classes.editor} title='Code editor'>
         <AceEditor
           mode='java'
-          theme='cloud_editor'
+          theme='github_light_default'
           value={content}
           onChange={onContentChange}
           width='100%'
@@ -77,10 +87,13 @@ export default function App() {
         />
       </Tile>
       <div className={classes.result}>
+        <Toolbar>
+          <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
+        </Toolbar>
         <Tile className={classes.compileOutput} title='Compile output'>
           <AceEditor
             mode='yaml'
-            theme='cloud_editor'
+            theme='github_light_default'
             value={compileResult?.output ?? ''}
             readOnly={true}
             width='100%'
@@ -89,7 +102,9 @@ export default function App() {
             className={classes.code}
           />
         </Tile>
-        <Tile className={classes.terminal} title='Terminal' />
+        <Tile className={classes.terminal} title='Terminal'>
+          <div className={`${classes.terminalContent} ${classes.code}`}>{terminalContent}</div>
+        </Tile>
       </div>
     </div>
   );

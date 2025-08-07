@@ -12,6 +12,7 @@ export default defineConfig((command, mode) => {
     },
     build: {
       outDir: env.BUILD_PATH ?? 'build',
+      minify: false,
     },
     plugins: [react()],
     server: { port: 3000 },
