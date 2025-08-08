@@ -19,7 +19,7 @@
  */
 
 import { Base, INTERNAL, ParseError, Pos } from './base';
-import { L2Base } from './l2-types';
+import { L2Base, L2Type } from './l2-types';
 import { Runner } from './runner';
 import { indent } from './util';
 
@@ -29,15 +29,15 @@ export abstract class L3Base extends Base {
   }
 }
 
-export type L3PrimitiveType = 'void' | 'string' | 'number' | 'boolean';
+export type L3PrimitiveType = 'string' | 'number' | 'boolean' | 'void';
 
 export abstract class L3Type extends L3Base {}
 
 export class L3SimpleType extends L3Type {
   primitive: L3PrimitiveType;
 
-  constructor(primitive: L3PrimitiveType) {
-    super(INTERNAL);
+  constructor(primitive: L3PrimitiveType, pos: Pos) {
+    super(pos);
     this.primitive = primitive;
   }
 
@@ -46,19 +46,48 @@ export class L3SimpleType extends L3Type {
   }
 }
 
-export const voidType = new L3SimpleType('void');
-export const stringType = new L3SimpleType('string');
-export const numberType = new L3SimpleType('number');
+export const STRING = new L3SimpleType('string', INTERNAL);
+export const NUMBER = new L3SimpleType('number', INTERNAL);
+export const BOOLEAN = new L3SimpleType('boolean', INTERNAL);
+export const VOID = new L3SimpleType('void', INTERNAL);
 
 export function isStringType(type: L3Type) {
   return type instanceof L3SimpleType && type.primitive === 'string';
 }
 
-export class L3CallableType extends L3Type {
-  returnType?: L3Type;
+export function isVoidType(type: L3Type) {
+  return type instanceof L3SimpleType && type.primitive === 'void';
+}
 
-  constructor(returnType?: L3Type) {
-    super(INTERNAL);
+export class L3Argument extends L3Type {
+  name: string;
+  type: L3Type;
+
+  constructor(name: string, type: L3Type, pos: Pos) {
+    super(pos);
+    this.name = name;
+    this.type = type;
+  }
+
+  toString(): string {
+    return 'argument';
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}\n`);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+
+export class L3CallableType extends L3Type {
+  argList: L3Argument[];
+  returnType: L3Type;
+
+  constructor(argList: L3Argument[], returnType: L3Type, pos: Pos) {
+    super(pos);
+    this.argList = argList;
     this.returnType = returnType;
   }
 
@@ -82,7 +111,7 @@ export class L3String extends L3Expression {
   value: string;
 
   constructor(value: string, pos: Pos) {
-    super(stringType, pos);
+    super(STRING, pos);
     this.value = value;
   }
 
@@ -104,7 +133,7 @@ export class L3Number extends L3Expression {
   value: string;
 
   constructor(value: string, pos: Pos) {
-    super(numberType, pos);
+    super(NUMBER, pos);
     this.value = value;
   }
 
@@ -139,14 +168,24 @@ export class L3Reference extends L3Expression {
   }
 }
 
-export abstract class L3Definition extends L3Base {}
+export abstract class L3Definition<T extends L3Type = L3Type> extends L3Base {
+  type: T;
 
-export class L3Variable extends L3Definition {
-  type: L3Type;
-
-  constructor(type: L3Type, pos: Pos) {
+  constructor(type: T, pos: Pos) {
     super(pos);
     this.type = type;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+
+export class L3Variable extends L3Definition {
+  constructor(type: L3Type, pos: Pos) {
+    super(type, pos);
   }
 
   toString(): string {
@@ -176,6 +215,25 @@ export class L3ExpressionStatement extends L3Statement {
     super.debugPrint(out, prefix);
     out.push(`${prefix}  expr: `);
     this.expr.debugPrint(out, `${prefix}  `);
+  }
+}
+
+export class L3ReturnStatement extends L3Statement {
+  expr?: L3Expression;
+
+  constructor(expr: L3Expression | undefined, pos: Pos) {
+    super(pos);
+    this.expr = expr;
+  }
+
+  toString(): string {
+    return 'return';
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  expr: `);
+    this.expr ? this.expr.debugPrint(out, `${prefix}  `) : out.push('(void)\n');
   }
 }
 
@@ -218,7 +276,7 @@ export class L3Operation extends L3Expression {
   }
 }
 
-export class L3Method extends L3Variable {
+export class L3Method extends L3Definition<L3CallableType> {
   statements: L3Base[];
 
   constructor(type: L3CallableType, statements: L3Base[], pos: Pos) {
@@ -226,11 +284,12 @@ export class L3Method extends L3Variable {
     this.statements = statements;
   }
 
+  toString(): string {
+    return 'method';
+  }
+
   debugPrint(out: string[], prefix: string): void {
     super.debugPrint(out, prefix);
-    //out.push(`${prefix}  name: ${this.name}\n`);
-    //out.push(`${prefix}  returnType: `);
-    //this.returnType ? this.returnType.debugPrint(out, `${prefix}  `) : out.push('(void)\n');
     out.push(`${prefix}  statements:\n`);
     this.statements.forEach((val) => {
       out.push(`${prefix}    - `);

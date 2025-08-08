@@ -275,36 +275,7 @@ export class L2Use extends L2Base {
   }
 }
 
-export class L2Method extends L2Base {
-  name: string;
-  returnType: L2Type | undefined;
-  statementList: L2Base[];
-
-  constructor(name: string, returnType: L2Type | undefined, statementList: L2Base[], pos: Pos) {
-    super(pos);
-    this.name = name;
-    this.returnType = returnType;
-    this.statementList = statementList;
-  }
-
-  toString(): string {
-    return `method "${this.name}"`;
-  }
-
-  debugPrint(out: string[], prefix: string): void {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}\n`);
-    out.push(`${prefix}  returnType: `);
-    this.returnType ? this.returnType.debugPrint(out, `${prefix}  `) : out.push('(void)\n');
-    out.push(`${prefix}  statementList:\n`);
-    this.statementList.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-
-export class L2Variable extends L2Base {
+export class L2Argument extends L2Base {
   name: string;
   type: L2Type;
 
@@ -315,11 +286,76 @@ export class L2Variable extends L2Base {
   }
 
   toString(): string {
+    return 'argument';
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}\n`);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+
+export abstract class L2Definition<T extends L2Type = L2Type> extends L2Base {
+  type: T;
+  name: string;
+
+  constructor(name: string, type: T, pos: Pos) {
+    super(pos);
+    this.name = name;
+    this.type = type;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}\n`);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+
+export class L2Method extends L2Definition<L2CallableType> {
+  statementList: L2Statement[];
+
+  constructor(name: string, type: L2CallableType, statementList: L2Statement[], pos: Pos) {
+    super(name, type, pos);
+    this.name = name;
+    this.type = type;
+    this.statementList = statementList;
+  }
+
+  toString(): string {
+    return `method "${this.name}"`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  statementList:\n`);
+    this.statementList.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
+  }
+}
+
+export class L2Variable extends L2Definition {
+  constructor(name: string, type: L2Type, pos: Pos) {
+    super(name, type, pos);
+  }
+
+  toString(): string {
     return `variable "${this.name}"`;
   }
 }
 
-export class L2Type extends L2Base {
+export abstract class L2Type extends L2Base {
+  constructor(pos: Pos) {
+    super(pos);
+  }
+}
+
+export class L2SimpleType extends L2Type {
   name: string;
 
   constructor(name: string, pos: Pos) {
@@ -330,14 +366,86 @@ export class L2Type extends L2Base {
   toString(): string {
     return `type ${this.name}`;
   }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}\n`);
+  }
 }
 
-export type L2ParseExpressionListResult = {
-  list: L2Expression[];
-  errors: ParseError[];
-};
+export class L2CallableType extends L2Type {
+  argList: L2Argument[];
+  returnType?: L2Type;
 
-export type L2ParseResult = {
-  list: L2Base[];
+  constructor(argList: L2Argument[], returnType: L2Type | undefined, pos: Pos) {
+    super(pos);
+    this.argList = argList;
+    this.returnType = returnType;
+  }
+
+  toString(): string {
+    return `type`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  argList:\n`);
+    this.argList.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
+    out.push(`${prefix}  returnType: `);
+    this.returnType ? this.returnType.debugPrint(out, `${prefix}  `) : out.push('(void)\n');
+  }
+}
+
+export abstract class L2Statement extends L2Base {
+  constructor(pos: Pos) {
+    super(pos);
+  }
+}
+
+export class L2ExpressionStatement extends L2Statement {
+  expr: L2Expression;
+
+  constructor(expr: L2Expression, pos: Pos) {
+    super(pos);
+    this.expr = expr;
+  }
+
+  toString(): string {
+    return `expression statement`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+
+    out.push(`${prefix}  expr: `);
+    this.expr.debugPrint(out, `${prefix}  `);
+  }
+}
+
+export class L2ReturnStatement extends L2Statement {
+  expr?: L2Expression;
+
+  constructor(expr: L2Expression | undefined, pos: Pos) {
+    super(pos);
+    this.expr = expr;
+  }
+
+  toString(): string {
+    return `return statement`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+
+    out.push(`${prefix}  expr: `);
+    this.expr ? this.expr.debugPrint(out, `${prefix}  `) : out.push(` (void)\n`);
+  }
+}
+
+export type L2ParseResult<T extends L2Base = L2Base> = {
+  list: T[];
   errors: ParseError[];
 };
