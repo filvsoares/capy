@@ -100,14 +100,14 @@ class L1Parser {
   current: string = '';
   errors: ParseError[] = [];
 
-  next() {
+  consume(): void {
     if (!this.current) {
-      return '';
+      return;
     }
     this.pos++;
     if (this.pos >= this.s.length) {
       this.current = '';
-      return '';
+      return;
     }
     if (this.current === '\n') {
       this.col = 1;
@@ -116,7 +116,6 @@ class L1Parser {
       this.col++;
     }
     this.current = this.s[this.pos];
-    return this.current;
   }
 
   readWord(): L1Keyword | L1Identifier | undefined {
@@ -128,10 +127,13 @@ class L1Parser {
     const col1 = this.col;
     let lin2 = this.lin;
     let col2 = this.col + 1;
-    while (isWordMiddle(this.next())) {
+    this.consume();
+
+    while (isWordMiddle(this.current)) {
       value += this.current;
       lin2 = this.lin;
       col2 = this.col + 1;
+      this.consume();
     }
     return KEYWORDS.has(value)
       ? new L1Keyword(value, { lin1, col1, lin2, col2 })
@@ -147,10 +149,12 @@ class L1Parser {
     const col1 = this.col;
     let lin2 = this.lin;
     let col2 = this.col + 1;
-    while (isNumberMiddle(this.next())) {
+    this.consume();
+    while (isNumberMiddle(this.current)) {
       value += this.current;
       lin2 = this.lin;
       col2 = this.col + 1;
+      this.consume();
     }
     return new L1Number(value, { lin1, col1, lin2, col2 });
   }
@@ -159,7 +163,10 @@ class L1Parser {
     if (!isWhitespace(this.current)) {
       return;
     }
-    while (isWhitespace(this.next())) {}
+    this.consume();
+    while (isWhitespace(this.current)) {
+      this.consume();
+    }
     return true;
   }
 
@@ -172,7 +179,8 @@ class L1Parser {
     const col1 = this.col;
     let lin2 = this.lin;
     let col2 = this.col + 1;
-    while (this.next() && isOperator(value + this.current)) {
+    this.consume();
+    while (this.current && isOperator(value + this.current)) {
       value += this.current;
       lin2 = this.lin;
       col2 = this.col + 1;
@@ -189,7 +197,7 @@ class L1Parser {
     const col1 = this.col;
     const lin2 = this.lin;
     const col2 = this.col + 1;
-    this.next();
+    this.consume();
     return new L1Separator(value, { lin1, col1, lin2, col2 });
   }
 
@@ -204,7 +212,7 @@ class L1Parser {
     const lin1 = this.lin;
     const col1 = this.col;
 
-    this.next();
+    this.consume();
 
     const list: L1Base[] = [];
     while (true) {
@@ -226,7 +234,7 @@ class L1Parser {
           pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
           message: `Unexpected char "${this.current}"`,
         });
-        this.next();
+        this.consume();
       }
       if (item instanceof L1Base) {
         list.push(item);
@@ -244,7 +252,7 @@ class L1Parser {
           message: `Expected "${expectedBracketEnd}" but found ${this.current}`,
         });
       }
-      this.next();
+      this.consume();
     }
 
     return new L1Bracket(bracketStart, expectedBracketEnd, list, { lin1, col1, lin2, col2 });
@@ -259,9 +267,10 @@ class L1Parser {
     const col1 = this.col;
     let lin2 = this.lin;
     let col2 = this.col + 1;
+    this.consume();
 
     while (true) {
-      if (!this.next()) {
+      if (!this.current) {
         this.errors.push({
           level: ERROR,
           pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col },
@@ -270,13 +279,14 @@ class L1Parser {
         break;
       }
       if (this.current === '"') {
+        this.consume();
         break;
       }
       value += this.current;
       lin2 = this.lin;
       col2 = this.col + 1;
+      this.consume();
     }
-    this.next();
     return new L1String(value, { lin1, col1, lin2, col2 });
   }
 
@@ -308,7 +318,7 @@ class L1Parser {
           pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
           message: `Unexpected char "${this.current}"`,
         });
-        this.next();
+        this.consume();
       }
       if (item instanceof L1Base) {
         list.push(item);

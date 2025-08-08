@@ -22,13 +22,18 @@ import { Base, ERROR, INTERNAL, ParseError, Pos } from './base';
 import {
   L2Addition,
   L2Base,
+  L2CallableType,
   L2Expression,
+  L2ExpressionStatement,
   L2Identifier,
   L2Method,
   L2MethodCall,
   L2Number,
   L2Operation,
+  L2ReturnStatement,
+  L2SimpleType,
   L2String,
+  L2Type,
   L2Use,
   L2Variable,
 } from './l2-types';
@@ -51,26 +56,21 @@ import {
   L3String,
   L3Number,
   L3ExpressionStatement,
-  voidType,
   L3Expression,
   isStringType,
   L3Dereference,
-  stringType,
   L3StringConcat,
   L3ParseResult,
+  L3Argument,
+  VOID,
+  STRING,
+  L3ReturnStatement,
+  isVoidType,
 } from './l3-types';
 import { indent } from './util';
 
 const INVALID = 1;
 type Invalid = typeof INVALID;
-type ReadResult<T> = T | Invalid | undefined;
-
-function checkType(name: string): L3PrimitiveType {
-  if (name === 'string' || name === 'number' || name === 'boolean') {
-    return name;
-  }
-  throw new Error(`Unknown type "${name}"`);
-}
 
 export class L3Parser {
   symbols: { [name: string]: L3Definition } = {};
@@ -107,7 +107,10 @@ export class L3Parser {
             pos: item.pos,
           });
         } else {
-          this.symbols[item.name] = new L3Variable(new L3SimpleType(checkType(item.type.name)), item.pos);
+          const type = this.processType(item.type);
+          if (type !== INVALID) {
+            this.symbols[item.name] = new L3Variable(type, item.pos);
+          }
         }
       } else if (item instanceof L2Method) {
         if (this.symbols[item.name]) {
@@ -117,15 +120,14 @@ export class L3Parser {
             pos: item.pos,
           });
         } else {
-          const method = new L3Method(
-            new L3CallableType(item.returnType && new L3SimpleType(checkType(item.returnType.name))),
-            [],
-            item.pos
-          );
-          this.symbols[item.name] = method;
-          deferredTasks.push(() => {
-            this.processStatements(method, item);
-          });
+          const type = this.processCallableType(item.type);
+          if (type !== INVALID) {
+            const method = new L3Method(type, [], item.pos);
+            this.symbols[item.name] = method;
+            deferredTasks.push(() => {
+              this.processMethod(method, item);
+            });
+          }
         }
       } else {
         this.errors.push({
@@ -144,7 +146,7 @@ export class L3Parser {
       start !== INVALID
         ? [
             new L3ExpressionStatement(
-              new L3Operation(start, [new L3MethodCall([], INTERNAL)], voidType, false, INTERNAL),
+              new L3Operation(start, [new L3MethodCall([], INTERNAL)], VOID, false, INTERNAL),
               INTERNAL
             ),
           ]
@@ -155,13 +157,45 @@ export class L3Parser {
     };
   }
 
-  processStatements(method: L3Method, origin: L2Method) {
+  processMethod(method: L3Method, origin: L2Method) {
     for (const item of origin.statementList) {
-      if (item instanceof L2Operation) {
-        const op = this.processOperation(item);
-        if (op !== INVALID) {
-          method.statements.push(new L3ExpressionStatement(op, item.pos));
+      if (item instanceof L2ExpressionStatement) {
+        const expr = this.processExpression(item.expr);
+        if (expr === INVALID) {
+          continue;
         }
+        method.statements.push(new L3ExpressionStatement(expr, item.pos));
+      } else if (item instanceof L2ReturnStatement) {
+        const expr = item.expr && this.processExpression(item.expr);
+        if (expr === INVALID) {
+          continue;
+        }
+        const isVoid = isVoidType(method.type.returnType);
+        if (expr && isVoid) {
+          this.errors.push({
+            level: ERROR,
+            message: `Cannot return expression when method has void return type`,
+            pos: item.pos,
+          });
+          continue;
+        }
+        if (!expr && !isVoid) {
+          this.errors.push({
+            level: ERROR,
+            message: `Must return expression of type ${method.type.returnType}`,
+            pos: item.pos,
+          });
+          continue;
+        }
+        if (expr && !isVoid && !this.isAssignable(expr.type, method.type.returnType)) {
+          this.errors.push({
+            level: ERROR,
+            message: `Return expects ${method.type.returnType} but ${expr.type} was provided`,
+            pos: expr.pos,
+          });
+          continue;
+        }
+        method.statements.push(new L3ReturnStatement(expr, item.pos));
       } else {
         this.errors.push({
           level: ERROR,
@@ -214,16 +248,40 @@ export class L3Parser {
     const steps: L3OperationStep[] = [];
     for (const step of src.steps) {
       if (step instanceof L2MethodCall) {
+        if (!(type instanceof L3CallableType)) {
+          this.errors.push({
+            level: ERROR,
+            message: `${type} is not callable`,
+            pos: step.pos,
+          });
+          return INVALID;
+        }
+        if (type.argList.length !== step.argList.length) {
+          this.errors.push({
+            level: ERROR,
+            message: `Method expects ${type.argList.length} argument(s) but ${step.argList.length} was/were provided`,
+            pos: step.pos,
+          });
+          return INVALID;
+        }
         const argList: L3Expression[] = [];
-        for (const l2arg of step.argList) {
-          const l3arg = this.processExpression(l2arg);
+        for (let i = 0; i < step.argList.length; i++) {
+          const l3arg = this.processExpression(step.argList[i]);
           if (l3arg === INVALID) {
+            return INVALID;
+          }
+          if (!this.isAssignable(l3arg.type, type.argList[i].type)) {
+            this.errors.push({
+              level: ERROR,
+              message: `Argument ${i + 1} expects type ${type.argList[i].type} but ${l3arg.type} was provided`,
+              pos: l3arg.pos,
+            });
             return INVALID;
           }
           argList.push(l3arg);
         }
         steps.push(new L3MethodCall(argList, step.pos));
-        type = voidType;
+        type = type.returnType;
         reference = false;
       } else if (step instanceof L2Addition) {
         const other = this.processExpression(step.operand);
@@ -235,7 +293,7 @@ export class L3Parser {
             steps.push(new L3Dereference());
           }
           steps.push(new L3StringConcat(this.dereference(other), step.pos));
-          type = stringType;
+          type = STRING;
           reference = false;
         } else {
           this.errors.push({
@@ -257,9 +315,13 @@ export class L3Parser {
     return new L3Operation(operand, steps, type, reference, src.pos);
   }
 
+  isAssignable(type: L3Type, assignTo: L3Type) {
+    return type instanceof L3SimpleType && assignTo instanceof L3SimpleType && type.primitive === assignTo.primitive;
+  }
+
   processReference(name: string, pos: Pos = INTERNAL): L3Reference | Invalid {
     const symbol = this.symbols[name];
-    if (!(symbol instanceof L3Variable)) {
+    if (!(symbol instanceof L3Definition)) {
       this.errors.push({
         level: ERROR,
         message: `Undefined symbol "${name}"`,
@@ -268,6 +330,45 @@ export class L3Parser {
       return INVALID;
     }
     return new L3Reference(name, symbol.type, pos);
+  }
+
+  processCallableType(src: L2CallableType): L3CallableType | Invalid {
+    const argList: L3Argument[] = [];
+    for (const srcArg of src.argList) {
+      const dstType = this.processType(srcArg.type);
+      if (dstType === INVALID) {
+        return INVALID;
+      }
+      argList.push(new L3Argument(srcArg.name, dstType, srcArg.pos));
+    }
+    const returnType = src.returnType ? this.processType(src.returnType) : VOID;
+    if (returnType === INVALID) {
+      return INVALID;
+    }
+    return new L3CallableType(argList, returnType, src.pos);
+  }
+
+  processType(src: L2Type): L3Type | Invalid {
+    if (src instanceof L2SimpleType) {
+      if (src.name === 'string' || src.name === 'number') {
+        return new L3SimpleType(src.name, src.pos);
+      }
+      this.errors.push({
+        level: ERROR,
+        message: `I still don't understand type "${src.name}"`,
+        pos: src.pos,
+      });
+      return INVALID;
+    }
+    if (src instanceof L2CallableType) {
+      return this.processCallableType(src);
+    }
+    this.errors.push({
+      level: ERROR,
+      message: `I still don't understand "${src.constructor.name}"`,
+      pos: src.pos,
+    });
+    return INVALID;
   }
 }
 

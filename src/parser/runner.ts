@@ -32,6 +32,7 @@ import {
   L3String,
   L3StringConcat,
   L3Runnable,
+  L3ReturnStatement,
 } from './l3-types';
 
 export class Runner {
@@ -74,9 +75,9 @@ export class Runner {
           argList.push(this.runExpression(arg));
         }
         if (ref instanceof L3LibraryMethod) {
-          ref.callback(argList, this);
+          current = ref.callback(argList, this);
         } else if (ref instanceof L3Method) {
-          this.runStatementList(ref.statements);
+          current = this.runStatementList(ref.statements);
         } else {
           throw new Error(`Cannot run ${ref}`);
         }
@@ -90,12 +91,14 @@ export class Runner {
     return current;
   }
 
-  runStatementList(list: L3Statement[]) {
+  runStatementList(list: L3Statement[]): any {
     for (const item of list) {
       if (item instanceof L3ExpressionStatement) {
         this.runExpression(item.expr);
+      } else if (item instanceof L3ReturnStatement) {
+        return item.expr && this.runExpression(item.expr);
       } else {
-        throw new Error(`Unknown statement ${item}`);
+        throw new Error(`I still don't understand ${item.constructor.name}`);
       }
     }
   }

@@ -29,12 +29,12 @@ import {
   L2Identifier,
   L2MemberAccess,
   L2Method,
+  L2Argument,
   L2MethodCall,
   L2Multiplication,
   L2Number,
   L2Operation,
   L2OperationStep,
-  L2ParseExpressionListResult,
   L2ParseResult,
   L2Remainder,
   L2String,
@@ -44,6 +44,11 @@ import {
   L2UnaryPlus,
   L2Use,
   L2Variable,
+  L2CallableType,
+  L2SimpleType,
+  L2Statement,
+  L2ExpressionStatement,
+  L2ReturnStatement,
 } from './l2-types';
 import { L3Type } from './l3-types';
 
@@ -99,11 +104,11 @@ class L2Parser {
   current: L1Base | undefined;
   errors: ParseError[] = [];
 
-  next() {
+  consume(): void {
     if (!this.current) {
       return;
     }
-    return (this.current = this.list[++this.pos]);
+    this.current = this.list[++this.pos];
   }
 
   readUse(): ReadResult<L2Use> {
@@ -111,8 +116,9 @@ class L2Parser {
     if (!isKeyword(t1, 'use')) {
       return;
     }
+    this.consume();
 
-    const t2 = this.next();
+    const t2 = this.current;
     if (!isString(t2)) {
       this.errors.push({
         level: ERROR,
@@ -121,10 +127,11 @@ class L2Parser {
       });
       return INVALID;
     }
+    this.consume();
 
-    const t3 = this.next();
+    const t3 = this.current;
     if (isSeparator(t3, ';')) {
-      this.next();
+      this.consume();
     } else {
       this.errors.push({
         level: ERROR,
@@ -141,8 +148,9 @@ class L2Parser {
     if (!isKeyword(t1, 'def')) {
       return;
     }
+    this.consume();
 
-    const t2 = this.next();
+    const t2 = this.current;
     if (!isIdentifier(t2)) {
       this.errors.push({
         level: ERROR,
@@ -151,13 +159,72 @@ class L2Parser {
       });
       return INVALID;
     }
+    this.consume();
 
-    const t3 = this.next();
+    const t3 = this.current;
+
+    /* Method */
     if (isBracket(t3, '(')) {
-      return this.readDefMethod(t1, t2, t3);
+      let type = this.readCallableType();
+      if (type === INVALID) {
+        return INVALID;
+      }
+      if (!type) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected type1`,
+          pos: fallbackPos(t3?.pos, t2.pos),
+        });
+        return INVALID;
+      }
+
+      const t4 = this.current;
+      if (!isBracket(t4, '{')) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected "{" but found ${t4}`,
+          pos: fallbackPos(t4?.pos, type.pos),
+        });
+        return INVALID;
+      }
+      this.consume();
+
+      const r = new L2Parser().parseStatementList(t4.tokenList);
+      this.errors.push(...r.errors);
+
+      return new L2Method(t2.name, type, r.list, combinePos(t1.pos, t4.pos));
     }
+
+    /* Variable */
     if (isOperator(t3, ':')) {
-      return this.readDefVariable(t1, t2, t3);
+      this.consume();
+
+      const t4 = this.current;
+      const type = t4 && this.readType();
+      if (type === INVALID) {
+        return INVALID;
+      }
+      if (!type) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected type`,
+          pos: fallbackPos(t4?.pos, t3.pos),
+        });
+        return INVALID;
+      }
+
+      const t5 = this.current;
+      if (isSeparator(t5, ';')) {
+        this.consume();
+      } else {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected ";"`,
+          pos: fallbackPos(t5?.pos, t3!.pos),
+        });
+      }
+
+      return new L2Variable(t2.name, type, combinePos(t1.pos, (t5 ?? t3!).pos));
     }
 
     this.errors.push({
@@ -168,87 +235,50 @@ class L2Parser {
     return INVALID;
   }
 
-  readDefMethod(t1: L1Keyword, t2: L1Keyword, t3: L1Bracket): ReadResult<L2Method> {
+  readCallableType(): ReadResult<L2CallableType> {
+    const t1 = this.current;
+    if (!isBracket(t1, '(')) {
+      return;
+    }
+    this.consume();
+
     let returnType: L2Type | undefined;
 
-    let t4 = this.next();
-    let t5 = t4;
-    let t6 = t4;
+    const r = new L2Parser().parseArgumentList(t1.tokenList);
+    this.errors.push(...r.errors);
 
-    if (isOperator(t4, ':')) {
-      t5 = this.next();
-      const _returnType = t5 && this.readType();
+    const t2 = this.current;
+    if (isOperator(t2, ':')) {
+      this.consume();
+
+      const _returnType = this.readType();
       if (_returnType === INVALID) {
         return INVALID;
       }
       if (!_returnType) {
         this.errors.push({
           level: ERROR,
-          message: `Expected return type`,
-          pos: fallbackPos(t5?.pos, t4.pos),
+          message: `Expected type`,
+          pos: t2.pos,
         });
         return INVALID;
       }
       returnType = _returnType;
-      t6 = this.current;
     }
 
-    if (!isBracket(t6, '{')) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected "{"`,
-        pos: fallbackPos(t6?.pos, t5!.pos),
-      });
-      return INVALID;
+    return new L2CallableType(r.list, returnType, combinePos(t1.pos, (returnType ?? t1).pos));
+  }
+
+  readSimpleType(): ReadResult<L2SimpleType> {
+    const t1 = this.current;
+    if (isKeyword(t1) || isIdentifier(t1)) {
+      this.consume();
+      return new L2SimpleType(t1.name, t1.pos);
     }
-
-    this.next();
-
-    const r = new L2Parser().parseStatementList(t6.tokenList);
-    this.errors.push(...r.errors);
-
-    return new L2Method(t2.name, returnType, r.list, combinePos(t1.pos, t6.pos));
   }
 
   readType(): ReadResult<L2Type> {
-    const t1 = this.current;
-    if (!(isKeyword(t1) || isIdentifier(t1))) {
-      return;
-    }
-
-    this.next();
-
-    return new L2Type(t1.name, t1.pos);
-  }
-
-  readDefVariable(t1: L1Keyword, t2: L1Keyword, t3: L1Operator): ReadResult<L2Variable> {
-    const t4 = this.next();
-    const type = t4 && this.readType();
-    if (type === INVALID) {
-      return INVALID;
-    }
-    if (!type) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected type`,
-        pos: fallbackPos(t4?.pos, t3.pos),
-      });
-      return INVALID;
-    }
-
-    const t5 = this.current;
-    if (isSeparator(t5, ';')) {
-      this.next();
-    } else {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected ";"`,
-        pos: fallbackPos(t5?.pos, t4.pos),
-      });
-      return INVALID;
-    }
-
-    return new L2Variable(t2.name, type, combinePos(t1.pos, t5.pos));
+    return this.readCallableType() || this.readSimpleType();
   }
 
   readToplevel(): ReadResult<L2Base> {
@@ -536,18 +566,20 @@ class L2Parser {
   }
 
   readExpression({ unexpectedTokenErrorMsg }: ReadExpressionOpts = {}): ReadResult<L2Expression> {
-    const t1 = this.current;
-    if (isExpressionEnd(t1)) {
-      return;
-    }
-
     let list: (L1Base | L2Expression)[] = [];
 
-    let t: L1Base | undefined = t1;
-    do {
+    while (true) {
+      const t = this.current;
+      if (isExpressionEnd(t)) {
+        break;
+      }
       list.push(t!);
-      t = this.next();
-    } while (!isExpressionEnd(t));
+      this.consume();
+    }
+
+    if (list.length === 0) {
+      return;
+    }
 
     const p1 = this.processOperator1(list);
     if (p1 === INVALID) {
@@ -578,7 +610,7 @@ class L2Parser {
     return this.unwrapOperand(p4[0]);
   }
 
-  readExpressionStatement(): ReadResult<L2Base> {
+  readExpressionStatement(): ReadResult<L2ExpressionStatement> {
     const val = this.readExpression({
       unexpectedTokenErrorMsg: (t) => `Expected ";" but found ${t}`,
     });
@@ -590,9 +622,8 @@ class L2Parser {
     }
 
     const t = this.current;
-
     if (isSeparator(t, ';')) {
-      this.next();
+      this.consume();
     } else {
       this.errors.push({
         level: ERROR,
@@ -601,14 +632,56 @@ class L2Parser {
       });
     }
 
-    return val;
+    return new L2ExpressionStatement(val, combinePos(val.pos, (t ?? val).pos));
   }
 
-  readStatement(): ReadResult<L2Base> {
-    return this.readExpressionStatement();
+  readReturnStatement(): ReadResult<L2ReturnStatement> {
+    const t1 = this.current;
+    if (!isKeyword(t1, 'return')) {
+      return;
+    }
+    this.consume();
+
+    const t2 = this.current;
+    if (isSeparator(t2, ';')) {
+      this.consume();
+      return new L2ReturnStatement(undefined, combinePos(t1.pos, t2.pos));
+    }
+
+    const val = this.readExpression({
+      unexpectedTokenErrorMsg: (t) => `Expected expression but found ${t}`,
+    });
+    if (val === INVALID) {
+      return INVALID;
+    }
+    if (!val) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected expression but found ${t2}`,
+        pos: fallbackPos(t2?.pos, t1.pos),
+      });
+      return INVALID;
+    }
+
+    const t3 = this.current;
+    if (isSeparator(t3, ';')) {
+      this.consume();
+    } else {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected ";"`,
+        pos: fallbackPos(t3?.pos, val.pos),
+      });
+    }
+
+    return new L2ReturnStatement(val, combinePos(t1.pos, (t3 ?? val).pos));
   }
 
-  parseStatementList(list: L1Base[]): L2ParseResult {
+  readStatement(): ReadResult<L2Statement> {
+    return this.readReturnStatement() || this.readExpressionStatement();
+  }
+
+  parseStatementList(list: L1Base[]): L2ParseResult<L2Statement> {
     this.pos = 0;
     this.list = list;
     this.current = list[0];
@@ -631,7 +704,7 @@ class L2Parser {
             pos: t.pos,
           });
         }
-        this.next();
+        this.consume();
         continue;
       }
       error = false;
@@ -641,7 +714,91 @@ class L2Parser {
     return { list: outList, errors: this.errors };
   }
 
-  parseExpressionList(list: L1Base[], opts: ReadExpressionOpts = {}): L2ParseExpressionListResult {
+  parseArgumentList(list: L1Base[]): L2ParseResult<L2Argument> {
+    this.pos = 0;
+    this.list = list;
+    this.current = list[0];
+
+    const outList: L2Argument[] = [];
+    let error = false;
+
+    while (this.current) {
+      const t1 = this.current;
+      if (!isIdentifier(t1)) {
+        if (!error) {
+          error = true;
+          this.errors.push({
+            level: ERROR,
+            message: `Expected identifier but found ${t1}`,
+            pos: t1.pos,
+          });
+        }
+        this.consume();
+        continue;
+      }
+      this.consume();
+
+      const t2 = this.current;
+      if (!isOperator(t2, ':')) {
+        error = true;
+        this.errors.push({
+          level: ERROR,
+          message: `Expected ":" but found ${t2 ?? '")"'}`,
+          pos: fallbackPos(t2?.pos, t1.pos),
+        });
+        continue;
+      }
+      this.consume();
+
+      const t3 = this.current;
+      const type = this.readType();
+      if (!type) {
+        error = true;
+        this.errors.push({
+          level: ERROR,
+          message: `Expected type but found ${t3}`,
+          pos: fallbackPos(t3?.pos, t2.pos),
+        });
+        continue;
+      }
+      if (type === INVALID) {
+        error = true;
+        continue;
+      }
+
+      error = false;
+      outList.push(new L2Argument(t1.name, type, combinePos(t1.pos, type.pos)));
+
+      const t4 = this.current;
+      if (!t4) {
+        break;
+      }
+      if (!isSeparator(t4, ',')) {
+        error = true;
+        this.errors.push({
+          level: ERROR,
+          message: `Expected "," but found ${t4}`,
+          pos: t4.pos,
+        });
+        continue;
+      }
+      this.consume();
+
+      const t5 = this.current;
+      if (!t5) {
+        error = true;
+        this.errors.push({
+          level: ERROR,
+          message: `Expected argument after ","`,
+          pos: t4.pos,
+        });
+      }
+    }
+
+    return { list: outList, errors: this.errors };
+  }
+
+  parseExpressionList(list: L1Base[], opts: ReadExpressionOpts = {}): L2ParseResult<L2Expression> {
     this.pos = 0;
     this.list = list;
     this.current = list[0];
@@ -669,39 +826,43 @@ class L2Parser {
             },
           });
         }
-        this.next();
+        this.consume();
         continue;
       }
+
       outList.push(val);
       error = false;
-      if (!this.current) {
+
+      const t1 = this.current;
+      if (!t1) {
         break;
       }
-      const t = this.current;
-      if (!isSeparator(t, ',')) {
+      if (!isSeparator(t1, ',')) {
         this.errors.push({
           level: ERROR,
           message: `Expected ","`,
           pos: {
-            lin1: t.pos.lin1,
-            col1: t.pos.col1,
-            lin2: t.pos.lin2,
-            col2: t.pos.col2,
+            lin1: t1.pos.lin1,
+            col1: t1.pos.col1,
+            lin2: t1.pos.lin2,
+            col2: t1.pos.col2,
           },
         });
-        this.next();
+        this.consume();
         continue;
       }
-      this.next();
-      if (!this.current) {
+      this.consume();
+
+      const t2 = this.current;
+      if (!t2) {
         this.errors.push({
           level: ERROR,
           message: `Expected expression after ","`,
           pos: {
-            lin1: t.pos.lin2,
-            col1: t.pos.col2,
-            lin2: t.pos.lin2,
-            col2: t.pos.col2,
+            lin1: t1.pos.lin2,
+            col1: t1.pos.col2,
+            lin2: t1.pos.lin2,
+            col2: t1.pos.col2,
           },
         });
       }
@@ -737,7 +898,7 @@ class L2Parser {
             },
           });
         }
-        this.next();
+        this.consume();
         continue;
       }
       error = false;

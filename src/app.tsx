@@ -22,8 +22,17 @@ import { layer1Parse } from '@/parser/l1-parser';
 import { layer2Parse } from './parser/l2-parser';
 import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
-import { Base, ParseError } from './parser/base';
-import { L3CallableType, L3Definition, L3Library, L3LibraryMethod, L3Method } from './parser/l3-types';
+import { Base, INTERNAL, ParseError } from './parser/base';
+import {
+  L3Argument,
+  L3CallableType,
+  L3Definition,
+  L3Library,
+  L3LibraryMethod,
+  L3Method,
+  STRING,
+  VOID,
+} from './parser/l3-types';
 import { Runner } from './parser/runner';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-java';
@@ -46,9 +55,12 @@ def start() {
 const libs: { [name: string]: L3Library } = {
   io: {
     exported: {
-      print: new L3LibraryMethod(new L3CallableType(), ([s], runner) => {
-        runner.print(s);
-      }),
+      print: new L3LibraryMethod(
+        new L3CallableType([new L3Argument('s', STRING, INTERNAL)], VOID, INTERNAL),
+        ([s], runner) => {
+          runner.print(s);
+        }
+      ),
     },
   },
 };
@@ -65,10 +77,14 @@ export default function App() {
   const onRunClick = () => {
     const r = compile(content, libs, { debugL2: true, debugL3: true });
     setCompileResult(r);
-    if (r.runnable) {
-      const runner = new Runner(r.runnable);
-      runner.run();
-      setTerminalContent(runner.stdout);
+    if (r.errors.length === 0) {
+      const runner = new Runner(r.runnable!);
+      try {
+        runner.run();
+        setTerminalContent(runner.stdout);
+      } catch (err: any) {
+        setTerminalContent(`Runtime error: ${err.message}`);
+      }
     }
   };
 
