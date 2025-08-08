@@ -7087,23 +7087,45 @@ class L3Base extends Base {
 class L3Type extends L3Base {
 }
 class L3SimpleType extends L3Type {
-  constructor(primitive) {
-    super(INTERNAL);
+  constructor(primitive, pos) {
+    super(pos);
     this.primitive = primitive;
   }
   toString() {
     return `${this.primitive}`;
   }
 }
-const voidType = new L3SimpleType("void");
-const stringType = new L3SimpleType("string");
-const numberType = new L3SimpleType("number");
+const STRING = new L3SimpleType("string", INTERNAL);
+const NUMBER = new L3SimpleType("number", INTERNAL);
+new L3SimpleType("boolean", INTERNAL);
+const VOID = new L3SimpleType("void", INTERNAL);
 function isStringType(type) {
   return type instanceof L3SimpleType && type.primitive === "string";
 }
+function isVoidType(type) {
+  return type instanceof L3SimpleType && type.primitive === "void";
+}
+class L3Argument extends L3Type {
+  constructor(name, type, pos) {
+    super(pos);
+    this.name = name;
+    this.type = type;
+  }
+  toString() {
+    return "argument";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}
+`);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
 class L3CallableType extends L3Type {
-  constructor(returnType) {
-    super(INTERNAL);
+  constructor(argList, returnType, pos) {
+    super(pos);
+    this.argList = argList;
     this.returnType = returnType;
   }
   toString() {
@@ -7118,7 +7140,7 @@ class L3Expression extends L3Base {
 }
 class L3String extends L3Expression {
   constructor(value, pos) {
-    super(stringType, pos);
+    super(STRING, pos);
     this.value = value;
   }
   isReference() {
@@ -7135,7 +7157,7 @@ class L3String extends L3Expression {
 }
 class L3Number extends L3Expression {
   constructor(value, pos) {
-    super(numberType, pos);
+    super(NUMBER, pos);
     this.value = value;
   }
   isReference() {
@@ -7163,11 +7185,19 @@ class L3Reference extends L3Expression {
   }
 }
 class L3Definition extends L3Base {
-}
-class L3Variable extends L3Definition {
   constructor(type, pos) {
     super(pos);
     this.type = type;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+class L3Variable extends L3Definition {
+  constructor(type, pos) {
+    super(type, pos);
   }
   toString() {
     return "variable";
@@ -7190,6 +7220,20 @@ class L3ExpressionStatement extends L3Statement {
     super.debugPrint(out, prefix);
     out.push(`${prefix}  expr: `);
     this.expr.debugPrint(out, `${prefix}  `);
+  }
+}
+class L3ReturnStatement extends L3Statement {
+  constructor(expr, pos) {
+    super(pos);
+    this.expr = expr;
+  }
+  toString() {
+    return "return";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  expr: `);
+    this.expr ? this.expr.debugPrint(out, `${prefix}  `) : out.push("(void)\n");
   }
 }
 class L3OperationStep extends L3Base {
@@ -7222,10 +7266,13 @@ class L3Operation extends L3Expression {
     });
   }
 }
-class L3Method extends L3Variable {
+class L3Method extends L3Definition {
   constructor(type, statements, pos) {
     super(type, pos);
     this.statements = statements;
+  }
+  toString() {
+    return "method";
   }
   debugPrint(out, prefix) {
     super.debugPrint(out, prefix);
@@ -7331,9 +7378,9 @@ class Runner {
           argList.push(this.runExpression(arg));
         }
         if (ref instanceof L3LibraryMethod) {
-          ref.callback(argList, this);
+          current = ref.callback(argList, this);
         } else if (ref instanceof L3Method) {
-          this.runStatementList(ref.statements);
+          current = this.runStatementList(ref.statements);
         } else {
           throw new Error(`Cannot run ${ref}`);
         }
@@ -7350,8 +7397,10 @@ class Runner {
     for (const item of list) {
       if (item instanceof L3ExpressionStatement) {
         this.runExpression(item.expr);
+      } else if (item instanceof L3ReturnStatement) {
+        return item.expr && this.runExpression(item.expr);
       } else {
-        throw new Error(`Unknown statement ${item}`);
+        throw new Error(`I still don't understand ${item.constructor.name}`);
       }
     }
   }
@@ -35810,7 +35859,7 @@ class L1Base extends Base {
     return true;
   }
 }
-const KEYWORDS = /* @__PURE__ */ new Set(["use", "def", "string", "number", "boolean"]);
+const KEYWORDS = /* @__PURE__ */ new Set(["use", "def", "string", "number", "boolean", "return"]);
 class L1Keyword extends L1Base {
   constructor(name, pos) {
     super(pos);
@@ -35975,14 +36024,14 @@ class L1Parser {
     this.current = "";
     this.errors = [];
   }
-  next() {
+  consume() {
     if (!this.current) {
-      return "";
+      return;
     }
     this.pos++;
     if (this.pos >= this.s.length) {
       this.current = "";
-      return "";
+      return;
     }
     if (this.current === "\n") {
       this.col = 1;
@@ -35991,7 +36040,6 @@ class L1Parser {
       this.col++;
     }
     this.current = this.s[this.pos];
-    return this.current;
   }
   readWord() {
     if (!isWordStart(this.current)) {
@@ -36002,10 +36050,12 @@ class L1Parser {
     const col1 = this.col;
     let lin2 = this.lin;
     let col2 = this.col + 1;
-    while (isWordMiddle(this.next())) {
+    this.consume();
+    while (isWordMiddle(this.current)) {
       value += this.current;
       lin2 = this.lin;
       col2 = this.col + 1;
+      this.consume();
     }
     return KEYWORDS.has(value) ? new L1Keyword(value, { lin1, col1, lin2, col2 }) : new L1Identifier(value, { lin1, col1, lin2, col2 });
   }
@@ -36018,10 +36068,12 @@ class L1Parser {
     const col1 = this.col;
     let lin2 = this.lin;
     let col2 = this.col + 1;
-    while (isNumberMiddle(this.next())) {
+    this.consume();
+    while (isNumberMiddle(this.current)) {
       value += this.current;
       lin2 = this.lin;
       col2 = this.col + 1;
+      this.consume();
     }
     return new L1Number(value, { lin1, col1, lin2, col2 });
   }
@@ -36029,7 +36081,9 @@ class L1Parser {
     if (!isWhitespace(this.current)) {
       return;
     }
-    while (isWhitespace(this.next())) {
+    this.consume();
+    while (isWhitespace(this.current)) {
+      this.consume();
     }
     return true;
   }
@@ -36042,7 +36096,8 @@ class L1Parser {
     const col1 = this.col;
     let lin2 = this.lin;
     let col2 = this.col + 1;
-    while (this.next() && isOperator$1(value + this.current)) {
+    this.consume();
+    while (this.current && isOperator$1(value + this.current)) {
       value += this.current;
       lin2 = this.lin;
       col2 = this.col + 1;
@@ -36058,7 +36113,7 @@ class L1Parser {
     const col1 = this.col;
     const lin2 = this.lin;
     const col2 = this.col + 1;
-    this.next();
+    this.consume();
     return new L1Separator(value, { lin1, col1, lin2, col2 });
   }
   readBracket() {
@@ -36069,7 +36124,7 @@ class L1Parser {
     const expectedBracketEnd = bracketStart === "(" ? ")" : bracketStart === "[" ? "]" : bracketStart === "{" ? "}" : "";
     const lin1 = this.lin;
     const col1 = this.col;
-    this.next();
+    this.consume();
     const list = [];
     while (true) {
       if (!this.current) {
@@ -36090,7 +36145,7 @@ class L1Parser {
           pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
           message: `Unexpected char "${this.current}"`
         });
-        this.next();
+        this.consume();
       }
       if (item instanceof L1Base) {
         list.push(item);
@@ -36106,7 +36161,7 @@ class L1Parser {
           message: `Expected "${expectedBracketEnd}" but found ${this.current}`
         });
       }
-      this.next();
+      this.consume();
     }
     return new L1Bracket(bracketStart, expectedBracketEnd, list, { lin1, col1, lin2, col2 });
   }
@@ -36119,8 +36174,9 @@ class L1Parser {
     const col1 = this.col;
     let lin2 = this.lin;
     let col2 = this.col + 1;
+    this.consume();
     while (true) {
-      if (!this.next()) {
+      if (!this.current) {
         this.errors.push({
           level: ERROR,
           pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col },
@@ -36129,13 +36185,14 @@ class L1Parser {
         break;
       }
       if (this.current === '"') {
+        this.consume();
         break;
       }
       value += this.current;
       lin2 = this.lin;
       col2 = this.col + 1;
+      this.consume();
     }
-    this.next();
     return new L1String(value, { lin1, col1, lin2, col2 });
   }
   read() {
@@ -36156,7 +36213,7 @@ class L1Parser {
           pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
           message: `Unexpected char "${this.current}"`
         });
-        this.next();
+        this.consume();
       }
       if (item instanceof L1Base) {
         list.push(item);
@@ -36360,11 +36417,42 @@ class L2Use extends L2Base {
 `);
   }
 }
-class L2Method extends L2Base {
-  constructor(name, returnType, statementList, pos) {
+class L2Argument extends L2Base {
+  constructor(name, type, pos) {
     super(pos);
     this.name = name;
-    this.returnType = returnType;
+    this.type = type;
+  }
+  toString() {
+    return "argument";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}
+`);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+class L2Definition extends L2Base {
+  constructor(name, type, pos) {
+    super(pos);
+    this.name = name;
+    this.type = type;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}
+`);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+class L2Method extends L2Definition {
+  constructor(name, type, statementList, pos) {
+    super(name, type, pos);
+    this.name = name;
+    this.type = type;
     this.statementList = statementList;
   }
   toString() {
@@ -36372,10 +36460,6 @@ class L2Method extends L2Base {
   }
   debugPrint(out, prefix) {
     super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-    out.push(`${prefix}  returnType: `);
-    this.returnType ? this.returnType.debugPrint(out, `${prefix}  `) : out.push("(void)\n");
     out.push(`${prefix}  statementList:
 `);
     this.statementList.forEach((val) => {
@@ -36384,23 +36468,86 @@ class L2Method extends L2Base {
     });
   }
 }
-class L2Variable extends L2Base {
+class L2Variable extends L2Definition {
   constructor(name, type, pos) {
-    super(pos);
-    this.name = name;
-    this.type = type;
+    super(name, type, pos);
   }
   toString() {
     return `variable "${this.name}"`;
   }
 }
 class L2Type extends L2Base {
+  constructor(pos) {
+    super(pos);
+  }
+}
+class L2SimpleType extends L2Type {
   constructor(name, pos) {
     super(pos);
     this.name = name;
   }
   toString() {
     return `type ${this.name}`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}
+`);
+  }
+}
+class L2CallableType extends L2Type {
+  constructor(argList, returnType, pos) {
+    super(pos);
+    this.argList = argList;
+    this.returnType = returnType;
+  }
+  toString() {
+    return `type`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  argList:
+`);
+    this.argList.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
+    out.push(`${prefix}  returnType: `);
+    this.returnType ? this.returnType.debugPrint(out, `${prefix}  `) : out.push("(void)\n");
+  }
+}
+class L2Statement extends L2Base {
+  constructor(pos) {
+    super(pos);
+  }
+}
+class L2ExpressionStatement extends L2Statement {
+  constructor(expr, pos) {
+    super(pos);
+    this.expr = expr;
+  }
+  toString() {
+    return `expression statement`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  expr: `);
+    this.expr.debugPrint(out, `${prefix}  `);
+  }
+}
+class L2ReturnStatement extends L2Statement {
+  constructor(expr, pos) {
+    super(pos);
+    this.expr = expr;
+  }
+  toString() {
+    return `return statement`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  expr: `);
+    this.expr ? this.expr.debugPrint(out, `${prefix}  `) : out.push(` (void)
+`);
   }
 }
 function isKeyword(token, value) {
@@ -36434,18 +36581,19 @@ class L2Parser {
     this.list = [];
     this.errors = [];
   }
-  next() {
+  consume() {
     if (!this.current) {
       return;
     }
-    return this.current = this.list[++this.pos];
+    this.current = this.list[++this.pos];
   }
   readUse() {
     const t1 = this.current;
     if (!isKeyword(t1, "use")) {
       return;
     }
-    const t2 = this.next();
+    this.consume();
+    const t2 = this.current;
     if (!isString(t2)) {
       this.errors.push({
         level: ERROR,
@@ -36454,9 +36602,10 @@ class L2Parser {
       });
       return INVALID$1;
     }
-    const t3 = this.next();
+    this.consume();
+    const t3 = this.current;
     if (isSeparator(t3, ";")) {
-      this.next();
+      this.consume();
     } else {
       this.errors.push({
         level: ERROR,
@@ -36471,7 +36620,8 @@ class L2Parser {
     if (!isKeyword(t1, "def")) {
       return;
     }
-    const t2 = this.next();
+    this.consume();
+    const t2 = this.current;
     if (!isIdentifier(t2)) {
       this.errors.push({
         level: ERROR,
@@ -36480,12 +36630,61 @@ class L2Parser {
       });
       return INVALID$1;
     }
-    const t3 = this.next();
+    this.consume();
+    const t3 = this.current;
     if (isBracket(t3, "(")) {
-      return this.readDefMethod(t1, t2, t3);
+      let type = this.readCallableType();
+      if (type === INVALID$1) {
+        return INVALID$1;
+      }
+      if (!type) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected type1`,
+          pos: fallbackPos(t3 == null ? void 0 : t3.pos, t2.pos)
+        });
+        return INVALID$1;
+      }
+      const t4 = this.current;
+      if (!isBracket(t4, "{")) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected "{" but found ${t4}`,
+          pos: fallbackPos(t4 == null ? void 0 : t4.pos, type.pos)
+        });
+        return INVALID$1;
+      }
+      this.consume();
+      const r2 = new L2Parser().parseStatementList(t4.tokenList);
+      this.errors.push(...r2.errors);
+      return new L2Method(t2.name, type, r2.list, combinePos(t1.pos, t4.pos));
     }
     if (isOperator(t3, ":")) {
-      return this.readDefVariable(t1, t2, t3);
+      this.consume();
+      const t4 = this.current;
+      const type = t4 && this.readType();
+      if (type === INVALID$1) {
+        return INVALID$1;
+      }
+      if (!type) {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected type`,
+          pos: fallbackPos(t4 == null ? void 0 : t4.pos, t3.pos)
+        });
+        return INVALID$1;
+      }
+      const t5 = this.current;
+      if (isSeparator(t5, ";")) {
+        this.consume();
+      } else {
+        this.errors.push({
+          level: ERROR,
+          message: `Expected ";"`,
+          pos: fallbackPos(t5 == null ? void 0 : t5.pos, t3.pos)
+        });
+      }
+      return new L2Variable(t2.name, type, combinePos(t1.pos, (t5 ?? t3).pos));
     }
     this.errors.push({
       level: ERROR,
@@ -36494,75 +36693,43 @@ class L2Parser {
     });
     return INVALID$1;
   }
-  readDefMethod(t1, t2, t3) {
+  readCallableType() {
+    const t1 = this.current;
+    if (!isBracket(t1, "(")) {
+      return;
+    }
+    this.consume();
     let returnType;
-    let t4 = this.next();
-    let t5 = t4;
-    let t6 = t4;
-    if (isOperator(t4, ":")) {
-      t5 = this.next();
-      const _returnType = t5 && this.readType();
+    const r2 = new L2Parser().parseArgumentList(t1.tokenList);
+    this.errors.push(...r2.errors);
+    const t2 = this.current;
+    if (isOperator(t2, ":")) {
+      this.consume();
+      const _returnType = this.readType();
       if (_returnType === INVALID$1) {
         return INVALID$1;
       }
       if (!_returnType) {
         this.errors.push({
           level: ERROR,
-          message: `Expected return type`,
-          pos: fallbackPos(t5 == null ? void 0 : t5.pos, t4.pos)
+          message: `Expected type`,
+          pos: t2.pos
         });
         return INVALID$1;
       }
       returnType = _returnType;
-      t6 = this.current;
     }
-    if (!isBracket(t6, "{")) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected "{"`,
-        pos: fallbackPos(t6 == null ? void 0 : t6.pos, t5.pos)
-      });
-      return INVALID$1;
+    return new L2CallableType(r2.list, returnType, combinePos(t1.pos, (returnType ?? t1).pos));
+  }
+  readSimpleType() {
+    const t1 = this.current;
+    if (isKeyword(t1) || isIdentifier(t1)) {
+      this.consume();
+      return new L2SimpleType(t1.name, t1.pos);
     }
-    this.next();
-    const r2 = new L2Parser().parseStatementList(t6.tokenList);
-    this.errors.push(...r2.errors);
-    return new L2Method(t2.name, returnType, r2.list, combinePos(t1.pos, t6.pos));
   }
   readType() {
-    const t1 = this.current;
-    if (!(isKeyword(t1) || isIdentifier(t1))) {
-      return;
-    }
-    this.next();
-    return new L2Type(t1.name, t1.pos);
-  }
-  readDefVariable(t1, t2, t3) {
-    const t4 = this.next();
-    const type = t4 && this.readType();
-    if (type === INVALID$1) {
-      return INVALID$1;
-    }
-    if (!type) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected type`,
-        pos: fallbackPos(t4 == null ? void 0 : t4.pos, t3.pos)
-      });
-      return INVALID$1;
-    }
-    const t5 = this.current;
-    if (isSeparator(t5, ";")) {
-      this.next();
-    } else {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected ";"`,
-        pos: fallbackPos(t5 == null ? void 0 : t5.pos, t4.pos)
-      });
-      return INVALID$1;
-    }
-    return new L2Variable(t2.name, type, combinePos(t1.pos, t5.pos));
+    return this.readCallableType() || this.readSimpleType();
   }
   readToplevel() {
     return this.readUse() || this.readDef();
@@ -36823,16 +36990,18 @@ class L2Parser {
     return result2;
   }
   readExpression({ unexpectedTokenErrorMsg } = {}) {
-    const t1 = this.current;
-    if (isExpressionEnd(t1)) {
+    let list = [];
+    while (true) {
+      const t2 = this.current;
+      if (isExpressionEnd(t2)) {
+        break;
+      }
+      list.push(t2);
+      this.consume();
+    }
+    if (list.length === 0) {
       return;
     }
-    let list = [];
-    let t2 = t1;
-    do {
-      list.push(t2);
-      t2 = this.next();
-    } while (!isExpressionEnd(t2));
     const p1 = this.processOperator1(list);
     if (p1 === INVALID$1) {
       return INVALID$1;
@@ -36871,7 +37040,7 @@ class L2Parser {
     }
     const t2 = this.current;
     if (isSeparator(t2, ";")) {
-      this.next();
+      this.consume();
     } else {
       this.errors.push({
         level: ERROR,
@@ -36879,10 +37048,47 @@ class L2Parser {
         pos: fallbackPos(t2 == null ? void 0 : t2.pos, val.pos)
       });
     }
-    return val;
+    return new L2ExpressionStatement(val, combinePos(val.pos, (t2 ?? val).pos));
+  }
+  readReturnStatement() {
+    const t1 = this.current;
+    if (!isKeyword(t1, "return")) {
+      return;
+    }
+    this.consume();
+    const t2 = this.current;
+    if (isSeparator(t2, ";")) {
+      this.consume();
+      return new L2ReturnStatement(void 0, combinePos(t1.pos, t2.pos));
+    }
+    const val = this.readExpression({
+      unexpectedTokenErrorMsg: (t4) => `Expected expression but found ${t4}`
+    });
+    if (val === INVALID$1) {
+      return INVALID$1;
+    }
+    if (!val) {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected expression but found ${t2}`,
+        pos: fallbackPos(t2 == null ? void 0 : t2.pos, t1.pos)
+      });
+      return INVALID$1;
+    }
+    const t3 = this.current;
+    if (isSeparator(t3, ";")) {
+      this.consume();
+    } else {
+      this.errors.push({
+        level: ERROR,
+        message: `Expected ";"`,
+        pos: fallbackPos(t3 == null ? void 0 : t3.pos, val.pos)
+      });
+    }
+    return new L2ReturnStatement(val, combinePos(t1.pos, (t3 ?? val).pos));
   }
   readStatement() {
-    return this.readExpressionStatement();
+    return this.readReturnStatement() || this.readExpressionStatement();
   }
   parseStatementList(list) {
     this.pos = 0;
@@ -36906,11 +37112,86 @@ class L2Parser {
             pos: t2.pos
           });
         }
-        this.next();
+        this.consume();
         continue;
       }
       error = false;
       outList.push(val);
+    }
+    return { list: outList, errors: this.errors };
+  }
+  parseArgumentList(list) {
+    this.pos = 0;
+    this.list = list;
+    this.current = list[0];
+    const outList = [];
+    let error = false;
+    while (this.current) {
+      const t1 = this.current;
+      if (!isIdentifier(t1)) {
+        if (!error) {
+          error = true;
+          this.errors.push({
+            level: ERROR,
+            message: `Expected identifier but found ${t1}`,
+            pos: t1.pos
+          });
+        }
+        this.consume();
+        continue;
+      }
+      this.consume();
+      const t2 = this.current;
+      if (!isOperator(t2, ":")) {
+        error = true;
+        this.errors.push({
+          level: ERROR,
+          message: `Expected ":" but found ${t2 ?? '")"'}`,
+          pos: fallbackPos(t2 == null ? void 0 : t2.pos, t1.pos)
+        });
+        continue;
+      }
+      this.consume();
+      const t3 = this.current;
+      const type = this.readType();
+      if (!type) {
+        error = true;
+        this.errors.push({
+          level: ERROR,
+          message: `Expected type but found ${t3}`,
+          pos: fallbackPos(t3 == null ? void 0 : t3.pos, t2.pos)
+        });
+        continue;
+      }
+      if (type === INVALID$1) {
+        error = true;
+        continue;
+      }
+      error = false;
+      outList.push(new L2Argument(t1.name, type, combinePos(t1.pos, type.pos)));
+      const t4 = this.current;
+      if (!t4) {
+        break;
+      }
+      if (!isSeparator(t4, ",")) {
+        error = true;
+        this.errors.push({
+          level: ERROR,
+          message: `Expected "," but found ${t4}`,
+          pos: t4.pos
+        });
+        continue;
+      }
+      this.consume();
+      const t5 = this.current;
+      if (!t5) {
+        error = true;
+        this.errors.push({
+          level: ERROR,
+          message: `Expected argument after ","`,
+          pos: t4.pos
+        });
+      }
     }
     return { list: outList, errors: this.errors };
   }
@@ -36929,51 +37210,52 @@ class L2Parser {
       if (!val) {
         if (!error) {
           error = true;
-          const t22 = this.current;
+          const t3 = this.current;
           this.errors.push({
             level: ERROR,
-            message: `Unexpected ${t22}`,
+            message: `Unexpected ${t3}`,
             pos: {
-              lin1: t22.pos.lin1,
-              col1: t22.pos.col1,
-              lin2: t22.pos.lin2,
-              col2: t22.pos.col2
+              lin1: t3.pos.lin1,
+              col1: t3.pos.col1,
+              lin2: t3.pos.lin2,
+              col2: t3.pos.col2
             }
           });
         }
-        this.next();
+        this.consume();
         continue;
       }
       outList.push(val);
       error = false;
-      if (!this.current) {
+      const t1 = this.current;
+      if (!t1) {
         break;
       }
-      const t2 = this.current;
-      if (!isSeparator(t2, ",")) {
+      if (!isSeparator(t1, ",")) {
         this.errors.push({
           level: ERROR,
           message: `Expected ","`,
           pos: {
-            lin1: t2.pos.lin1,
-            col1: t2.pos.col1,
-            lin2: t2.pos.lin2,
-            col2: t2.pos.col2
+            lin1: t1.pos.lin1,
+            col1: t1.pos.col1,
+            lin2: t1.pos.lin2,
+            col2: t1.pos.col2
           }
         });
-        this.next();
+        this.consume();
         continue;
       }
-      this.next();
-      if (!this.current) {
+      this.consume();
+      const t2 = this.current;
+      if (!t2) {
         this.errors.push({
           level: ERROR,
           message: `Expected expression after ","`,
           pos: {
-            lin1: t2.pos.lin2,
-            col1: t2.pos.col2,
-            lin2: t2.pos.lin2,
-            col2: t2.pos.col2
+            lin1: t1.pos.lin2,
+            col1: t1.pos.col2,
+            lin2: t1.pos.lin2,
+            col2: t1.pos.col2
           }
         });
       }
@@ -37007,7 +37289,7 @@ class L2Parser {
             }
           });
         }
-        this.next();
+        this.consume();
         continue;
       }
       error = false;
@@ -37020,12 +37302,6 @@ function layer2Parse(list) {
   return new L2Parser().parse(list);
 }
 const INVALID = 1;
-function checkType(name) {
-  if (name === "string" || name === "number" || name === "boolean") {
-    return name;
-  }
-  throw new Error(`Unknown type "${name}"`);
-}
 class L3Parser {
   constructor() {
     this.symbols = {};
@@ -37062,7 +37338,10 @@ class L3Parser {
             pos: item.pos
           });
         } else {
-          this.symbols[item.name] = new L3Variable(new L3SimpleType(checkType(item.type.name)), item.pos);
+          const type = this.processType(item.type);
+          if (type !== INVALID) {
+            this.symbols[item.name] = new L3Variable(type, item.pos);
+          }
         }
       } else if (item instanceof L2Method) {
         if (this.symbols[item.name]) {
@@ -37072,15 +37351,14 @@ class L3Parser {
             pos: item.pos
           });
         } else {
-          const method = new L3Method(
-            new L3CallableType(item.returnType && new L3SimpleType(checkType(item.returnType.name))),
-            [],
-            item.pos
-          );
-          this.symbols[item.name] = method;
-          deferredTasks.push(() => {
-            this.processStatements(method, item);
-          });
+          const type = this.processCallableType(item.type);
+          if (type !== INVALID) {
+            const method = new L3Method(type, [], item.pos);
+            this.symbols[item.name] = method;
+            deferredTasks.push(() => {
+              this.processMethod(method, item);
+            });
+          }
         }
       } else {
         this.errors.push({
@@ -37096,7 +37374,7 @@ class L3Parser {
     const start = this.processReference("start");
     const initialStatements = start !== INVALID ? [
       new L3ExpressionStatement(
-        new L3Operation(start, [new L3MethodCall([], INTERNAL)], voidType, false, INTERNAL),
+        new L3Operation(start, [new L3MethodCall([], INTERNAL)], VOID, false, INTERNAL),
         INTERNAL
       )
     ] : [];
@@ -37105,13 +37383,45 @@ class L3Parser {
       errors: this.errors
     };
   }
-  processStatements(method, origin) {
+  processMethod(method, origin) {
     for (const item of origin.statementList) {
-      if (item instanceof L2Operation) {
-        const op = this.processOperation(item);
-        if (op !== INVALID) {
-          method.statements.push(new L3ExpressionStatement(op, item.pos));
+      if (item instanceof L2ExpressionStatement) {
+        const expr = this.processExpression(item.expr);
+        if (expr === INVALID) {
+          continue;
         }
+        method.statements.push(new L3ExpressionStatement(expr, item.pos));
+      } else if (item instanceof L2ReturnStatement) {
+        const expr = item.expr && this.processExpression(item.expr);
+        if (expr === INVALID) {
+          continue;
+        }
+        const isVoid = isVoidType(method.type.returnType);
+        if (expr && isVoid) {
+          this.errors.push({
+            level: ERROR,
+            message: `Cannot return expression when method has void return type`,
+            pos: item.pos
+          });
+          continue;
+        }
+        if (!expr && !isVoid) {
+          this.errors.push({
+            level: ERROR,
+            message: `Must return expression of type ${method.type.returnType}`,
+            pos: item.pos
+          });
+          continue;
+        }
+        if (expr && !isVoid && !this.isAssignable(expr.type, method.type.returnType)) {
+          this.errors.push({
+            level: ERROR,
+            message: `Return expects ${method.type.returnType} but ${expr.type} was provided`,
+            pos: expr.pos
+          });
+          continue;
+        }
+        method.statements.push(new L3ReturnStatement(expr, item.pos));
       } else {
         this.errors.push({
           level: ERROR,
@@ -37161,16 +37471,40 @@ class L3Parser {
     const steps = [];
     for (const step of src.steps) {
       if (step instanceof L2MethodCall) {
+        if (!(type instanceof L3CallableType)) {
+          this.errors.push({
+            level: ERROR,
+            message: `${type} is not callable`,
+            pos: step.pos
+          });
+          return INVALID;
+        }
+        if (type.argList.length !== step.argList.length) {
+          this.errors.push({
+            level: ERROR,
+            message: `Method expects ${type.argList.length} argument(s) but ${step.argList.length} was/were provided`,
+            pos: step.pos
+          });
+          return INVALID;
+        }
         const argList = [];
-        for (const l2arg of step.argList) {
-          const l3arg = this.processExpression(l2arg);
+        for (let i = 0; i < step.argList.length; i++) {
+          const l3arg = this.processExpression(step.argList[i]);
           if (l3arg === INVALID) {
+            return INVALID;
+          }
+          if (!this.isAssignable(l3arg.type, type.argList[i].type)) {
+            this.errors.push({
+              level: ERROR,
+              message: `Argument ${i + 1} expects type ${type.argList[i].type} but ${l3arg.type} was provided`,
+              pos: l3arg.pos
+            });
             return INVALID;
           }
           argList.push(l3arg);
         }
         steps.push(new L3MethodCall(argList, step.pos));
-        type = voidType;
+        type = type.returnType;
         reference = false;
       } else if (step instanceof L2Addition) {
         const other = this.processExpression(step.operand);
@@ -37182,7 +37516,7 @@ class L3Parser {
             steps.push(new L3Dereference());
           }
           steps.push(new L3StringConcat(this.dereference(other), step.pos));
-          type = stringType;
+          type = STRING;
           reference = false;
         } else {
           this.errors.push({
@@ -37203,9 +37537,12 @@ class L3Parser {
     }
     return new L3Operation(operand, steps, type, reference, src.pos);
   }
+  isAssignable(type, assignTo) {
+    return type instanceof L3SimpleType && assignTo instanceof L3SimpleType && type.primitive === assignTo.primitive;
+  }
   processReference(name, pos = INTERNAL) {
     const symbol = this.symbols[name];
-    if (!(symbol instanceof L3Variable)) {
+    if (!(symbol instanceof L3Definition)) {
       this.errors.push({
         level: ERROR,
         message: `Undefined symbol "${name}"`,
@@ -37214,6 +37551,43 @@ class L3Parser {
       return INVALID;
     }
     return new L3Reference(name, symbol.type, pos);
+  }
+  processCallableType(src) {
+    const argList = [];
+    for (const srcArg of src.argList) {
+      const dstType = this.processType(srcArg.type);
+      if (dstType === INVALID) {
+        return INVALID;
+      }
+      argList.push(new L3Argument(srcArg.name, dstType, srcArg.pos));
+    }
+    const returnType = src.returnType ? this.processType(src.returnType) : VOID;
+    if (returnType === INVALID) {
+      return INVALID;
+    }
+    return new L3CallableType(argList, returnType, src.pos);
+  }
+  processType(src) {
+    if (src instanceof L2SimpleType) {
+      if (src.name === "string" || src.name === "number") {
+        return new L3SimpleType(src.name, src.pos);
+      }
+      this.errors.push({
+        level: ERROR,
+        message: `I still don't understand type "${src.name}"`,
+        pos: src.pos
+      });
+      return INVALID;
+    }
+    if (src instanceof L2CallableType) {
+      return this.processCallableType(src);
+    }
+    this.errors.push({
+      level: ERROR,
+      message: `I still don't understand "${src.constructor.name}"`,
+      pos: src.pos
+    });
+    return INVALID;
   }
 }
 function layer3Parse(list, libs2) {
@@ -37348,9 +37722,12 @@ def start() {
 const libs = {
   io: {
     exported: {
-      print: new L3LibraryMethod(new L3CallableType(), ([s], runner) => {
-        runner.print(s);
-      })
+      print: new L3LibraryMethod(
+        new L3CallableType([new L3Argument("s", STRING, INTERNAL)], VOID, INTERNAL),
+        ([s], runner) => {
+          runner.print(s);
+        }
+      )
     }
   }
 };
@@ -37364,10 +37741,14 @@ function App() {
   const onRunClick = () => {
     const r2 = compile(content2, libs, { debugL2: true, debugL3: true });
     setCompileResult(r2);
-    if (r2.runnable) {
+    if (r2.errors.length === 0) {
       const runner = new Runner(r2.runnable);
-      runner.run();
-      setTerminalContent(runner.stdout);
+      try {
+        runner.run();
+        setTerminalContent(runner.stdout);
+      } catch (err) {
+        setTerminalContent(`Runtime error: ${err.message}`);
+      }
     }
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: classes$3.container, children: [
