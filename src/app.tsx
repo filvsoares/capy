@@ -23,16 +23,7 @@ import { layer2Parse } from './parser/l2-parser';
 import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
 import { Base, INTERNAL, ParseError } from './parser/base';
-import {
-  L3Argument,
-  L3CallableType,
-  L3Definition,
-  L3Library,
-  L3LibraryMethod,
-  L3Method,
-  STRING,
-  VOID,
-} from './parser/l3-types';
+import { L3Argument, L3CallableType, L3LibraryMethod, L3Method, L3Module, STRING, VOID } from './parser/l3-types';
 import { Runner } from './parser/runner';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-java';
@@ -48,22 +39,23 @@ import { Play } from 'feather-icons-react';
 const initialCode = `use "io";
 
 def start() {
-  print("Hello! What is your name?");
+    print(hello("John"));
+}
+
+def hello(p: string): string {
+    return "Hello, " + p + "!";
 }
 `;
 
-const libs: { [name: string]: L3Library } = {
-  io: {
-    exported: {
-      print: new L3LibraryMethod(
-        new L3CallableType([new L3Argument('s', STRING, INTERNAL)], VOID, INTERNAL),
-        ([s], runner) => {
-          runner.print(s);
-        }
-      ),
-    },
-  },
-};
+const io = new L3Module('io', [
+  new L3LibraryMethod(
+    'print',
+    new L3CallableType([new L3Argument('s', STRING, INTERNAL)], VOID, INTERNAL),
+    ([s], runner) => {
+      runner.print(s);
+    }
+  ),
+]);
 
 export default function App() {
   const [content, setContent] = useState(initialCode);
@@ -75,12 +67,12 @@ export default function App() {
   };
 
   const onRunClick = () => {
-    const r = compile(content, libs, { debugL2: true, debugL3: true });
+    const r = compile(content, [io], { debugL2: true, debugL3: true });
     setCompileResult(r);
     if (r.errors.length === 0) {
-      const runner = new Runner(r.runnable!);
+      const runner = new Runner();
       try {
-        runner.run();
+        runner.run([r.runnable!, io], 'main');
         setTerminalContent(runner.stdout);
       } catch (err: any) {
         setTerminalContent(`Runtime error: ${err.message}`);

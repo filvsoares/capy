@@ -38,12 +38,10 @@ import {
   L2Variable,
 } from './l2-types';
 import {
-  L3Definition,
-  L3Library,
   L3Method,
   L3Type,
   L3Variable,
-  L3Runnable as L3Runnable,
+  L3Module as L3Module,
   L3Statement,
   L3Operation,
   L3OperationStep,
@@ -66,107 +64,200 @@ import {
   STRING,
   L3ReturnStatement,
   isVoidType,
+  L3Symbol,
+  L3MethodDependency,
+  L3ModuleSymbolDependency,
+  L3ArgumentDependency,
 } from './l3-types';
-import { indent } from './util';
 
-const INVALID = 1;
+const INVALID = Symbol();
 type Invalid = typeof INVALID;
 
-export class L3Parser {
-  symbols: { [name: string]: L3Definition } = {};
-  errors: ParseError[] = [];
+class Scope {
+  parent: L3Parser;
+  deps: L3MethodDependency[] = [];
+  depsByName: { [name: string]: number } = {};
 
-  parse(list: L2Base[], libs: { [name: string]: L3Library }): L3ParseResult {
-    const deferredTasks: (() => void)[] = [];
+  constructor(parent: L3Parser) {
+    this.parent = parent;
+  }
+
+  add(dep: L3MethodDependency): number | Invalid {
+    const existing = this.depsByName[dep.name];
+    if (existing) {
+      this.parent.errors.push({
+        level: ERROR,
+        message: `Dependency ${dep.name} already exists`,
+        pos: dep.pos,
+      });
+      return INVALID;
+    }
+    const index = this.deps.length;
+    this.deps.push(dep);
+    this.depsByName[dep.name] = index;
+    return index;
+  }
+
+  find(ref: L2Identifier): number | Invalid {
+    const existing = this.depsByName[ref.value];
+    if (existing !== undefined) {
+      return existing;
+    }
+    const known = this.parent.knownDeps[ref.value];
+    if (known) {
+      if (known.length > 1) {
+        this.parent.errors.push({
+          level: ERROR,
+          message: `Dependency ${ref.value} is ambiguous`,
+          pos: ref.pos,
+        });
+        return INVALID;
+      }
+      return this.add(known[0]);
+    }
+    this.parent.errors.push({
+      level: ERROR,
+      message: `Dependency ${ref.value} not found`,
+      pos: ref.pos,
+    });
+    return INVALID;
+  }
+}
+
+export class L3Parser {
+  errors: ParseError[] = [];
+  symbols: { [name: string]: L3Symbol } = {};
+  modules: { [name: string]: L3Module } = {};
+  knownDeps: { [name: string]: L3MethodDependency[] } = {};
+  deferredTasks: (() => void)[] = [];
+  moduleName: string = '';
+
+  addSymbol(val: L3Symbol) {
+    if (this.symbols[val.name]) {
+      return false;
+    }
+    this.symbols[val.name] = val;
+    return true;
+  }
+
+  addKnownDep(name: string, val: L3MethodDependency) {
+    const existing = this.knownDeps[name];
+    if (existing) {
+      existing.push(val);
+    } else {
+      this.knownDeps[name] = [val];
+    }
+  }
+
+  parse(moduleName: string, list: L2Base[], modules: L3Module[]): L3ParseResult {
+    this.moduleName = moduleName;
+    for (const module of modules) {
+      this.modules[module.name] = module;
+    }
+
     for (const item of list) {
       if (item instanceof L2Use) {
-        const lib = libs[item.value];
-        if (!lib) {
-          this.errors.push({
-            level: ERROR,
-            message: `Library "${item.value}" not found`,
-            pos: item.pos,
-          });
-        }
-        for (const def in lib.exported) {
-          if (this.symbols[def]) {
-            this.errors.push({
-              level: ERROR,
-              message: `Library "${item.value}" defines "${def}" but it is already defined`,
-              pos: item.pos,
-            });
-          } else {
-            this.symbols[def] = lib.exported[def];
-          }
-        }
-      } else if (item instanceof L2Variable) {
-        if (this.symbols[item.name]) {
-          this.errors.push({
-            level: ERROR,
-            message: `Symbol "${item.name}" already defined`,
-            pos: item.pos,
-          });
-        } else {
-          const type = this.processType(item.type);
-          if (type !== INVALID) {
-            this.symbols[item.name] = new L3Variable(type, item.pos);
-          }
-        }
-      } else if (item instanceof L2Method) {
-        if (this.symbols[item.name]) {
-          this.errors.push({
-            level: ERROR,
-            message: `Symbol "${item.name}" already defined`,
-            pos: item.pos,
-          });
-        } else {
-          const type = this.processCallableType(item.type);
-          if (type !== INVALID) {
-            const method = new L3Method(type, [], item.pos);
-            this.symbols[item.name] = method;
-            deferredTasks.push(() => {
-              this.processMethod(method, item);
-            });
-          }
-        }
-      } else {
-        this.errors.push({
-          level: ERROR,
-          message: `I still don't understand ${item.constructor.name}`,
-          pos: item.pos,
-        });
+        this.processUse(item);
+        continue;
       }
+      if (item instanceof L2Variable) {
+        this.processVariable(item);
+        continue;
+      }
+      if (item instanceof L2Method) {
+        this.processMethod(item);
+        continue;
+      }
+      this.errors.push({
+        level: ERROR,
+        message: `I still don't understand ${item.constructor.name}`,
+        pos: item.pos,
+      });
     }
-    for (const task of deferredTasks) {
+
+    for (const task of this.deferredTasks) {
       task();
     }
-    const start = this.processReference('start');
 
-    const initialStatements =
-      start !== INVALID
-        ? [
-            new L3ExpressionStatement(
-              new L3Operation(start, [new L3MethodCall([], INTERNAL)], VOID, false, INTERNAL),
-              INTERNAL
-            ),
-          ]
-        : [];
     return {
-      runnable: new L3Runnable(this.symbols, initialStatements),
+      runnable: new L3Module(moduleName, Object.values(this.symbols)),
       errors: this.errors,
     };
   }
 
-  processMethod(method: L3Method, origin: L2Method) {
+  processUse(use: L2Use) {
+    const module = this.modules[use.value];
+    if (!module) {
+      this.errors.push({
+        level: ERROR,
+        message: `Module "${use.value}" not found`,
+        pos: use.pos,
+      });
+    }
+    for (const symbol of module.symbols) {
+      const dst = new L3ModuleSymbolDependency(use.value, symbol.name, symbol.type, use.pos);
+      this.addKnownDep(symbol.name, dst);
+    }
+  }
+
+  processVariable(item: L2Variable) {
+    const type = this.processType(item.type);
+    if (type === INVALID) {
+      return;
+    }
+    const dst = new L3Variable(item.name, type, item.pos);
+    if (!this.addSymbol(dst)) {
+      this.errors.push({
+        level: ERROR,
+        message: `Symbol "${dst.name}" already defined`,
+        pos: item.pos,
+      });
+    }
+    const dep = new L3ModuleSymbolDependency(this.moduleName, dst.name, dst.type, dst.pos);
+    this.addKnownDep(dep.name, dep);
+  }
+
+  processMethod(method: L2Method) {
+    const type = this.processCallableType(method.type);
+    if (type === INVALID) {
+      return;
+    }
+    const dst = new L3Method(method.name, type, [], [], method.pos);
+    if (!this.addSymbol(dst)) {
+      this.errors.push({
+        level: ERROR,
+        message: `Symbol "${dst.name}" already defined`,
+        pos: method.pos,
+      });
+    }
+
+    const dep = new L3ModuleSymbolDependency(this.moduleName, dst.name, dst.type, dst.pos);
+    this.addKnownDep(dep.name, dep);
+
+    this.deferredTasks.push(() => {
+      this.processMethodStatements(dst, method);
+    });
+  }
+
+  processMethodStatements(method: L3Method, origin: L2Method) {
+    const scope = new Scope(this);
+    method.deps = scope.deps;
+
+    for (let i = 0; i < method.type.argList.length; i++) {
+      const arg = method.type.argList[i];
+      const dep = new L3ArgumentDependency(i, arg.name, arg.type, arg.pos);
+      scope.add(dep);
+    }
+
     for (const item of origin.statementList) {
       if (item instanceof L2ExpressionStatement) {
-        const expr = this.processExpression(item.expr);
+        const expr = this.processExpression(item.expr, scope);
         if (expr === INVALID) {
           continue;
         }
         method.statements.push(new L3ExpressionStatement(expr, item.pos));
       } else if (item instanceof L2ReturnStatement) {
-        const expr = item.expr && this.processExpression(item.expr);
+        const expr = item.expr && this.processExpression(item.expr, scope);
         if (expr === INVALID) {
           continue;
         }
@@ -206,7 +297,7 @@ export class L3Parser {
     }
   }
 
-  processExpression(src: L2Expression): L3Expression | Invalid {
+  processExpression(src: L2Expression, scope: Scope): L3Expression | Invalid {
     if (src instanceof L2String) {
       return new L3String(src.value, src.pos);
     }
@@ -214,10 +305,10 @@ export class L3Parser {
       return new L3Number(src.value, src.pos);
     }
     if (src instanceof L2Identifier) {
-      return this.processReference(src.value, src.pos);
+      return this.processReference(src, scope);
     }
     if (src instanceof L2Operation) {
-      return this.processOperation(src);
+      return this.processOperation(src, scope);
     }
     this.errors.push({
       level: ERROR,
@@ -238,8 +329,8 @@ export class L3Parser {
     return new L3Operation(obj, [new L3Dereference()], obj.type, false, obj.pos);
   }
 
-  processOperation(src: L2Operation): L3Operation | Invalid {
-    const operand = this.processExpression(src.operand);
+  processOperation(src: L2Operation, scope: Scope): L3Operation | Invalid {
+    const operand = this.processExpression(src.operand, scope);
     if (operand === INVALID) {
       return INVALID;
     }
@@ -266,7 +357,7 @@ export class L3Parser {
         }
         const argList: L3Expression[] = [];
         for (let i = 0; i < step.argList.length; i++) {
-          const l3arg = this.processExpression(step.argList[i]);
+          const l3arg = this.processExpression(step.argList[i], scope);
           if (l3arg === INVALID) {
             return INVALID;
           }
@@ -284,7 +375,7 @@ export class L3Parser {
         type = type.returnType;
         reference = false;
       } else if (step instanceof L2Addition) {
-        const other = this.processExpression(step.operand);
+        const other = this.processExpression(step.operand, scope);
         if (other === INVALID) {
           return INVALID;
         }
@@ -319,17 +410,13 @@ export class L3Parser {
     return type instanceof L3SimpleType && assignTo instanceof L3SimpleType && type.primitive === assignTo.primitive;
   }
 
-  processReference(name: string, pos: Pos = INTERNAL): L3Reference | Invalid {
-    const symbol = this.symbols[name];
-    if (!(symbol instanceof L3Definition)) {
-      this.errors.push({
-        level: ERROR,
-        message: `Undefined symbol "${name}"`,
-        pos: pos,
-      });
+  processReference(ref: L2Identifier, scope: Scope): L3Reference | Invalid {
+    const index = scope.find(ref);
+    if (index === INVALID) {
       return INVALID;
     }
-    return new L3Reference(name, symbol.type, pos);
+    const dep = scope.deps[index];
+    return new L3Reference(index, dep.name, dep.type, ref.pos);
   }
 
   processCallableType(src: L2CallableType): L3CallableType | Invalid {
@@ -372,6 +459,6 @@ export class L3Parser {
   }
 }
 
-export function layer3Parse(list: L2Base[], libs: { [name: string]: L3Library }) {
-  return new L3Parser().parse(list, libs);
+export function layer3Parse(moduleName: string, list: L2Base[], modules: L3Module[]) {
+  return new L3Parser().parse(moduleName, list, modules);
 }

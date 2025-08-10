@@ -4,17 +4,17 @@ import { L1ParseResult } from './l1-types';
 import { layer2Parse } from './l2-parser';
 import { L2ParseResult } from './l2-types';
 import { layer3Parse } from './l3-parser';
-import { L3Library, L3ParseResult, L3Runnable } from './l3-types';
+import { L3ParseResult, L3Module } from './l3-types';
 
 export type CompileResult = {
   output: string;
   errors: ParseError[];
-  runnable?: L3Runnable;
+  runnable?: L3Module;
 };
 
 export function compile(
   s: string,
-  libs: { [name: string]: L3Library },
+  libs: L3Module[],
   { debugL1, debugL2, debugL3 }: { debugL1?: boolean; debugL2?: boolean; debugL3?: boolean }
 ): CompileResult {
   const errors: ParseError[] = [];
@@ -31,7 +31,7 @@ export function compile(
     p2 = layer2Parse(p1.list);
     errors.push(...p2.errors);
 
-    p3 = layer3Parse(p2.list, libs);
+    p3 = layer3Parse('main', p2.list, libs);
     errors.push(...p3.errors);
   } catch (err: any) {
     errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });

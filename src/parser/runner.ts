@@ -31,24 +31,31 @@ import {
   L3Statement,
   L3String,
   L3StringConcat,
-  L3Runnable,
+  L3Module,
   L3ReturnStatement,
+  L3Symbol,
+  L3ArgumentDependency,
+  L3ModuleSymbolDependency,
+  L3Dereference,
 } from './l3-types';
 
+class Variable {
+  value: any;
+
+  constructor(value: any) {
+    this.value = value;
+  }
+}
+
 export class Runner {
-  r: L3Runnable;
-  symbolValues: { [name: string]: any } = {};
+  modules: L3Module[] = [];
+  resolvedModules: { [module: string]: { index: number; symbols?: { [symbol: string]: L3Symbol } } } = {};
+
   stdout: string = '';
 
-  constructor(r: L3Runnable) {
-    this.r = r;
-  }
+  constructor() {}
 
-  resolveSymbol(name: string) {
-    return this.r.symbols[name];
-  }
-
-  runExpression(obj: L3Expression) {
+  runExpression(obj: L3Expression, deps: any[]) {
     if (obj instanceof L3String) {
       return obj.value;
     }
@@ -56,34 +63,38 @@ export class Runner {
       return obj.value;
     }
     if (obj instanceof L3Reference) {
-      return obj.name;
+      return deps[obj.index];
     }
     if (obj instanceof L3Operation) {
-      return this.runOperation(obj);
+      return this.runOperation(obj, deps);
     }
 
     throw new Error(`Cannot read value from ${obj}`);
   }
 
-  runOperation(op: L3Operation) {
-    let current: any = this.runExpression(op.operand);
+  runOperation(op: L3Operation, deps: any[]) {
+    let current: any = this.runExpression(op.operand, deps);
     for (const step of op.steps) {
       if (step instanceof L3MethodCall) {
-        const ref = this.resolveSymbol(current);
         const argList: any[] = [];
         for (const arg of step.argList) {
-          argList.push(this.runExpression(arg));
+          argList.push(this.runExpression(arg, deps));
         }
-        if (ref instanceof L3LibraryMethod) {
-          current = ref.callback(argList, this);
-        } else if (ref instanceof L3Method) {
-          current = this.runStatementList(ref.statements);
+        if (current instanceof L3LibraryMethod) {
+          current = current.callback(argList, this);
+        } else if (current instanceof L3Method) {
+          current = this.runMethod(current, argList);
         } else {
-          throw new Error(`Cannot run ${ref}`);
+          throw new Error(`Cannot run ${current}`);
         }
       } else if (step instanceof L3StringConcat) {
-        const other = this.runExpression(step.other);
+        const other = this.runExpression(step.other, deps);
         current += other;
+      } else if (step instanceof L3Dereference) {
+        if (!(current instanceof Variable)) {
+          throw new Error(`Current is not variable`);
+        }
+        current = current.value;
       } else {
         throw new Error(`Unknown step ${step}`);
       }
@@ -91,20 +102,56 @@ export class Runner {
     return current;
   }
 
-  runStatementList(list: L3Statement[]): any {
-    for (const item of list) {
+  runMethod(method: L3Method, args: any[]): any {
+    const deps = method.deps.map((dep) => {
+      if (dep instanceof L3ArgumentDependency) {
+        return new Variable(args[dep.index]);
+      }
+      if (dep instanceof L3ModuleSymbolDependency) {
+        return this.resolveSymbol(dep.module, dep.name);
+      }
+    });
+    for (const item of method.statements) {
       if (item instanceof L3ExpressionStatement) {
-        this.runExpression(item.expr);
+        this.runExpression(item.expr, deps);
       } else if (item instanceof L3ReturnStatement) {
-        return item.expr && this.runExpression(item.expr);
+        return item.expr && this.runExpression(item.expr, deps);
       } else {
         throw new Error(`I still don't understand ${item.constructor.name}`);
       }
     }
   }
 
-  run() {
-    this.runStatementList(this.r.initialStatements);
+  resolveSymbol(moduleName: string, symbolName: string) {
+    let resolvedModule = this.resolvedModules[moduleName];
+    if (!resolvedModule) {
+      throw new Error(`Module "${moduleName}" not found`);
+    }
+    let symbols = resolvedModule.symbols;
+    if (!symbols) {
+      const module = this.modules[resolvedModule.index];
+      resolvedModule.symbols = symbols = {};
+      for (const symbol of module.symbols) {
+        symbols[symbol.name] = symbol;
+      }
+    }
+    const symbol = symbols[symbolName];
+    if (!symbol) {
+      throw new Error(`Symbol "${symbolName}" not found in module ${moduleName}`);
+    }
+    return symbol;
+  }
+
+  run(modules: L3Module[], mainModuleName: string) {
+    this.modules = modules;
+    for (let i = 0; i < modules.length; i++) {
+      this.resolvedModules[modules[i].name] = { index: i };
+    }
+    const startMethod = this.resolveSymbol(mainModuleName, 'start');
+    if (!(startMethod instanceof L3Method)) {
+      throw new Error(`Symbol "start" is not a method`);
+    }
+    this.runMethod(startMethod, []);
   }
 
   print(s: string) {
