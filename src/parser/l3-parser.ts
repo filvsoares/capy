@@ -21,6 +21,7 @@
 import { Base, ERROR, INTERNAL, ParseError, Pos } from './base';
 import {
   L2Addition,
+  L2Assignment,
   L2Base,
   L2CallableType,
   L2Expression,
@@ -68,6 +69,7 @@ import {
   L3MethodDependency,
   L3ModuleSymbolDependency,
   L3ArgumentDependency,
+  L3Assignment,
 } from './l3-types';
 
 const INVALID = Symbol();
@@ -382,10 +384,10 @@ export class L3Parser {
         if (isStringType(type) && isStringType(other.type)) {
           if (reference) {
             steps.push(new L3Dereference());
+            reference = false;
           }
           steps.push(new L3StringConcat(this.dereference(other), step.pos));
           type = STRING;
-          reference = false;
         } else {
           this.errors.push({
             level: ERROR,
@@ -394,6 +396,32 @@ export class L3Parser {
           });
           return INVALID;
         }
+      } else if (step instanceof L2Assignment) {
+        const target = this.processExpression(step.operand, scope);
+        if (target === INVALID) {
+          return INVALID;
+        }
+        if (!target.isReference()) {
+          this.errors.push({
+            level: ERROR,
+            message: `Cannot assign value to ${target}`,
+            pos: target.pos,
+          });
+          return INVALID;
+        }
+        if (!this.isAssignable(type, target.type)) {
+          this.errors.push({
+            level: ERROR,
+            message: `Value of type ${type} cannot be assigned to variable of type ${target.type}`,
+            pos: target.pos,
+          });
+          return INVALID;
+        }
+        if (reference) {
+          steps.push(new L3Dereference());
+          reference = false;
+        }
+        steps.push(new L3Assignment(target, step.pos));
       } else {
         this.errors.push({
           level: ERROR,

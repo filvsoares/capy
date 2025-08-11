@@ -216,6 +216,12 @@ export class L2Subtraction extends L2OperationStep {
   toString(): string {
     return `operation`;
   }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  operand: `);
+    this.operand.debugPrint(out, `${prefix}  `);
+  }
 }
 
 export class L2Multiplication extends L2OperationStep {
@@ -228,6 +234,12 @@ export class L2Multiplication extends L2OperationStep {
 
   toString(): string {
     return `operation`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  operand: `);
+    this.operand.debugPrint(out, `${prefix}  `);
   }
 }
 
@@ -242,6 +254,12 @@ export class L2Division extends L2OperationStep {
   toString(): string {
     return `operation`;
   }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  operand: `);
+    this.operand.debugPrint(out, `${prefix}  `);
+  }
 }
 
 export class L2Remainder extends L2OperationStep {
@@ -254,6 +272,31 @@ export class L2Remainder extends L2OperationStep {
 
   toString(): string {
     return `operation`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  operand: `);
+    this.operand.debugPrint(out, `${prefix}  `);
+  }
+}
+
+export class L2Assignment extends L2OperationStep {
+  operand: L2Expression;
+
+  constructor(operand: L2Expression, pos: Pos) {
+    super(pos);
+    this.operand = operand;
+  }
+
+  toString(): string {
+    return `operation`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  operand: `);
+    this.operand.debugPrint(out, `${prefix}  `);
   }
 }
 

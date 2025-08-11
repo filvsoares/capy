@@ -49,6 +49,7 @@ import {
   L2Statement,
   L2ExpressionStatement,
   L2ReturnStatement,
+  L2Assignment,
 } from './l2-types';
 import { L3Type } from './l3-types';
 
@@ -565,6 +566,40 @@ class L2Parser {
     return result;
   }
 
+  processOperator5(list: (L1Base | L2Expression)[]): (L1Base | L2Expression)[] | Invalid {
+    list = [...list].reverse();
+
+    const result: (L1Base | L2Expression)[] = [];
+
+    let t1: L1Base | L2Expression = list[0];
+    let i = 1;
+    while (i < list.length) {
+      const t2 = list[i];
+      const t3 = list[i + 1];
+
+      if (isOperand(t1) && isOperator(t2, '=') && isOperand(t3)) {
+        const operand = this.unwrapOperand(t3);
+        if (operand === INVALID) {
+          return INVALID;
+        }
+        const operation = this.createOperation(t1, new L2Assignment(operand, combinePos(t1.pos, t3.pos)));
+        if (operation === INVALID) {
+          return INVALID;
+        }
+        t1 = operation;
+        i += 2;
+        continue;
+      }
+
+      result.push(t1);
+      t1 = t2;
+      i++;
+    }
+    result.push(t1);
+    result.reverse();
+    return result;
+  }
+
   readExpression({ unexpectedTokenErrorMsg }: ReadExpressionOpts = {}): ReadResult<L2Expression> {
     let list: (L1Base | L2Expression)[] = [];
 
@@ -597,17 +632,22 @@ class L2Parser {
     if (p4 === INVALID) {
       return INVALID;
     }
+    const p5 = this.processOperator5(p4);
+    if (p5 === INVALID) {
+      return INVALID;
+    }
 
-    if (p4.length > 1) {
+    if (p5.length > 1) {
+      console.log(p5);
       this.errors.push({
         level: ERROR,
-        message: unexpectedTokenErrorMsg?.(p4[1]) ?? `Unexpected ${p4[1]}`,
-        pos: p4[1].pos,
+        message: unexpectedTokenErrorMsg?.(p5[1]) ?? `Unexpected ${p5[1]}`,
+        pos: p5[1].pos,
       });
       return INVALID;
     }
 
-    return this.unwrapOperand(p4[0]);
+    return this.unwrapOperand(p5[0]);
   }
 
   readExpressionStatement(): ReadResult<L2ExpressionStatement> {

@@ -37,6 +37,7 @@ import {
   L3ArgumentDependency,
   L3ModuleSymbolDependency,
   L3Dereference,
+  L3Assignment,
 } from './l3-types';
 
 class Variable {
@@ -95,8 +96,14 @@ export class Runner {
           throw new Error(`Current is not variable`);
         }
         current = current.value;
+      } else if (step instanceof L3Assignment) {
+        const target = this.runExpression(step.target, deps);
+        if (!(target instanceof Variable)) {
+          throw new Error('Assignment target is not variable');
+        }
+        target.value = current;
       } else {
-        throw new Error(`Unknown step ${step}`);
+        throw new Error(`Unknown step ${step.constructor.name}`);
       }
     }
     return current;

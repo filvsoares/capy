@@ -442,6 +442,25 @@ export class L3StringConcat extends L3OperationStep {
   }
 }
 
+export class L3Assignment extends L3OperationStep {
+  target: L3Expression;
+
+  constructor(target: L3Expression, pos: Pos) {
+    super(pos);
+    this.target = target;
+  }
+
+  toString(): string {
+    return 'assignment';
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  target: `);
+    this.target.debugPrint(out, `${prefix}  `);
+  }
+}
+
 export class L3Module extends L3Base {
   name: string;
   symbols: L3Symbol[] = [];
