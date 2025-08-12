@@ -194,7 +194,7 @@ export class L3ModuleVariableReference extends L3VariableReference {
   }
 }
 
-export class L3StackVariableReference extends L3VariableReference {
+export class L3LocalVariableReference extends L3VariableReference {
   index: number;
   name: string;
 
@@ -234,11 +234,11 @@ export abstract class L3Symbol<T extends L3Type = L3Type> extends L3Base {
 }
 
 export class L3Variable extends L3Symbol {
-  initMethod: L3Method | null;
+  initExpr: L3Expression | null;
 
-  constructor(name: string, type: L3Type, initMethod: L3Method | null, pos: Pos) {
+  constructor(name: string, type: L3Type, initExpr: L3Method | null, pos: Pos) {
     super(name, type, pos);
-    this.initMethod = initMethod;
+    this.initExpr = initExpr;
   }
 
   toString(): string {
@@ -246,8 +246,8 @@ export class L3Variable extends L3Symbol {
   }
   debugPrint(out: string[], prefix: string): void {
     super.debugPrint(out, prefix);
-    out.push(`${prefix}  initMethod: `);
-    this.initMethod ? this.initMethod.debugPrint(out, `${prefix}  `) : out.push(' (none)\n');
+    out.push(`${prefix}  initExpr: `);
+    this.initExpr ? this.initExpr.debugPrint(out, `${prefix}  `) : out.push(' (none)\n');
   }
 }
 
@@ -304,12 +304,10 @@ export abstract class L3OperationStep extends L3Base {
 export class L3Operation extends L3Expression {
   operand: L3Expression;
   steps: L3OperationStep[];
-  reference: boolean;
 
-  constructor(operand: L3Expression, steps: L3OperationStep[], type: L3Type, reference: boolean, pos: Pos) {
+  constructor(operand: L3Expression, steps: L3OperationStep[], type: L3Type, pos: Pos) {
     super(type, pos);
     this.operand = operand;
-    this.reference = reference;
     this.steps = steps;
   }
 
@@ -330,7 +328,7 @@ export class L3Operation extends L3Expression {
   }
 }
 
-export abstract class L3StackVariable extends L3Base {
+export class L3LocalVariable extends L3Base {
   name: string;
   type: L3Type;
 
@@ -338,6 +336,10 @@ export abstract class L3StackVariable extends L3Base {
     super(pos);
     this.name = name;
     this.type = type;
+  }
+
+  toString(): string {
+    return 'local var';
   }
 
   debugPrint(out: string[], prefix: string): void {
@@ -348,7 +350,7 @@ export abstract class L3StackVariable extends L3Base {
   }
 }
 
-export class L3ArgumentVariable extends L3StackVariable {
+export class L3ArgumentVariable extends L3LocalVariable {
   index: number;
 
   constructor(index: number, name: string, type: L3Type, pos: Pos) {
@@ -367,10 +369,10 @@ export class L3ArgumentVariable extends L3StackVariable {
 }
 
 export class L3Method extends L3Symbol<L3CallableType> {
-  stack: L3StackVariable[];
+  stack: L3LocalVariable[];
   statements: L3Base[];
 
-  constructor(name: string, type: L3CallableType, deps: L3StackVariable[], statements: L3Base[], pos: Pos) {
+  constructor(name: string, type: L3CallableType, deps: L3LocalVariable[], statements: L3Base[], pos: Pos) {
     super(name, type, pos);
     this.stack = deps;
     this.statements = statements;

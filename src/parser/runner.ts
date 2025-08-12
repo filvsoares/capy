@@ -39,7 +39,7 @@ import {
   L3Variable,
   L3MethodReference,
   L3ModuleVariableReference,
-  L3StackVariableReference,
+  L3LocalVariableReference,
 } from './l3-types';
 
 class Variable {
@@ -85,13 +85,13 @@ export class Runner {
       let val2 = val1[obj.name];
       if (!val2) {
         val1[obj.name] = val2 = new Variable('');
-        if (symbol.initMethod) {
-          val2.value = this.runMethod(symbol.initMethod, []);
+        if (symbol.initExpr) {
+          val2.value = this.runExpression(symbol.initExpr, []);
         }
       }
       return val2;
     }
-    if (obj instanceof L3StackVariableReference) {
+    if (obj instanceof L3LocalVariableReference) {
       return deps[obj.index];
     }
     if (obj instanceof L3Operation) {
@@ -141,7 +141,7 @@ export class Runner {
       if (item instanceof L3ArgumentVariable) {
         return new Variable(args[item.index]);
       }
-      throw new Error(`Cannot resolve stack item ${item.constructor.name}`);
+      return new Variable('');
     });
     for (const item of method.statements) {
       if (item instanceof L3ExpressionStatement) {

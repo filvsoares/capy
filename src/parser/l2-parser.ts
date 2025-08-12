@@ -753,7 +753,7 @@ class L2Parser {
   }
 
   readStatement(): ReadResult<L2Statement> {
-    return this.readReturnStatement() || this.readExpressionStatement();
+    return this.readReturnStatement() || this.readExpressionStatement() || this.readVariable();
   }
 
   parseStatementList(list: L1Base[]): L2ParseResult<L2Statement> {
