@@ -33,6 +33,7 @@ import {
   L2Operation,
   L2ReturnStatement,
   L2SimpleType,
+  L2Statement,
   L2String,
   L2Type,
   L2Use,
@@ -207,7 +208,7 @@ export class L3Parser {
     if (type === INVALID) {
       return;
     }
-    const dst = new L3Variable(item.name, type, item.pos);
+    const dst = new L3Variable(item.name, type, null, item.pos);
     if (!this.addSymbol(dst)) {
       this.errors.push({
         level: ERROR,
@@ -217,6 +218,12 @@ export class L3Parser {
     }
     const dep = new L3ModuleSymbolDependency(this.moduleName, dst.name, dst.type, dst.pos);
     this.addKnownDep(dep.name, dep);
+
+    if (item.initExpr) {
+      this.deferredTasks.push(() => {
+        this.processVariableInitializer(dst, item.initExpr!);
+      });
+    }
   }
 
   processMethod(method: L2Method) {
@@ -237,11 +244,16 @@ export class L3Parser {
     this.addKnownDep(dep.name, dep);
 
     this.deferredTasks.push(() => {
-      this.processMethodStatements(dst, method);
+      this.processMethodStatements(dst, method.statementList);
     });
   }
 
-  processMethodStatements(method: L3Method, origin: L2Method) {
+  processVariableInitializer(variable: L3Variable, initExpr: L2Expression) {
+    variable.initMethod = new L3Method('__init', new L3CallableType([], variable.type, INTERNAL), [], [], INTERNAL);
+    this.processMethodStatements(variable.initMethod, [new L2ReturnStatement(initExpr, INTERNAL)]);
+  }
+
+  processMethodStatements(method: L3Method, statementList: L2Statement[]) {
     const scope = new Scope(this);
     method.deps = scope.deps;
 
@@ -251,7 +263,7 @@ export class L3Parser {
       scope.add(dep);
     }
 
-    for (const item of origin.statementList) {
+    for (const item of statementList) {
       if (item instanceof L2ExpressionStatement) {
         const expr = this.processExpression(item.expr, scope);
         if (expr === INVALID) {
@@ -259,7 +271,7 @@ export class L3Parser {
         }
         method.statements.push(new L3ExpressionStatement(expr, item.pos));
       } else if (item instanceof L2ReturnStatement) {
-        const expr = item.expr && this.processExpression(item.expr, scope);
+        const expr = item.expr && this.dereference(this.processExpression(item.expr, scope));
         if (expr === INVALID) {
           continue;
         }
@@ -320,7 +332,10 @@ export class L3Parser {
     return INVALID;
   }
 
-  dereference(obj: L3Expression) {
+  dereference(obj: L3Expression | Invalid) {
+    if (obj === INVALID) {
+      return INVALID;
+    }
     if (!obj.isReference()) {
       return obj;
     }
@@ -377,7 +392,7 @@ export class L3Parser {
         type = type.returnType;
         reference = false;
       } else if (step instanceof L2Addition) {
-        const other = this.processExpression(step.operand, scope);
+        const other = this.dereference(this.processExpression(step.operand, scope));
         if (other === INVALID) {
           return INVALID;
         }
@@ -386,7 +401,7 @@ export class L3Parser {
             steps.push(new L3Dereference());
             reference = false;
           }
-          steps.push(new L3StringConcat(this.dereference(other), step.pos));
+          steps.push(new L3StringConcat(other, step.pos));
           type = STRING;
         } else {
           this.errors.push({

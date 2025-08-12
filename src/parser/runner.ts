@@ -38,6 +38,7 @@ import {
   L3ModuleSymbolDependency,
   L3Dereference,
   L3Assignment,
+  L3Variable,
 } from './l3-types';
 
 class Variable {
@@ -51,6 +52,7 @@ class Variable {
 export class Runner {
   modules: L3Module[] = [];
   resolvedModules: { [module: string]: { index: number; symbols?: { [symbol: string]: L3Symbol } } } = {};
+  variables: { [module: string]: { [name: string]: Variable } } = {};
 
   stdout: string = '';
 
@@ -115,7 +117,25 @@ export class Runner {
         return new Variable(args[dep.index]);
       }
       if (dep instanceof L3ModuleSymbolDependency) {
-        return this.resolveSymbol(dep.module, dep.name);
+        const symbol = this.resolveSymbol(dep.module, dep.name);
+        if (symbol instanceof L3Method || symbol instanceof L3LibraryMethod) {
+          return symbol;
+        }
+        if (symbol instanceof L3Variable) {
+          let val1 = this.variables[dep.module];
+          if (!val1) {
+            this.variables[dep.module] = val1 = {};
+          }
+          let val2 = val1[dep.name];
+          if (!val2) {
+            val1[dep.name] = val2 = new Variable('');
+            if (symbol.initMethod) {
+              val2.value = this.runMethod(symbol.initMethod, []);
+            }
+          }
+          return val2;
+        }
+        throw new Error(`Cannot resolve reference of ${symbol.constructor.name}`);
       }
     });
     for (const item of method.statements) {

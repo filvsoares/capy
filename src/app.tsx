@@ -26,7 +26,7 @@ import { Base, INTERNAL, ParseError } from './parser/base';
 import { L3Argument, L3CallableType, L3LibraryMethod, L3Method, L3Module, STRING, VOID } from './parser/l3-types';
 import { Runner } from './parser/runner';
 import AceEditor from 'react-ace';
-import 'ace-builds/src-noconflict/mode-java';
+import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
 import { layer3Parse } from './parser/l3-parser';
@@ -38,11 +38,11 @@ import { Play } from 'feather-icons-react';
 
 const initialCode = `use "io";
 
-def start() {
+function start() {
     print(hello("John"));
 }
 
-def hello(p: string): string {
+function hello(p: string): string {
     return "Hello, " + p + "!";
 }
 `;
@@ -84,7 +84,7 @@ export default function App() {
     <div className={classes.container}>
       <Tile className={classes.editor} title='Code editor'>
         <AceEditor
-          mode='java'
+          mode='typescript'
           theme='github_light_default'
           value={content}
           onChange={onContentChange}

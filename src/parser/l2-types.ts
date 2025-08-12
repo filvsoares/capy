@@ -19,7 +19,6 @@
  */
 
 import { Base, ParseError, Pos } from './base';
-import { indent } from './util';
 
 export abstract class L2Base extends Base {
   isL2() {
@@ -383,12 +382,21 @@ export class L2Method extends L2Definition<L2CallableType> {
 }
 
 export class L2Variable extends L2Definition {
-  constructor(name: string, type: L2Type, pos: Pos) {
+  initExpr: L2Expression | null;
+
+  constructor(name: string, type: L2Type, initExpr: L2Expression | null, pos: Pos) {
     super(name, type, pos);
+    this.initExpr = initExpr;
   }
 
   toString(): string {
     return `variable "${this.name}"`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  initExpr: `);
+    this.initExpr ? this.initExpr.debugPrint(out, `${prefix}  `) : out.push('(none)\n');
   }
 }
 
@@ -418,9 +426,9 @@ export class L2SimpleType extends L2Type {
 
 export class L2CallableType extends L2Type {
   argList: L2Argument[];
-  returnType?: L2Type;
+  returnType: L2Type | null;
 
-  constructor(argList: L2Argument[], returnType: L2Type | undefined, pos: Pos) {
+  constructor(argList: L2Argument[], returnType: L2Type | null, pos: Pos) {
     super(pos);
     this.argList = argList;
     this.returnType = returnType;
@@ -469,9 +477,9 @@ export class L2ExpressionStatement extends L2Statement {
 }
 
 export class L2ReturnStatement extends L2Statement {
-  expr?: L2Expression;
+  expr: L2Expression | null;
 
-  constructor(expr: L2Expression | undefined, pos: Pos) {
+  constructor(expr: L2Expression | null, pos: Pos) {
     super(pos);
     this.expr = expr;
   }

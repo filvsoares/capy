@@ -32,7 +32,7 @@ export abstract class L1Base extends Base {
   }
 }
 
-export const KEYWORDS = new Set(['use', 'def', 'string', 'number', 'boolean', 'return']);
+export const KEYWORDS = new Set(['use', 'string', 'number', 'boolean', 'return', 'function', 'var', 'const']);
 
 export class L1Keyword extends L1Base {
   name: string;

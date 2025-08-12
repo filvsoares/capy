@@ -204,12 +204,20 @@ export abstract class L3Symbol<T extends L3Type = L3Type> extends L3Base {
 }
 
 export class L3Variable extends L3Symbol {
-  constructor(name: string, type: L3Type, pos: Pos) {
+  initMethod: L3Method | null;
+
+  constructor(name: string, type: L3Type, initMethod: L3Method | null, pos: Pos) {
     super(name, type, pos);
+    this.initMethod = initMethod;
   }
 
   toString(): string {
     return 'variable';
+  }
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  initMethod: `);
+    this.initMethod ? this.initMethod.debugPrint(out, `${prefix}  `) : out.push(' (none)\n');
   }
 }
 
@@ -239,9 +247,9 @@ export class L3ExpressionStatement extends L3Statement {
 }
 
 export class L3ReturnStatement extends L3Statement {
-  expr?: L3Expression;
+  expr: L3Expression | null;
 
-  constructor(expr: L3Expression | undefined, pos: Pos) {
+  constructor(expr: L3Expression | null, pos: Pos) {
     super(pos);
     this.expr = expr;
   }
