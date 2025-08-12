@@ -27,18 +27,19 @@ import {
   L3MethodCall,
   L3Number,
   L3Operation,
-  L3Reference,
   L3Statement,
   L3String,
   L3StringConcat,
   L3Module,
   L3ReturnStatement,
   L3Symbol,
-  L3ArgumentDependency,
-  L3ModuleSymbolDependency,
-  L3Dereference,
+  L3ArgumentVariable,
+  L3ReadVariable,
   L3Assignment,
   L3Variable,
+  L3MethodReference,
+  L3ModuleVariableReference,
+  L3StackVariableReference,
 } from './l3-types';
 
 class Variable {
@@ -65,14 +66,38 @@ export class Runner {
     if (obj instanceof L3Number) {
       return obj.value;
     }
-    if (obj instanceof L3Reference) {
+    if (obj instanceof L3MethodReference) {
+      const symbol = this.resolveSymbol(obj.module, obj.name);
+      if (!(symbol instanceof L3Method || symbol instanceof L3LibraryMethod)) {
+        throw new Error(`Expected method but found ${symbol.constructor.name}`);
+      }
+      return symbol;
+    }
+    if (obj instanceof L3ModuleVariableReference) {
+      const symbol = this.resolveSymbol(obj.module, obj.name);
+      if (!(symbol instanceof L3Variable)) {
+        throw new Error(`Expected variable but found ${symbol.constructor.name}`);
+      }
+      let val1 = this.variables[obj.module];
+      if (!val1) {
+        this.variables[obj.module] = val1 = {};
+      }
+      let val2 = val1[obj.name];
+      if (!val2) {
+        val1[obj.name] = val2 = new Variable('');
+        if (symbol.initMethod) {
+          val2.value = this.runMethod(symbol.initMethod, []);
+        }
+      }
+      return val2;
+    }
+    if (obj instanceof L3StackVariableReference) {
       return deps[obj.index];
     }
     if (obj instanceof L3Operation) {
       return this.runOperation(obj, deps);
     }
-
-    throw new Error(`Cannot read value from ${obj}`);
+    throw new Error(`Cannot read value from ${obj.constructor.name}`);
   }
 
   runOperation(op: L3Operation, deps: any[]) {
@@ -88,12 +113,12 @@ export class Runner {
         } else if (current instanceof L3Method) {
           current = this.runMethod(current, argList);
         } else {
-          throw new Error(`Cannot run ${current}`);
+          throw new Error(`Cannot run ${current.constructor.name}`);
         }
       } else if (step instanceof L3StringConcat) {
         const other = this.runExpression(step.other, deps);
         current += other;
-      } else if (step instanceof L3Dereference) {
+      } else if (step instanceof L3ReadVariable) {
         if (!(current instanceof Variable)) {
           throw new Error(`Current is not variable`);
         }
@@ -112,31 +137,11 @@ export class Runner {
   }
 
   runMethod(method: L3Method, args: any[]): any {
-    const deps = method.deps.map((dep) => {
-      if (dep instanceof L3ArgumentDependency) {
-        return new Variable(args[dep.index]);
+    const deps = method.stack.map((item) => {
+      if (item instanceof L3ArgumentVariable) {
+        return new Variable(args[item.index]);
       }
-      if (dep instanceof L3ModuleSymbolDependency) {
-        const symbol = this.resolveSymbol(dep.module, dep.name);
-        if (symbol instanceof L3Method || symbol instanceof L3LibraryMethod) {
-          return symbol;
-        }
-        if (symbol instanceof L3Variable) {
-          let val1 = this.variables[dep.module];
-          if (!val1) {
-            this.variables[dep.module] = val1 = {};
-          }
-          let val2 = val1[dep.name];
-          if (!val2) {
-            val1[dep.name] = val2 = new Variable('');
-            if (symbol.initMethod) {
-              val2.value = this.runMethod(symbol.initMethod, []);
-            }
-          }
-          return val2;
-        }
-        throw new Error(`Cannot resolve reference of ${symbol.constructor.name}`);
-      }
+      throw new Error(`Cannot resolve stack item ${item.constructor.name}`);
     });
     for (const item of method.statements) {
       if (item instanceof L3ExpressionStatement) {

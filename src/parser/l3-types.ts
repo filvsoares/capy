@@ -117,8 +117,6 @@ export abstract class L3Expression extends L3Base {
     super(pos);
     this.type = type;
   }
-
-  abstract isReference(): boolean;
 }
 
 export class L3String extends L3Expression {
@@ -127,10 +125,6 @@ export class L3String extends L3Expression {
   constructor(value: string, pos: Pos) {
     super(STRING, pos);
     this.value = value;
-  }
-
-  isReference(): boolean {
-    return false;
   }
 
   toString(): string {
@@ -151,16 +145,56 @@ export class L3Number extends L3Expression {
     this.value = value;
   }
 
-  isReference(): boolean {
-    return false;
-  }
-
   toString(): string {
     return `number`;
   }
 }
 
-export class L3Reference extends L3Expression {
+export class L3MethodReference extends L3Expression {
+  module: string;
+  name: string;
+
+  constructor(module: string, name: string, type: L3Type, pos: Pos) {
+    super(type, pos);
+    this.module = module;
+    this.name = name;
+  }
+
+  toString(): string {
+    return `identifier "${this.name}"`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  module: ${this.module}\n`);
+    out.push(`${prefix}  name: ${this.name}\n`);
+  }
+}
+
+export abstract class L3VariableReference extends L3Expression {}
+
+export class L3ModuleVariableReference extends L3VariableReference {
+  module: string;
+  name: string;
+
+  constructor(module: string, name: string, type: L3Type, pos: Pos) {
+    super(type, pos);
+    this.module = module;
+    this.name = name;
+  }
+
+  toString(): string {
+    return `identifier "${this.name}"`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  module: ${this.module}\n`);
+    out.push(`${prefix}  name: ${this.name}\n`);
+  }
+}
+
+export class L3StackVariableReference extends L3VariableReference {
   index: number;
   name: string;
 
@@ -168,10 +202,6 @@ export class L3Reference extends L3Expression {
     super(type, pos);
     this.index = index;
     this.name = name;
-  }
-
-  isReference(): boolean {
-    return true;
   }
 
   toString(): string {
@@ -283,10 +313,6 @@ export class L3Operation extends L3Expression {
     this.steps = steps;
   }
 
-  isReference(): boolean {
-    return this.reference;
-  }
-
   toString(): string {
     return 'operation';
   }
@@ -304,7 +330,7 @@ export class L3Operation extends L3Expression {
   }
 }
 
-export abstract class L3MethodDependency extends L3Base {
+export abstract class L3StackVariable extends L3Base {
   name: string;
   type: L3Type;
 
@@ -322,25 +348,7 @@ export abstract class L3MethodDependency extends L3Base {
   }
 }
 
-export class L3ModuleSymbolDependency extends L3MethodDependency {
-  module: string;
-
-  constructor(module: string, name: string, type: L3Type, pos: Pos) {
-    super(name, type, pos);
-    this.module = module;
-  }
-
-  toString(): string {
-    return 'module symbol dependency';
-  }
-
-  debugPrint(out: string[], prefix: string): void {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  module: ${this.module}\n`);
-  }
-}
-
-export class L3ArgumentDependency extends L3MethodDependency {
+export class L3ArgumentVariable extends L3StackVariable {
   index: number;
 
   constructor(index: number, name: string, type: L3Type, pos: Pos) {
@@ -359,12 +367,12 @@ export class L3ArgumentDependency extends L3MethodDependency {
 }
 
 export class L3Method extends L3Symbol<L3CallableType> {
-  deps: L3MethodDependency[];
+  stack: L3StackVariable[];
   statements: L3Base[];
 
-  constructor(name: string, type: L3CallableType, deps: L3MethodDependency[], statements: L3Base[], pos: Pos) {
+  constructor(name: string, type: L3CallableType, deps: L3StackVariable[], statements: L3Base[], pos: Pos) {
     super(name, type, pos);
-    this.deps = deps;
+    this.stack = deps;
     this.statements = statements;
   }
 
@@ -374,8 +382,8 @@ export class L3Method extends L3Symbol<L3CallableType> {
 
   debugPrint(out: string[], prefix: string): void {
     super.debugPrint(out, prefix);
-    out.push(`${prefix}  deps:\n`);
-    this.deps.forEach((val) => {
+    out.push(`${prefix}  stack:\n`);
+    this.stack.forEach((val) => {
       out.push(`${prefix}    - `);
       val.debugPrint(out, `${prefix}      `);
     });
@@ -399,13 +407,13 @@ export class L3LibraryMethod extends L3Symbol<L3CallableType> {
   }
 }
 
-export class L3Dereference extends L3OperationStep {
+export class L3ReadVariable extends L3OperationStep {
   constructor() {
     super(INTERNAL);
   }
 
   toString(): string {
-    return 'dereference';
+    return 'read variable';
   }
 }
 

@@ -48,7 +48,6 @@ import {
   L3Operation,
   L3OperationStep,
   L3Base,
-  L3Reference,
   L3PrimitiveType,
   L3SimpleType,
   L3CallableType,
@@ -58,7 +57,7 @@ import {
   L3ExpressionStatement,
   L3Expression,
   isStringType,
-  L3Dereference,
+  L3ReadVariable,
   L3StringConcat,
   L3ParseResult,
   L3Argument,
@@ -67,10 +66,14 @@ import {
   L3ReturnStatement,
   isVoidType,
   L3Symbol,
-  L3MethodDependency,
-  L3ModuleSymbolDependency,
-  L3ArgumentDependency,
+  L3StackVariable,
+  L3ArgumentVariable,
   L3Assignment,
+  L3VariableReference,
+  L3MethodReference,
+  L3StackVariableReference,
+  L3ModuleVariableReference,
+  L3LibraryMethod,
 } from './l3-types';
 
 const INVALID = Symbol();
@@ -78,14 +81,14 @@ type Invalid = typeof INVALID;
 
 class Scope {
   parent: L3Parser;
-  deps: L3MethodDependency[] = [];
+  deps: L3StackVariable[] = [];
   depsByName: { [name: string]: number } = {};
 
   constructor(parent: L3Parser) {
     this.parent = parent;
   }
 
-  add(dep: L3MethodDependency): number | Invalid {
+  add(dep: L3StackVariable): number | Invalid {
     const existing = this.depsByName[dep.name];
     if (existing) {
       this.parent.errors.push({
@@ -101,55 +104,34 @@ class Scope {
     return index;
   }
 
-  find(ref: L2Identifier): number | Invalid {
-    const existing = this.depsByName[ref.value];
-    if (existing !== undefined) {
-      return existing;
-    }
-    const known = this.parent.knownDeps[ref.value];
-    if (known) {
-      if (known.length > 1) {
-        this.parent.errors.push({
-          level: ERROR,
-          message: `Dependency ${ref.value} is ambiguous`,
-          pos: ref.pos,
-        });
-        return INVALID;
-      }
-      return this.add(known[0]);
-    }
-    this.parent.errors.push({
-      level: ERROR,
-      message: `Dependency ${ref.value} not found`,
-      pos: ref.pos,
-    });
-    return INVALID;
+  find(ref: L2Identifier): number | undefined {
+    return this.depsByName[ref.value];
   }
 }
 
 export class L3Parser {
   errors: ParseError[] = [];
-  symbols: { [name: string]: L3Symbol } = {};
+  mySymbols: { [name: string]: L3Symbol } = {};
   modules: { [name: string]: L3Module } = {};
-  knownDeps: { [name: string]: L3MethodDependency[] } = {};
+  allSymbols: { [name: string]: { module: string; symbol: L3Symbol }[] } = {};
   deferredTasks: (() => void)[] = [];
   moduleName: string = '';
 
-  addSymbol(val: L3Symbol) {
-    if (this.symbols[val.name]) {
+  addToMySymbols(symbol: L3Symbol) {
+    if (this.mySymbols[symbol.name]) {
       return false;
     }
-    this.symbols[val.name] = val;
+    this.mySymbols[symbol.name] = symbol;
+    this.addToAllSymbols(this.moduleName, symbol);
     return true;
   }
 
-  addKnownDep(name: string, val: L3MethodDependency) {
-    const existing = this.knownDeps[name];
-    if (existing) {
-      existing.push(val);
-    } else {
-      this.knownDeps[name] = [val];
+  addToAllSymbols(module: string, symbol: L3Symbol) {
+    let list = this.allSymbols[symbol.name];
+    if (!list) {
+      this.allSymbols[symbol.name] = list = [];
     }
+    list.push({ module, symbol });
   }
 
   parse(moduleName: string, list: L2Base[], modules: L3Module[]): L3ParseResult {
@@ -183,7 +165,7 @@ export class L3Parser {
     }
 
     return {
-      runnable: new L3Module(moduleName, Object.values(this.symbols)),
+      runnable: new L3Module(moduleName, Object.values(this.mySymbols)),
       errors: this.errors,
     };
   }
@@ -198,8 +180,7 @@ export class L3Parser {
       });
     }
     for (const symbol of module.symbols) {
-      const dst = new L3ModuleSymbolDependency(use.value, symbol.name, symbol.type, use.pos);
-      this.addKnownDep(symbol.name, dst);
+      this.addToAllSymbols(use.value, symbol);
     }
   }
 
@@ -209,15 +190,13 @@ export class L3Parser {
       return;
     }
     const dst = new L3Variable(item.name, type, null, item.pos);
-    if (!this.addSymbol(dst)) {
+    if (!this.addToMySymbols(dst)) {
       this.errors.push({
         level: ERROR,
         message: `Symbol "${dst.name}" already defined`,
         pos: item.pos,
       });
     }
-    const dep = new L3ModuleSymbolDependency(this.moduleName, dst.name, dst.type, dst.pos);
-    this.addKnownDep(dep.name, dep);
 
     if (item.initExpr) {
       this.deferredTasks.push(() => {
@@ -232,16 +211,13 @@ export class L3Parser {
       return;
     }
     const dst = new L3Method(method.name, type, [], [], method.pos);
-    if (!this.addSymbol(dst)) {
+    if (!this.addToMySymbols(dst)) {
       this.errors.push({
         level: ERROR,
         message: `Symbol "${dst.name}" already defined`,
         pos: method.pos,
       });
     }
-
-    const dep = new L3ModuleSymbolDependency(this.moduleName, dst.name, dst.type, dst.pos);
-    this.addKnownDep(dep.name, dep);
 
     this.deferredTasks.push(() => {
       this.processMethodStatements(dst, method.statementList);
@@ -255,11 +231,11 @@ export class L3Parser {
 
   processMethodStatements(method: L3Method, statementList: L2Statement[]) {
     const scope = new Scope(this);
-    method.deps = scope.deps;
+    method.stack = scope.deps;
 
     for (let i = 0; i < method.type.argList.length; i++) {
       const arg = method.type.argList[i];
-      const dep = new L3ArgumentDependency(i, arg.name, arg.type, arg.pos);
+      const dep = new L3ArgumentVariable(i, arg.name, arg.type, arg.pos);
       scope.add(dep);
     }
 
@@ -271,7 +247,7 @@ export class L3Parser {
         }
         method.statements.push(new L3ExpressionStatement(expr, item.pos));
       } else if (item instanceof L2ReturnStatement) {
-        const expr = item.expr && this.dereference(this.processExpression(item.expr, scope));
+        const expr = item.expr && this.readVariable(this.processExpression(item.expr, scope));
         if (expr === INVALID) {
           continue;
         }
@@ -332,18 +308,14 @@ export class L3Parser {
     return INVALID;
   }
 
-  dereference(obj: L3Expression | Invalid) {
+  readVariable(obj: L3Expression | Invalid) {
     if (obj === INVALID) {
       return INVALID;
     }
-    if (!obj.isReference()) {
+    if (!(obj instanceof L3VariableReference)) {
       return obj;
     }
-    if (obj instanceof L3Operation) {
-      obj.steps.push(new L3Dereference());
-      return obj;
-    }
-    return new L3Operation(obj, [new L3Dereference()], obj.type, false, obj.pos);
+    return new L3Operation(obj, [new L3ReadVariable()], obj.type, false, obj.pos);
   }
 
   processOperation(src: L2Operation, scope: Scope): L3Operation | Invalid {
@@ -352,7 +324,7 @@ export class L3Parser {
       return INVALID;
     }
     let type = operand.type;
-    let reference = operand.isReference();
+    let isVariable = operand instanceof L3VariableReference;
     const steps: L3OperationStep[] = [];
     for (const step of src.steps) {
       if (step instanceof L2MethodCall) {
@@ -374,7 +346,7 @@ export class L3Parser {
         }
         const argList: L3Expression[] = [];
         for (let i = 0; i < step.argList.length; i++) {
-          const l3arg = this.processExpression(step.argList[i], scope);
+          const l3arg = this.readVariable(this.processExpression(step.argList[i], scope));
           if (l3arg === INVALID) {
             return INVALID;
           }
@@ -388,18 +360,21 @@ export class L3Parser {
           }
           argList.push(l3arg);
         }
+        if (isVariable) {
+          steps.push(new L3ReadVariable());
+          isVariable = false;
+        }
         steps.push(new L3MethodCall(argList, step.pos));
         type = type.returnType;
-        reference = false;
       } else if (step instanceof L2Addition) {
-        const other = this.dereference(this.processExpression(step.operand, scope));
+        const other = this.readVariable(this.processExpression(step.operand, scope));
         if (other === INVALID) {
           return INVALID;
         }
         if (isStringType(type) && isStringType(other.type)) {
-          if (reference) {
-            steps.push(new L3Dereference());
-            reference = false;
+          if (isVariable) {
+            steps.push(new L3ReadVariable());
+            isVariable = false;
           }
           steps.push(new L3StringConcat(other, step.pos));
           type = STRING;
@@ -416,7 +391,7 @@ export class L3Parser {
         if (target === INVALID) {
           return INVALID;
         }
-        if (!target.isReference()) {
+        if (!(target instanceof L3VariableReference)) {
           this.errors.push({
             level: ERROR,
             message: `Cannot assign value to ${target}`,
@@ -432,9 +407,9 @@ export class L3Parser {
           });
           return INVALID;
         }
-        if (reference) {
-          steps.push(new L3Dereference());
-          reference = false;
+        if (isVariable) {
+          steps.push(new L3ReadVariable());
+          isVariable = false;
         }
         steps.push(new L3Assignment(target, step.pos));
       } else {
@@ -446,20 +421,61 @@ export class L3Parser {
         return INVALID;
       }
     }
-    return new L3Operation(operand, steps, type, reference, src.pos);
+    return new L3Operation(operand, steps, type, isVariable, src.pos);
   }
 
   isAssignable(type: L3Type, assignTo: L3Type) {
-    return type instanceof L3SimpleType && assignTo instanceof L3SimpleType && type.primitive === assignTo.primitive;
+    if (type instanceof L3SimpleType && assignTo instanceof L3SimpleType) {
+      return type.primitive === assignTo.primitive;
+    }
+    if (type instanceof L3CallableType && assignTo instanceof L3CallableType) {
+      if (type.returnType !== assignTo.returnType) {
+        return false;
+      }
+      if (type.argList.length !== assignTo.argList.length) {
+        return false;
+      }
+      for (let i = 0; i < type.argList.length; i++) {
+        if (!this.isAssignable(type.argList[i].type, assignTo.argList[i].type)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
-  processReference(ref: L2Identifier, scope: Scope): L3Reference | Invalid {
+  processReference(ref: L2Identifier, scope: Scope): L3MethodReference | L3VariableReference | Invalid {
     const index = scope.find(ref);
-    if (index === INVALID) {
-      return INVALID;
+    if (index !== undefined) {
+      const dep = scope.deps[index];
+      return new L3StackVariableReference(index, dep.name, dep.type, ref.pos);
     }
-    const dep = scope.deps[index];
-    return new L3Reference(index, dep.name, dep.type, ref.pos);
+    const symbols = this.allSymbols[ref.value];
+    if (symbols) {
+      if (symbols.length > 1) {
+        this.errors.push({
+          level: ERROR,
+          message: `Dependency ${ref.value} is ambiguous`,
+          pos: ref.pos,
+        });
+        return INVALID;
+      }
+      const { module, symbol } = symbols[0];
+      if (symbol instanceof L3Method || symbol instanceof L3LibraryMethod) {
+        return new L3MethodReference(module, symbol.name, symbol.type, ref.pos);
+      }
+      if (symbol instanceof L3Variable) {
+        return new L3ModuleVariableReference(module, symbol.name, symbol.type, ref.pos);
+      }
+      throw new Error(`Unexpected symbol type ${symbol.constructor.name}`);
+    }
+    this.errors.push({
+      level: ERROR,
+      message: `Could not find reference ${ref.value}`,
+      pos: ref.pos,
+    });
+    return INVALID;
   }
 
   processCallableType(src: L2CallableType): L3CallableType | Invalid {
