@@ -1,9 +1,0 @@
-.toolbar {
-  height: 36px;
-  flex-grow: 0;
-  flex-shrink: 0;
-  display: flex;
-  justify-items: flex-start;
-  align-items: stretch;
-  row-gap: 8px;
-}
