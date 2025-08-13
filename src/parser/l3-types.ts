@@ -368,14 +368,22 @@ export class L3ArgumentVariable extends L3LocalVariable {
   }
 }
 
-export class L3Method extends L3Symbol<L3CallableType> {
-  stack: L3LocalVariable[];
-  statements: L3Base[];
+export abstract class L3Method extends L3Symbol<L3CallableType> {}
 
-  constructor(name: string, type: L3CallableType, deps: L3LocalVariable[], statements: L3Base[], pos: Pos) {
+export class L3UnresolvedMethod extends L3Method {
+  toString(): string {
+    return 'unresolved method';
+  }
+}
+
+export class L3CapyMethod extends L3Method {
+  stack: L3LocalVariable[];
+  statementList: L3StatementList;
+
+  constructor(name: string, type: L3CallableType, deps: L3LocalVariable[], statementList: L3StatementList, pos: Pos) {
     super(name, type, pos);
     this.stack = deps;
-    this.statements = statements;
+    this.statementList = statementList;
   }
 
   toString(): string {
@@ -389,16 +397,37 @@ export class L3Method extends L3Symbol<L3CallableType> {
       out.push(`${prefix}    - `);
       val.debugPrint(out, `${prefix}      `);
     });
-    out.push(`${prefix}  statements:\n`);
-    this.statements.forEach((val) => {
+    out.push(`${prefix}  statementList: `);
+    this.statementList.debugPrint(out, `${prefix}  `);
+  }
+}
+
+export class L3StatementList extends L3Base {
+  list: L3Statement[];
+
+  constructor(list: L3Statement[], pos: Pos) {
+    super(pos);
+    this.list = list;
+  }
+
+  toString(): string {
+    return 'statement list';
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+
+    out.push(`${prefix}  list:\n`);
+    this.list.forEach((val) => {
       out.push(`${prefix}    - `);
       val.debugPrint(out, `${prefix}      `);
     });
   }
 }
 
-export class L3LibraryMethod extends L3Symbol<L3CallableType> {
+export class L3LibraryMethod extends L3Method {
   callback: (args: any[], runner: Runner) => any;
+
   constructor(name: string, type: L3CallableType, callback: (args: any[], runner: Runner) => any) {
     super(name, type, INTERNAL);
     this.callback = callback;

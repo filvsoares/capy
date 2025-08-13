@@ -40,6 +40,8 @@ import {
   L3MethodReference,
   L3ModuleVariableReference,
   L3LocalVariableReference,
+  L3CapyMethod,
+  L3StatementList,
 } from './l3-types';
 
 class Variable {
@@ -68,7 +70,7 @@ export class Runner {
     }
     if (obj instanceof L3MethodReference) {
       const symbol = this.resolveSymbol(obj.module, obj.name);
-      if (!(symbol instanceof L3Method || symbol instanceof L3LibraryMethod)) {
+      if (!(symbol instanceof L3Method)) {
         throw new Error(`Expected method but found ${symbol.constructor.name}`);
       }
       return symbol;
@@ -110,7 +112,7 @@ export class Runner {
         }
         if (current instanceof L3LibraryMethod) {
           current = current.callback(argList, this);
-        } else if (current instanceof L3Method) {
+        } else if (current instanceof L3CapyMethod) {
           current = this.runMethod(current, argList);
         } else {
           throw new Error(`Cannot run ${current.constructor.name}`);
@@ -136,22 +138,31 @@ export class Runner {
     return current;
   }
 
-  runMethod(method: L3Method, args: any[]): any {
-    const deps = method.stack.map((item) => {
+  runStatementList(statementList: L3StatementList, stack: any[]): any {
+    for (const item of statementList.list) {
+      if (item instanceof L3ExpressionStatement) {
+        this.runExpression(item.expr, stack);
+      } else if (item instanceof L3ReturnStatement) {
+        return item.expr && this.runExpression(item.expr, stack);
+      } else if (item instanceof L3StatementList) {
+        const returned = this.runStatementList(item, stack);
+        if (returned !== undefined) {
+          return returned;
+        }
+      } else {
+        throw new Error(`I still don't understand ${item.constructor.name}`);
+      }
+    }
+  }
+
+  runMethod(method: L3CapyMethod, args: any[]): any {
+    const stack = method.stack.map((item) => {
       if (item instanceof L3ArgumentVariable) {
         return new Variable(args[item.index]);
       }
       return new Variable('');
     });
-    for (const item of method.statements) {
-      if (item instanceof L3ExpressionStatement) {
-        this.runExpression(item.expr, deps);
-      } else if (item instanceof L3ReturnStatement) {
-        return item.expr && this.runExpression(item.expr, deps);
-      } else {
-        throw new Error(`I still don't understand ${item.constructor.name}`);
-      }
-    }
+    return this.runStatementList(method.statementList, stack);
   }
 
   resolveSymbol(moduleName: string, symbolName: string) {
@@ -180,7 +191,7 @@ export class Runner {
       this.resolvedModules[modules[i].name] = { index: i };
     }
     const startMethod = this.resolveSymbol(mainModuleName, 'start');
-    if (!(startMethod instanceof L3Method)) {
+    if (!(startMethod instanceof L3CapyMethod)) {
       throw new Error(`Symbol "start" is not a method`);
     }
     this.runMethod(startMethod, []);

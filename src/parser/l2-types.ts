@@ -358,9 +358,9 @@ export abstract class L2Definition<T extends L2Type = L2Type> extends L2Base {
 }
 
 export class L2Method extends L2Definition<L2CallableType> {
-  statementList: L2Statement[];
+  statementList: L2StatementList;
 
-  constructor(name: string, type: L2CallableType, statementList: L2Statement[], pos: Pos) {
+  constructor(name: string, type: L2CallableType, statementList: L2StatementList, pos: Pos) {
     super(name, type, pos);
     this.name = name;
     this.type = type;
@@ -373,11 +373,8 @@ export class L2Method extends L2Definition<L2CallableType> {
 
   debugPrint(out: string[], prefix: string): void {
     super.debugPrint(out, prefix);
-    out.push(`${prefix}  statementList:\n`);
-    this.statementList.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
+    out.push(`${prefix}  statementList: `);
+    this.statementList.debugPrint(out, `${prefix}  `);
   }
 }
 
@@ -453,6 +450,28 @@ export class L2CallableType extends L2Type {
 export abstract class L2Statement extends L2Base {
   constructor(pos: Pos) {
     super(pos);
+  }
+}
+
+export class L2StatementList extends L2Statement {
+  list: L2Statement[];
+
+  constructor(list: L2Statement[], pos: Pos) {
+    super(pos);
+    this.list = list;
+  }
+
+  toString(): string {
+    return `statement list`;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  list:\n`);
+    this.list.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
   }
 }
 

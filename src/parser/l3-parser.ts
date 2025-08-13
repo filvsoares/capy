@@ -34,6 +34,7 @@ import {
   L2ReturnStatement,
   L2SimpleType,
   L2Statement,
+  L2StatementList,
   L2String,
   L2Type,
   L2Use,
@@ -73,15 +74,24 @@ import {
   L3MethodReference,
   L3LocalVariableReference,
   L3ModuleVariableReference,
-  L3LibraryMethod,
+  L3StatementList,
+  L3UnresolvedMethod,
+  L3CapyMethod,
 } from './l3-types';
 
 const INVALID = Symbol();
 type Invalid = typeof INVALID;
 
 class MethodStack {
-  items: L3LocalVariable[] = [];
-  itemsByName: { [name: string]: number } = {};
+  parent: MethodStack | null;
+  items: L3LocalVariable[];
+  itemsByName: { [name: string]: number };
+
+  constructor(parent: MethodStack | null = null) {
+    this.parent = parent;
+    this.items = parent?.items ?? [];
+    this.itemsByName = {};
+  }
 
   add(item: L3LocalVariable): number | false {
     const existing = this.itemsByName[item.name];
@@ -95,7 +105,18 @@ class MethodStack {
   }
 
   find(ref: L2Identifier): number | undefined {
-    return this.itemsByName[ref.value];
+    let current: MethodStack | null = this;
+    while (current) {
+      const result = this.itemsByName[ref.value];
+      if (result !== undefined) {
+        return result;
+      }
+      current = current.parent;
+    }
+  }
+
+  createChild() {
+    return new MethodStack(this);
   }
 }
 
@@ -114,6 +135,13 @@ export class L3Parser {
     this.mySymbols[symbol.name] = symbol;
     this.addToAllSymbols(this.moduleName, symbol);
     return true;
+  }
+
+  replaceInMySymbols(symbol: L3Symbol) {
+    if (!this.mySymbols[symbol.name]) {
+      return false;
+    }
+    this.mySymbols[symbol.name] = symbol;
   }
 
   addToAllSymbols(module: string, symbol: L3Symbol) {
@@ -200,7 +228,7 @@ export class L3Parser {
     if (type === INVALID) {
       return;
     }
-    const dst = new L3Method(method.name, type, [], [], method.pos);
+    const dst = new L3UnresolvedMethod(method.name, type, method.pos);
     if (!this.addToMySymbols(dst)) {
       this.errors.push({
         level: ERROR,
@@ -210,7 +238,7 @@ export class L3Parser {
     }
 
     this.deferredTasks.push(() => {
-      this.processMethodStatements(dst, method.statementList);
+      this.resolveMethod(dst, method.statementList);
     });
   }
 
@@ -222,102 +250,131 @@ export class L3Parser {
     variable.initExpr = l3expr;
   }
 
-  processMethodStatements(method: L3Method, statementList: L2Statement[]) {
+  resolveMethod(src: L3UnresolvedMethod, srcStatementList: L2StatementList) {
     const stack = new MethodStack();
-    method.stack = stack.items;
 
-    for (let i = 0; i < method.type.argList.length; i++) {
-      const arg = method.type.argList[i];
-      const dep = new L3ArgumentVariable(i, arg.name, arg.type, arg.pos);
-      stack.add(dep);
+    for (let i = 0; i < src.type.argList.length; i++) {
+      const arg = src.type.argList[i];
+      stack.add(new L3ArgumentVariable(i, arg.name, arg.type, arg.pos));
     }
 
-    for (const item of statementList) {
+    const statementList = this.processStatementList(srcStatementList, stack, src.type.returnType);
+
+    const dst = new L3CapyMethod(src.name, src.type, stack.items, statementList, src.pos);
+    this.replaceInMySymbols(dst);
+  }
+
+  processExpressionStatement(src: L2ExpressionStatement, stack: MethodStack) {
+    const expr = this.processExpression(src.expr, stack);
+    if (expr === INVALID) {
+      return INVALID;
+    }
+    return new L3ExpressionStatement(expr, src.pos);
+  }
+
+  processReturnStatement(src: L2ReturnStatement, stack: MethodStack, expectedType: L3Type) {
+    const expr = src.expr && this.readVariable(this.processExpression(src.expr, stack));
+    if (expr === INVALID) {
+      return INVALID;
+    }
+    const isVoid = isVoidType(expectedType);
+    if (expr && isVoid) {
+      this.errors.push({
+        level: ERROR,
+        message: `Cannot return expression when method has void return type`,
+        pos: src.pos,
+      });
+      return INVALID;
+    }
+    if (!expr && !isVoid) {
+      this.errors.push({
+        level: ERROR,
+        message: `Must return expression of type ${expectedType}`,
+        pos: src.pos,
+      });
+      return INVALID;
+    }
+    if (expr && !isVoid && !this.isAssignable(expr.type, expectedType)) {
+      this.errors.push({
+        level: ERROR,
+        message: `Return expects ${expectedType} but ${expr.type} was provided`,
+        pos: expr.pos,
+      });
+      return INVALID;
+    }
+    return new L3ReturnStatement(expr, src.pos);
+  }
+
+  processLocalVariable(src: L2Variable, stack: MethodStack) {
+    const type = this.processType(src.type);
+    if (type === INVALID) {
+      return INVALID;
+    }
+    let l3expr: L3Expression | null = null;
+    if (src.initExpr) {
+      const _l3expr = this.processExpression(src.initExpr, stack);
+      if (_l3expr === INVALID) {
+        return INVALID;
+      }
+      l3expr = _l3expr;
+      if (!this.isAssignable(_l3expr.type, type)) {
+        this.errors.push({
+          level: ERROR,
+          message: `Variable has type "${type}" but initializer has type "${_l3expr.type}"`,
+          pos: src.pos,
+        });
+      }
+    }
+    const localVariable = new L3LocalVariable(src.name, type, src.pos);
+    const index = stack.add(localVariable);
+    if (index === false) {
+      this.errors.push({
+        level: ERROR,
+        message: `Identifier "${src.name}" already declared`,
+        pos: src.pos,
+      });
+      return INVALID;
+    }
+    if (l3expr) {
+      return new L3ExpressionStatement(
+        new L3Operation(
+          l3expr,
+          [new L3Assignment(new L3LocalVariableReference(index, src.name, type, src.pos), src.pos)],
+          type,
+          src.pos
+        ),
+        src.pos
+      );
+    }
+  }
+
+  processStatementList(src: L2StatementList, stack: MethodStack, expectedReturnType: L3Type) {
+    const dst = new L3StatementList([], src.pos);
+    for (const item of src.list) {
       if (item instanceof L2ExpressionStatement) {
-        const expr = this.processExpression(item.expr, stack);
-        if (expr === INVALID) {
-          continue;
+        const dstItem = this.processExpressionStatement(item, stack);
+        if (dstItem !== INVALID) {
+          dst.list.push(dstItem);
         }
-        method.statements.push(new L3ExpressionStatement(expr, item.pos));
         continue;
       }
       if (item instanceof L2ReturnStatement) {
-        const expr = item.expr && this.readVariable(this.processExpression(item.expr, stack));
-        if (expr === INVALID) {
-          continue;
+        const dstItem = this.processReturnStatement(item, stack, expectedReturnType);
+        if (dstItem !== INVALID) {
+          dst.list.push(dstItem);
         }
-        const isVoid = isVoidType(method.type.returnType);
-        if (expr && isVoid) {
-          this.errors.push({
-            level: ERROR,
-            message: `Cannot return expression when method has void return type`,
-            pos: item.pos,
-          });
-          continue;
-        }
-        if (!expr && !isVoid) {
-          this.errors.push({
-            level: ERROR,
-            message: `Must return expression of type ${method.type.returnType}`,
-            pos: item.pos,
-          });
-          continue;
-        }
-        if (expr && !isVoid && !this.isAssignable(expr.type, method.type.returnType)) {
-          this.errors.push({
-            level: ERROR,
-            message: `Return expects ${method.type.returnType} but ${expr.type} was provided`,
-            pos: expr.pos,
-          });
-          continue;
-        }
-        method.statements.push(new L3ReturnStatement(expr, item.pos));
         continue;
       }
       if (item instanceof L2Variable) {
-        const type = this.processType(item.type);
-        if (type === INVALID) {
-          continue;
+        const dstItem = this.processLocalVariable(item, stack);
+        if (dstItem && dstItem !== INVALID) {
+          dst.list.push(dstItem);
         }
-        let l3expr: L3Expression | null = null;
-        if (item.initExpr) {
-          const _l3expr = this.processExpression(item.initExpr, stack);
-          if (_l3expr === INVALID) {
-            continue;
-          }
-          if (!this.isAssignable(_l3expr.type, type)) {
-            this.errors.push({
-              level: ERROR,
-              message: `Variable has type "${type}" but initializer has type "${_l3expr.type}"`,
-              pos: item.pos,
-            });
-          } else {
-            l3expr = _l3expr;
-          }
-        }
-        const localVariable = new L3LocalVariable(item.name, type, item.pos);
-        const index = stack.add(localVariable);
-        if (index === false) {
-          this.errors.push({
-            level: ERROR,
-            message: `Identifier "${item.name}" already declared`,
-            pos: item.pos,
-          });
-          continue;
-        }
-        if (l3expr) {
-          method.statements.push(
-            new L3ExpressionStatement(
-              new L3Operation(
-                l3expr,
-                [new L3Assignment(new L3LocalVariableReference(index, item.name, type, item.pos), item.pos)],
-                type,
-                item.pos
-              ),
-              item.pos
-            )
-          );
-        }
+        continue;
+      }
+      if (item instanceof L2StatementList) {
+        const dstItem = this.processStatementList(item, stack.createChild(), expectedReturnType);
+        dst.list.push(dstItem);
         continue;
       }
       this.errors.push({
@@ -326,6 +383,7 @@ export class L3Parser {
         pos: item.pos,
       });
     }
+    return dst;
   }
 
   processExpression(src: L2Expression, stack: MethodStack | null): L3Expression | Invalid {
@@ -505,7 +563,7 @@ export class L3Parser {
         return INVALID;
       }
       const { module, symbol } = symbols[0];
-      if (symbol instanceof L3Method || symbol instanceof L3LibraryMethod) {
+      if (symbol instanceof L3Method) {
         return new L3MethodReference(module, symbol.name, symbol.type, ref.pos);
       }
       if (symbol instanceof L3Variable) {

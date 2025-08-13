@@ -50,6 +50,7 @@ import {
   L2ExpressionStatement,
   L2ReturnStatement,
   L2Assignment,
+  L2StatementList,
 } from './l2-types';
 import { L3Type } from './l3-types';
 
@@ -177,7 +178,8 @@ class L2Parser {
     }
 
     const t4 = this.current;
-    if (!isBracket(t4, '{')) {
+    const statementList = t4 && this.readStatementList();
+    if (!statementList) {
       this.errors.push({
         level: ERROR,
         message: `Expected "{" but found ${t4}`,
@@ -185,12 +187,24 @@ class L2Parser {
       });
       return INVALID;
     }
+    if (statementList === INVALID) {
+      return INVALID;
+    }
+
+    return new L2Method(t2.name, type, statementList, combinePos(t1.pos, t4.pos));
+  }
+
+  readStatementList(): ReadResult<L2StatementList> {
+    const t1 = this.current;
+    if (!isBracket(t1, '{')) {
+      return;
+    }
     this.consume();
 
-    const r = new L2Parser().parseStatementList(t4.tokenList);
+    const r = new L2Parser().parseStatementList(t1.tokenList);
     this.errors.push(...r.errors);
 
-    return new L2Method(t2.name, type, r.list, combinePos(t1.pos, t4.pos));
+    return new L2StatementList(r.list, t1.pos);
   }
 
   readVariable(): ReadResult<L2Variable> {
@@ -753,7 +767,9 @@ class L2Parser {
   }
 
   readStatement(): ReadResult<L2Statement> {
-    return this.readReturnStatement() || this.readExpressionStatement() || this.readVariable();
+    return (
+      this.readReturnStatement() || this.readExpressionStatement() || this.readVariable() || this.readStatementList()
+    );
   }
 
   parseStatementList(list: L1Base[]): L2ParseResult<L2Statement> {
