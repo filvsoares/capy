@@ -1,6 +1,6 @@
 import { ERROR, INTERNAL, ParseError } from './base';
-import { layer1Parse } from './l1-parser';
-import { L1ParseResult } from './l1-types';
+import { layer1Parse } from './layer1/l1-parser';
+import { L1ParseResult } from './layer1/l1-types';
 import { layer2Parse } from './l2-parser';
 import { L2ParseResult } from './l2-types';
 import { layer3Parse } from './l3-parser';

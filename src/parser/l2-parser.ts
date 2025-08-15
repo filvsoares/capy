@@ -19,7 +19,6 @@
  */
 
 import { Base, combinePos, ERROR, fallbackPos, ParseError } from './base';
-import { L1Bracket, L1Operator, L1String, L1Base, L1Keyword, L1Number, L1Identifier, L1Separator } from './l1-types';
 import {
   L2Addition,
   L2ArraySubscripting,
@@ -53,6 +52,13 @@ import {
   L2StatementList,
 } from './l2-types';
 import { L3Type } from './l3-types';
+import { L1Bracket } from './layer1/l1-bracket';
+import { L1Number } from './layer1/l1-number';
+import { L1Operator } from './layer1/l1-operator';
+import { L1Separator } from './layer1/l1-separator';
+import { L1String } from './layer1/l1-string';
+import { L1Base } from './layer1/l1-types';
+import { L1Identifier, L1Keyword } from './layer1/l1-word';
 
 function isKeyword(token: any, value?: string): token is L1Keyword {
   return token instanceof L1Keyword && (value === undefined || token.name === value);
