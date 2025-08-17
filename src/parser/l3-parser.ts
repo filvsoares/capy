@@ -39,7 +39,7 @@ import {
   L2Type,
   L2Use,
   L2Variable,
-} from './l2-types';
+} from './layer2/l2-types';
 import {
   L3Method,
   L3Type,

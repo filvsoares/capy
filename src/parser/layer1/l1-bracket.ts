@@ -34,6 +34,10 @@ export class L1Bracket extends L1Base {
       val.debugPrint(out, `${prefix}      `);
     });
   }
+
+  static matches(token: any, value?: string): token is L1Bracket {
+    return token instanceof L1Bracket && (value === undefined || token.start === value);
+  }
 }
 
 function read(c: L1ParseContext): L1Bracket | undefined {

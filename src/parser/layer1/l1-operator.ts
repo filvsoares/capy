@@ -45,6 +45,10 @@ export class L1Operator extends L1Base {
     super.debugPrint(out, prefix);
     out.push(`${prefix}  value: ${this.value}\n`);
   }
+
+  static matches(token: any, value?: string): token is L1Operator {
+    return token instanceof L1Operator && (value === undefined || token.value === value);
+  }
 }
 
 function read(c: L1ParseContext): L1Operator | undefined {

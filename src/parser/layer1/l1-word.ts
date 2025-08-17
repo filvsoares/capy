@@ -19,6 +19,10 @@ export class L1Keyword extends L1Base {
     super.debugPrint(out, prefix);
     out.push(`${prefix}  name: ${this.name}\n`);
   }
+
+  static matches(token: any, value?: string): token is L1Keyword {
+    return token instanceof L1Identifier && (value === undefined || token.name === value);
+  }
 }
 
 export class L1Identifier extends L1Base {
@@ -36,6 +40,10 @@ export class L1Identifier extends L1Base {
   debugPrint(out: string[], prefix: string): void {
     super.debugPrint(out, prefix);
     out.push(`${prefix}  name: ${this.name}\n`);
+  }
+
+  static matches(token: any, value?: string): token is L1Identifier {
+    return token instanceof L1Identifier && (value === undefined || token.name === value);
   }
 }
 

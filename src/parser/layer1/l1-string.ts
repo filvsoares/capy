@@ -21,6 +21,10 @@ export class L1String extends L1Base {
     super.debugPrint(out, prefix);
     out.push(`${prefix}  value: ${this.value}\n`);
   }
+
+  static matches(token: any, value?: string): token is L1String {
+    return token instanceof L1String && (value === undefined || token.value === value);
+  }
 }
 
 function read(c: L1ParseContext): L1String | undefined {
