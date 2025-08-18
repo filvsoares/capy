@@ -18,8 +18,8 @@
  * @file Type definitions for layer-2 parser.
  */
 
-import { Base, ParseError, Pos } from '../base';
-import { L1Base } from '../layer1/l1-types';
+import { Base, ParseError, Pos } from '@/parser/base';
+import { L1Base } from '@/parser/layer1/l1-types';
 
 export abstract class L2Base extends Base {
   isL2() {

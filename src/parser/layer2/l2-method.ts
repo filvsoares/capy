@@ -1,5 +1,5 @@
-import { combinePos, ERROR, fallbackPos, Pos } from '../base';
-import { L1Identifier, L1Keyword } from '../layer1/l1-word';
+import { combinePos, ERROR, fallbackPos, Pos } from '@/parser/base';
+import { L1Identifier, L1Keyword } from '@/parser/layer1/reader/l1-word';
 import { L2CallableType, readCallableType } from './l2-callable-type';
 import { L2Definition } from './l2-definition';
 import { L2StatementList, readStatementList } from './l2-statement-list';

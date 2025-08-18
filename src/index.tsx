@@ -23,7 +23,10 @@ import './index.css';
 import { createRoot } from 'react-dom/client';
 
 import App from '@/app';
+import { declareBeans } from './bean-declarations';
 
 const rootDiv = document.getElementById('root-div')!;
+
+declareBeans();
 
 createRoot(rootDiv).render(<App />);

@@ -18,21 +18,39 @@
  * @file Type definitions for layer-1 parser.
  */
 
-import { Component, declareComponentKey } from '@/util/components';
-import { Base, ParseError, Pos } from '../base';
+import { Base, ParseError } from '@/parser/base';
 
-export interface L1ParseContext {
-  lin: number;
-  col: number;
+export class L1ParseContext {
+  s: string;
+  pos: number = 0;
+  lin: number = 0;
+  col: number = 0;
   current: string;
-  errors: ParseError[];
-  consume(): void;
-  read(): L1Base | true | undefined;
-}
+  errors: ParseError[] = [];
 
-export type L1ParserReader = {
-  read: (c: L1ParseContext) => L1Base | true | undefined;
-};
+  constructor(s: string) {
+    this.s = s;
+    this.current = s[0];
+  }
+
+  consume(): void {
+    if (!this.current) {
+      return;
+    }
+    this.pos++;
+    if (this.pos >= this.s.length) {
+      this.current = '';
+      return;
+    }
+    if (this.current === '\n') {
+      this.col = 1;
+      this.lin++;
+    } else {
+      this.col++;
+    }
+    this.current = this.s[this.pos];
+  }
+}
 
 /**
  * Base class for L1 objects.

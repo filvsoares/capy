@@ -1,7 +1,7 @@
-import { combinePos, ERROR, fallbackPos, Pos } from '../base';
-import { L1Operator } from '../layer1/l1-operator';
-import { L1Separator } from '../layer1/l1-separator';
-import { L1Identifier, L1Keyword } from '../layer1/l1-word';
+import { combinePos, ERROR, fallbackPos, Pos } from '@/parser/base';
+import { L1Operator } from '@/parser/layer1/reader/l1-operator';
+import { L1Separator } from '@/parser/layer1/reader/l1-separator';
+import { L1Identifier, L1Keyword } from '@/parser/layer1/reader/l1-word';
 import { L2Definition } from './l2-definition';
 import { L2Expression, readExpression } from './l2-expression';
 import { L2Type } from './l2-type';

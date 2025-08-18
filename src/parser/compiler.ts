@@ -1,10 +1,11 @@
 import { ERROR, INTERNAL, ParseError } from './base';
-import { layer1Parse } from './layer1/l1-parser';
 import { L1ParseResult } from './layer1/l1-types';
 import { layer2Parse } from './layer2/l2-parser';
 import { L2ParseResult } from './layer2/l2-types';
 import { layer3Parse } from './l3-parser';
 import { L3ParseResult, L3Module } from './l3-types';
+import { l1Parser } from './layer1/_bean-interfaces';
+import { BeanResolver } from '@/util/beans';
 
 export type CompileResult = {
   output: string;
@@ -12,11 +13,11 @@ export type CompileResult = {
   runnable?: L3Module;
 };
 
-export function compile(
+export async function compile(
   s: string,
   libs: L3Module[],
   { debugL1, debugL2, debugL3 }: { debugL1?: boolean; debugL2?: boolean; debugL3?: boolean }
-): CompileResult {
+): Promise<CompileResult> {
   const errors: ParseError[] = [];
   const out: string[] = [];
 
@@ -24,8 +25,10 @@ export function compile(
   let p2: L2ParseResult | undefined;
   let p3: L3ParseResult | undefined;
 
+  const l1ParserImpl = (await new BeanResolver().getBeans(l1Parser))[0];
+
   try {
-    p1 = layer1Parse(s);
+    p1 = l1ParserImpl.parse(s);
     errors.push(...p1.errors);
 
     p2 = layer2Parse(p1.list);

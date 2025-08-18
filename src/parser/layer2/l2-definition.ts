@@ -1,4 +1,4 @@
-import { Pos } from '../base';
+import { Pos } from '@/parser/base';
 import { L2Type } from './l2-type';
 import { L2Base } from './l2-types';
 

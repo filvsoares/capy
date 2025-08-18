@@ -18,7 +18,6 @@
  * @file App component.
  */
 
-import { layer1Parse } from '@/parser/layer1/l1-parser';
 import { layer2Parse } from './parser/layer2/l2-parser';
 import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
@@ -66,8 +65,8 @@ export default function App() {
     setContent(value);
   };
 
-  const onRunClick = () => {
-    const r = compile(content, [io], { debugL2: true, debugL3: true });
+  const onRunClick = async () => {
+    const r = await compile(content, [io], { debugL2: true, debugL3: true });
     setCompileResult(r);
     if (r.errors.length === 0) {
       const runner = new Runner();

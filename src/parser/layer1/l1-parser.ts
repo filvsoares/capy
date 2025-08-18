@@ -18,86 +18,47 @@
  * @file Layer-1 parser implementation.
  */
 
-import { getComponents } from '@/util/components';
-import { ERROR, ParseError } from '../base';
-import { L1Base, L1ParseContext, L1ParseResult } from './l1-types';
-import { l1BracketReader } from './l1-bracket';
-import { l1NumberReader } from './l1-number';
-import { l1OperatorReader } from './l1-operator';
-import { l1SeparatorReader } from './l1-separator';
-import { l1StringReader } from './l1-string';
-import { l1WordReader } from './l1-word';
-import { l1WhitespaceReader } from './l1-whitespace';
+import { ERROR } from '@/parser/base';
+import { L1Base, L1ParseContext, L1ParseResult } from '@/parser/layer1/l1-types';
+import { L1Reader } from './reader/_bean-interfaces';
+import { L1Parser } from './_bean-interfaces';
+import { Bean } from '@/util/beans';
 
-const readers = [
-  l1BracketReader,
-  l1NumberReader,
-  l1OperatorReader,
-  l1WordReader,
-  l1SeparatorReader,
-  l1StringReader,
-  l1WhitespaceReader,
-];
+export class L1ParserImpl extends Bean implements L1Parser {
+  readers: L1Reader[];
 
-class L1ParseContextImpl implements L1ParseContext {
-  s: string;
-  pos: number = 0;
-  lin: number = 0;
-  col: number = 0;
-  current: string;
-  errors: ParseError[] = [];
-
-  constructor(s: string) {
-    this.s = s;
-    this.current = s[0];
+  constructor({ readers }: { readers: L1Reader[] }) {
+    super();
+    this.readers = readers;
   }
 
-  consume(): void {
-    if (!this.current) {
-      return;
-    }
-    this.pos++;
-    if (this.pos >= this.s.length) {
-      this.current = '';
-      return;
-    }
-    if (this.current === '\n') {
-      this.col = 1;
-      this.lin++;
-    } else {
-      this.col++;
-    }
-    this.current = this.s[this.pos];
-  }
-
-  read(): L1Base | true | undefined {
-    for (const reader of readers) {
-      const item = reader.read(this);
+  read(c: L1ParseContext) {
+    for (const reader of this.readers) {
+      const item = reader.read(c);
       if (item) {
         return item;
       }
     }
   }
-}
+  parse(s: string): L1ParseResult {
+    const c = new L1ParseContext(s);
 
-export function layer1Parse(s: string): L1ParseResult {
-  const c = new L1ParseContextImpl(s);
+    const list: L1Base[] = [];
 
-  const list: L1Base[] = [];
-
-  while (c.current) {
-    let item = c.read();
-    if (!item) {
-      c.errors.push({
-        level: ERROR,
-        pos: { lin1: c.lin, col1: c.col, lin2: c.lin, col2: c.col + 1 },
-        message: `Unexpected char "${c.current}"`,
-      });
-      c.consume();
+    while (c.current) {
+      const item = this.read(c);
+      if (!item) {
+        c.errors.push({
+          level: ERROR,
+          pos: { lin1: c.lin, col1: c.col, lin2: c.lin, col2: c.col + 1 },
+          message: `Unexpected char "${c.current}"`,
+        });
+        c.consume();
+      }
+      if (item instanceof L1Base) {
+        list.push(item);
+      }
     }
-    if (item instanceof L1Base) {
-      list.push(item);
-    }
+    return { list, errors: c.errors };
   }
-  return { list, errors: c.errors };
 }

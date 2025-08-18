@@ -1,5 +1,7 @@
-import { Pos } from '../base';
-import { L1Base, L1ParseContext, L1ParserReader } from './l1-types';
+import { Pos } from '@/parser/base';
+import { L1Base, L1ParseContext } from '@/parser/layer1/l1-types';
+import { Bean } from '@/util/beans';
+import { L1Reader } from './_bean-interfaces';
 
 type OperatorMap = { [name: string]: true | OperatorMap };
 
@@ -51,22 +53,22 @@ export class L1Operator extends L1Base {
   }
 }
 
-function read(c: L1ParseContext): L1Operator | undefined {
-  if (!isOperator(c.current)) {
-    return;
+export class L1OperatorReader extends Bean implements L1Reader {
+  read(c: L1ParseContext): L1Operator | undefined {
+    if (!isOperator(c.current)) {
+      return;
+    }
+    let value = c.current;
+    const lin1 = c.lin;
+    const col1 = c.col;
+    let lin2 = c.lin;
+    let col2 = c.col + 1;
+    c.consume();
+    while (c.current && isOperator(value + c.current)) {
+      value += c.current;
+      lin2 = c.lin;
+      col2 = c.col + 1;
+    }
+    return new L1Operator(value, { lin1, col1, lin2, col2 });
   }
-  let value = c.current;
-  const lin1 = c.lin;
-  const col1 = c.col;
-  let lin2 = c.lin;
-  let col2 = c.col + 1;
-  c.consume();
-  while (c.current && isOperator(value + c.current)) {
-    value += c.current;
-    lin2 = c.lin;
-    col2 = c.col + 1;
-  }
-  return new L1Operator(value, { lin1, col1, lin2, col2 });
 }
-
-export const l1OperatorReader: L1ParserReader = { read };

@@ -1,7 +1,7 @@
-import { combinePos, ERROR, fallbackPos, Pos } from '../base';
-import { L1Separator } from '../layer1/l1-separator';
-import { L1String } from '../layer1/l1-string';
-import { L1Keyword } from '../layer1/l1-word';
+import { combinePos, ERROR, fallbackPos, Pos } from '@/parser/base';
+import { L1Separator } from '@/parser/layer1/reader/l1-separator';
+import { L1String } from '@/parser/layer1/reader/l1-string';
+import { L1Keyword } from '@/parser/layer1/reader/l1-word';
 import { INVALID, L2Base, L2ParseContext, ReadResult } from './l2-types';
 
 export class L2Use extends L2Base {

@@ -1,8 +1,8 @@
-import { combinePos, ERROR, fallbackPos, Pos } from '../base';
-import { L1Separator } from '../layer1/l1-separator';
+import { combinePos, ERROR, fallbackPos, Pos } from '@/parser/base';
 import { L2Expression, readExpression } from './l2-expression';
 import { L2Statement } from './l2-statement';
 import { INVALID, L2ParseContext, ReadResult } from './l2-types';
+import { L1Separator } from '../layer1/reader/l1-separator';
 
 export class L2ExpressionStatement extends L2Statement {
   expr: L2Expression;

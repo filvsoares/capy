@@ -1,4 +1,4 @@
-import { ERROR } from '../base';
+import { ERROR } from '@/parser/base';
 import { readFunction } from './l2-method';
 import { INVALID, L2Base, L2ParseContext, ReadResult } from './l2-types';
 import { readUse } from './l2-use';

@@ -1,10 +1,11 @@
-import { combinePos, ERROR, fallbackPos, INTERNAL, Pos } from '../base';
-import { L1Operator } from '../layer1/l1-operator';
-import { L1Separator } from '../layer1/l1-separator';
-import { L1Identifier } from '../layer1/l1-word';
+import { combinePos, ERROR, fallbackPos, INTERNAL, Pos } from '@/parser/base';
+
 import { L2Type } from './l2-type';
 import { readType } from './l2-type-all';
 import { Invalid, INVALID, L2Base, L2ParseContext, ReadResult } from './l2-types';
+import { L1Identifier } from '../layer1/reader/l1-word';
+import { L1Operator } from '../layer1/reader/l1-operator';
+import { L1Separator } from '../layer1/reader/l1-separator';
 
 export class L2Argument extends L2Base {
   name: string;

@@ -1,6 +1,6 @@
-import { combinePos, ERROR, fallbackPos, Pos } from '../base';
-import { L1Separator } from '../layer1/l1-separator';
-import { L1Keyword } from '../layer1/l1-word';
+import { combinePos, ERROR, fallbackPos, Pos } from '@/parser/base';
+import { L1Separator } from '@/parser/layer1/reader/l1-separator';
+import { L1Keyword } from '@/parser/layer1/reader/l1-word';
 import { L2Expression, readExpression } from './l2-expression';
 import { L2Statement } from './l2-statement';
 import { INVALID, L2ParseContext, ReadResult } from './l2-types';

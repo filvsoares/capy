@@ -1,11 +1,11 @@
-import { combinePos, ERROR, Pos } from '../base';
-import { L1Bracket } from '../layer1/l1-bracket';
-import { L1Number } from '../layer1/l1-number';
-import { L1Operator } from '../layer1/l1-operator';
-import { L1Separator } from '../layer1/l1-separator';
-import { L1String } from '../layer1/l1-string';
-import { L1Base } from '../layer1/l1-types';
-import { L1Identifier, L1Keyword } from '../layer1/l1-word';
+import { combinePos, ERROR, Pos } from '@/parser/base';
+import { L1Bracket } from '@/parser/layer1/reader/l1-bracket';
+import { L1Number } from '@/parser/layer1/reader/l1-number';
+import { L1Operator } from '@/parser/layer1/reader/l1-operator';
+import { L1Separator } from '@/parser/layer1/reader/l1-separator';
+import { L1String } from '@/parser/layer1/reader/l1-string';
+import { L1Base } from '@/parser/layer1/l1-types';
+import { L1Identifier, L1Keyword } from '@/parser/layer1/reader/l1-word';
 import { Invalid, INVALID, L2Base, L2ParseContext, ReadResult } from './l2-types';
 
 function isExpressionEnd(t: L1Base | undefined) {

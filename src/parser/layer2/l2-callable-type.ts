@@ -1,10 +1,10 @@
-import { combinePos, ERROR, Pos } from '../base';
-import { L1Bracket } from '../layer1/l1-bracket';
-import { L1Operator } from '../layer1/l1-operator';
+import { combinePos, ERROR, Pos } from '@/parser/base';
 import { L2Argument, readArgumentList } from './l2-argument';
 import { L2Type } from './l2-type';
 import { readType } from './l2-type-all';
 import { INVALID, L2Base, L2ParseContext, ReadResult } from './l2-types';
+import { L1Bracket } from '../layer1/reader/l1-bracket';
+import { L1Operator } from '../layer1/reader/l1-operator';
 
 export class L2CallableType extends L2Type {
   argList: L2Argument[];

@@ -18,8 +18,8 @@
  * @file Layer-2 parser implementation.
  */
 
-import { ParseError } from '../base';
-import { L1Base } from '../layer1/l1-types';
+import { ParseError } from '@/parser/base';
+import { L1Base } from '@/parser/layer1/l1-types';
 import { readToplevelList } from './l2-toplevel';
 import { L2Base, L2ParseContext, L2ParseResult } from './l2-types';
 

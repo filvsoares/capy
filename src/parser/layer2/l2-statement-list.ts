@@ -1,7 +1,8 @@
-import { ERROR, INTERNAL, Pos } from '../base';
-import { L1Bracket } from '../layer1/l1-bracket';
-import { L2Statement, readStatement } from './l2-statement';
+import { ERROR, INTERNAL, Pos } from '@/parser/base';
+import { L1Bracket } from '@/parser/layer1/reader/l1-bracket';
+import { L2Statement } from './l2-statement';
 import { INVALID, L2Base, L2ParseContext, ReadResult } from './l2-types';
+import { readStatement } from './l2-statement-impl';
 
 export class L2StatementList extends L2Statement {
   list: L2Statement[];
