@@ -66,7 +66,7 @@ export default function App() {
   };
 
   const onRunClick = async () => {
-    const r = await compile(content, [io], { debugL2: true, debugL3: true });
+    const r = await compile(content, [io], { debugL1: true, debugL2: true, debugL3: true });
     setCompileResult(r);
     if (r.errors.length === 0) {
       const runner = new Runner();

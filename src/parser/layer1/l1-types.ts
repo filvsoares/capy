@@ -23,8 +23,8 @@ import { Base, ParseError } from '@/parser/base';
 export class L1ParseContext {
   s: string;
   pos: number = 0;
-  lin: number = 0;
-  col: number = 0;
+  lin: number = 1;
+  col: number = 1;
   current: string;
   errors: ParseError[] = [];
 

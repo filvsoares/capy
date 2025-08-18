@@ -46,7 +46,7 @@ export class L1Bracket extends L1Base {
 export class L1BracketReader extends Bean implements L1Reader {
   parsers: L1Parser[];
 
-  constructor({ parsers }: { parsers: L1Parser[] }) {
+  constructor([parsers]: [L1Parser[]]) {
     super();
     this.parsers = parsers;
   }

@@ -23,7 +23,7 @@ export class L1Keyword extends L1Base {
   }
 
   static matches(token: any, value?: string): token is L1Keyword {
-    return token instanceof L1Identifier && (value === undefined || token.name === value);
+    return token instanceof L1Keyword && (value === undefined || token.name === value);
   }
 }
 

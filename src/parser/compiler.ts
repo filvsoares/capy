@@ -5,7 +5,7 @@ import { L2ParseResult } from './layer2/l2-types';
 import { layer3Parse } from './l3-parser';
 import { L3ParseResult, L3Module } from './l3-types';
 import { l1Parser } from './layer1/_bean-interfaces';
-import { BeanResolver } from '@/util/beans';
+import { getBeans } from '@/util/beans';
 
 export type CompileResult = {
   output: string;
@@ -25,7 +25,7 @@ export async function compile(
   let p2: L2ParseResult | undefined;
   let p3: L3ParseResult | undefined;
 
-  const l1ParserImpl = (await new BeanResolver().getBeans(l1Parser))[0];
+  const l1ParserImpl = (await getBeans(l1Parser))[0];
 
   try {
     p1 = l1ParserImpl.parse(s);

@@ -27,7 +27,7 @@ import { Bean } from '@/util/beans';
 export class L1ParserImpl extends Bean implements L1Parser {
   readers: L1Reader[];
 
-  constructor({ readers }: { readers: L1Reader[] }) {
+  constructor([readers]: [L1Reader[]]) {
     super();
     this.readers = readers;
   }
