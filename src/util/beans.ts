@@ -41,7 +41,7 @@ function internalLoadModules(
   loadModulePromises: Promise<void>[]
 ) {
   console.log(`internalLoadModules(${String(interfaceKey)})`);
-  for (const creator of registry[interfaceKey].creators) {
+  for (const creator of registry[interfaceKey]?.creators ?? []) {
     if (processedCreators.has(creator.key)) {
       console.log(`  creator ${String(creator.key)} already processed`);
       continue;
@@ -66,7 +66,11 @@ function internalLoadModules(
 function internalGetBeans(interfaceKey: symbol): Bean[] {
   console.log(`internalGetBeans(${String(interfaceKey)})`);
 
-  const registryKey = registry[interfaceKey];
+  let registryKey = registry[interfaceKey];
+  if (!registryKey) {
+    registry[interfaceKey] = registryKey = { creators: [] };
+  }
+
   let beans = registryKey.beans;
   if (beans) {
     console.log(`already has, returning ${beans.length} item(s)`);

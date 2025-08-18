@@ -18,13 +18,21 @@
  * @file Layer-2 parser implementation.
  */
 
-import { ParseError } from '@/parser/base';
-import { L1Base } from '@/parser/layer1/l1-types';
-import { readToplevelList } from './l2-toplevel';
-import { L2Base, L2ParseContext, L2ParseResult } from './l2-types';
+import { L1Base } from '../layer1/l1-types';
+import { L2Parser } from './_bean-interfaces';
+import { L2ParseContext, L2ParseResult } from './l2-types';
+import { L2ToplevelReader } from './reader/toplevel/_bean-interfaces';
 
-export function layer2Parse(list: L1Base[]): L2ParseResult {
-  const c = new L2ParseContext(list);
-  const outList = readToplevelList(c);
-  return { list: outList, errors: c.errors };
+export class L2ParserImpl implements L2Parser {
+  toplevelReaders: L2ToplevelReader[];
+
+  constructor([toplevelReaders]: [L2ToplevelReader[]]) {
+    this.toplevelReaders = toplevelReaders;
+  }
+
+  parse(list: L1Base[]): L2ParseResult {
+    const c = new L2ParseContext(list);
+    const outList = this.toplevelReaders[0].readList(c);
+    return { list: outList, errors: c.errors };
+  }
 }

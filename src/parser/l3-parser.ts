@@ -58,7 +58,7 @@ import {
   L3UnresolvedMethod,
   L3CapyMethod,
 } from './l3-types';
-import { L2CallableType } from './layer2/l2-callable-type';
+import { L2CallableType } from './layer2/reader/l2-callable-type';
 import {
   L2Addition,
   L2Assignment,
@@ -68,16 +68,17 @@ import {
   L2Number,
   L2Operation,
   L2String,
-} from './layer2/l2-expression';
-import { L2ExpressionStatement } from './layer2/l2-expression-statement';
-import { L2Method } from './layer2/l2-method';
-import { L2ReturnStatement } from './layer2/l2-return-statement';
-import { L2SimpleType } from './layer2/l2-simple-type';
-import { L2StatementList } from './layer2/l2-statement-list';
-import { L2Type } from './layer2/l2-type';
+} from './layer2/reader/l2-expression';
+
+import { L2SimpleType } from './layer2/reader/l2-simple-type';
+import { L2Type } from './layer2/reader/l2-type';
 import { L2Base } from './layer2/l2-types';
-import { L2Use } from './layer2/l2-use';
-import { L2Variable } from './layer2/l2-variable';
+import { L2Use } from './layer2/reader/toplevel/l2-use';
+import { L2Variable } from './layer2/reader/toplevel/l2-variable';
+import { L2Method } from './layer2/reader/toplevel/l2-method';
+import { L2StatementList } from './layer2/reader/statement/l2-statement-list';
+import { L2ExpressionStatement } from './layer2/reader/statement/l2-expression-statement';
+import { L2ReturnStatement } from './layer2/reader/statement/l2-return-statement';
 
 const INVALID = Symbol();
 type Invalid = typeof INVALID;

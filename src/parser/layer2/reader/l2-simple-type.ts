@@ -1,7 +1,7 @@
 import { Pos } from '@/parser/base';
 import { L1Identifier, L1Keyword } from '@/parser/layer1/reader/l1-word';
 import { L2Type } from './l2-type';
-import { L2ParseContext, ReadResult } from './l2-types';
+import { L2ParseContext, ReadResult } from '../l2-types';
 
 export class L2SimpleType extends L2Type {
   name: string;

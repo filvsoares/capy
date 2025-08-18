@@ -18,7 +18,6 @@
  * @file App component.
  */
 
-import { layer2Parse } from './parser/layer2/l2-parser';
 import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
 import { Base, INTERNAL, ParseError } from './parser/base';

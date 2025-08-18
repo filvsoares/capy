@@ -6,7 +6,7 @@ import { L1Separator } from '@/parser/layer1/reader/l1-separator';
 import { L1String } from '@/parser/layer1/reader/l1-string';
 import { L1Base } from '@/parser/layer1/l1-types';
 import { L1Identifier, L1Keyword } from '@/parser/layer1/reader/l1-word';
-import { Invalid, INVALID, L2Base, L2ParseContext, ReadResult } from './l2-types';
+import { Invalid, INVALID, L2Base, L2ParseContext, ReadResult } from '../l2-types';
 
 function isExpressionEnd(t: L1Base | undefined) {
   return !t || !(isOperand(t) || L1Operator.matches(t));
