@@ -1,5 +1,5 @@
 import { Pos } from '@/beans/base';
-import { L2Expression } from '../l2-expression/l2-expression-reader';
+import { L2Expression } from '../l2-expression/l2-expression';
 import { L2Type } from '../l2-type/l2-type';
 import { L2Definition } from './l2-definition';
 

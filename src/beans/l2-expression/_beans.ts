@@ -1,12 +1,13 @@
 import { declareBean } from '@/util/beans';
-import { l2ExpressionReader, l2OperationPass1Processor } from './_bean-interfaces';
+import { l2OperationProcessor } from './l2-operation-processor';
+import { l2ExpressionReader } from './l2-expression-reader';
 
 export function declareBeans() {
   declareBean({
     name: 'L2ExpressionReaderImpl',
     provides: [l2ExpressionReader],
-    consumes: [l2OperationPass1Processor],
-    loadModule: () => import('./l2-expression-reader'),
+    consumes: [l2OperationProcessor],
+    loadModule: () => import('./l2-expression-reader-impl'),
     factory: (m, deps) => new m.L2ExpressionReaderImpl(deps),
   });
 }

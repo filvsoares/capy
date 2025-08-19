@@ -2,11 +2,11 @@ import { combinePos, ERROR, fallbackPos, Pos } from '@/beans/base';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
 import { L2Method } from './l2-method';
 import { Bean } from '@/util/beans';
-import { L2ToplevelItemReader } from './_bean-interfaces';
-import { L2StatementReader } from '../l2-statement/_bean-interfaces';
+import { L2ToplevelItemReader } from './l2-toplevel-item-reader';
+import { L2StatementReader } from '../l2-statement/l2-statement-reader';
 import { L1Identifier, L1Keyword } from '../l1-reader/l1-word';
 import { L1Bracket } from '../l1-reader/l1-bracket';
-import { L2CallableTypeReader } from '../l2-type/_bean-interfaces';
+import { L2CallableTypeReader } from '../l2-type/l2-callable-type-reader';
 
 export class L2MethodReader extends Bean implements L2ToplevelItemReader {
   statementReaders: L2StatementReader[];

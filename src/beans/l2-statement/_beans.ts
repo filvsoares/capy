@@ -1,6 +1,7 @@
 import { declareBean } from '@/util/beans';
-import { l2StatementItemReader, l2StatementReader } from './_bean-interfaces';
-import { l2ExpressionReader } from '../l2-expression/_bean-interfaces';
+import { l2StatementReader } from './l2-statement-reader';
+import { l2StatementItemReader } from './l2-statement-item-reader';
+import { l2ExpressionReader } from '../l2-expression/l2-expression-reader';
 
 export function declareBeans() {
   declareBean({
@@ -21,7 +22,7 @@ export function declareBeans() {
     name: 'L2StatementReaderImpl',
     provides: [l2StatementReader],
     consumes: [l2StatementItemReader],
-    loadModule: () => import('./l2-statement-reader'),
+    loadModule: () => import('./l2-statement-reader-impl'),
     factory: (m, deps) => new m.L2StatementReaderImpl(deps),
   });
 }

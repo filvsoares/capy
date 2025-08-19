@@ -1,6 +1,6 @@
 import { Bean } from '@/util/beans';
 import { L2ParseContext, ReadResult } from '../l2-parser/l2-types';
-import { L2TypeItemReader } from './_bean-interfaces';
+import { L2TypeItemReader } from './l2-type-item-reader';
 import { L2SimpleType } from './l2-simple-type';
 import { L1Identifier, L1Keyword } from '../l1-reader/l1-word';
 

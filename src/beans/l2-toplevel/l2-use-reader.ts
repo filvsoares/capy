@@ -1,7 +1,7 @@
 import { combinePos, ERROR, fallbackPos, Pos } from '@/beans/base';
 import { INVALID, L2Base, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
 import { Bean } from '@/util/beans';
-import { L2ToplevelItemReader } from './_bean-interfaces';
+import { L2ToplevelItemReader } from './l2-toplevel-item-reader';
 import { L2Use } from './l2-use';
 import { L1Keyword } from '../l1-reader/l1-word';
 import { L1String } from '../l1-reader/l1-string';

@@ -1,5 +1,5 @@
 export class Bean {
-  _priority?: number;
+  priority?: number;
 }
 
 export type BeanInterface<T = {}> = {
@@ -109,7 +109,7 @@ function internalGetBeans(interfaceKey: symbol): BeanList {
       )
     );
   }
-  beans.sort((a, b) => (b._priority ?? 0) - (a._priority ?? 0));
+  beans.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
   beans.triggerOnLoad();
 
   console.log(`returning ${beans.length} item(s)`);

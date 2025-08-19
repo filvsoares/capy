@@ -1,5 +1,5 @@
 import { Pos } from '../base';
-import { L2Expression, L2OperationStep } from '../l2-expression/l2-expression-reader';
+import { L2Expression, L2OperationStep } from '../l2-expression/l2-expression';
 
 export class L2ArraySubscript extends L2OperationStep {
   item: L2Expression;

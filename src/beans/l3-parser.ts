@@ -59,15 +59,7 @@ import {
   L3CapyMethod,
 } from './l3-types';
 import { L2CallableType } from './l2-type/l2-callable-type';
-import {
-  L2Addition,
-  L2Assignment,
-  L2Expression,
-  L2Identifier,
-  L2Number,
-  L2Operation,
-  L2String,
-} from './l2-expression/l2-expression-reader';
+import { L2Expression, L2Identifier, L2Number, L2Operation, L2String } from './l2-expression/l2-expression';
 
 import { L2SimpleType } from './l2-type/l2-simple-type';
 import { L2Type } from './l2-type/l2-type';
@@ -79,6 +71,8 @@ import { L2StatementList } from './l2-statement/l2-statement-list';
 import { L2ExpressionStatement } from './l2-statement/l2-expression-statement';
 import { L2ReturnStatement } from './l2-statement/l2-return-statement';
 import { L2MethodCall } from './l2-operation/l2-method-call';
+import { L2Addition } from './l2-operation/l2-addition';
+import { L2Assignment } from './l2-operation/l2-assignment';
 
 const INVALID = Symbol();
 type Invalid = typeof INVALID;

@@ -1,10 +1,10 @@
 import { Bean, BeanList } from '@/util/beans';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
-import { L2StatementItemReader } from './_bean-interfaces';
 import { L2ExpressionStatement } from './l2-expression-statement';
 import { combinePos, ERROR, fallbackPos } from '@/beans/base';
 import { L1Separator } from '../l1-reader/l1-separator';
-import { L2ExpressionReader } from '../l2-expression/_bean-interfaces';
+import { L2StatementItemReader } from './l2-statement-item-reader';
+import { L2ExpressionReader } from '../l2-expression/l2-expression-reader';
 
 export class L2ExpressionStatementReader extends Bean implements L2StatementItemReader {
   expressionReader?: L2ExpressionReader;

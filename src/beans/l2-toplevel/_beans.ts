@@ -1,9 +1,10 @@
 import { declareBean } from '@/util/beans';
-import { l2ToplevelItemReader } from './_bean-interfaces';
-import { l2StatementReader } from '../l2-statement/_bean-interfaces';
-import { l2ToplevelReader } from '../l2-parser/_bean-interfaces';
-import { l2CallableTypeReader, l2TypeReader } from '../l2-type/_bean-interfaces';
-import { l2ExpressionReader } from '../l2-expression/_bean-interfaces';
+import { l2ToplevelItemReader } from './l2-toplevel-item-reader';
+import { l2StatementReader } from '../l2-statement/l2-statement-reader';
+import { l2ToplevelReader } from '../l2-parser/l2-toplevel-reader';
+import { l2TypeReader } from '../l2-type/l2-type-reader';
+import { l2CallableTypeReader } from '../l2-type/l2-callable-type-reader';
+import { l2ExpressionReader } from '../l2-expression/l2-expression-reader';
 
 export function declareBeans() {
   declareBean({
@@ -31,7 +32,7 @@ export function declareBeans() {
     name: 'L2ToplevelReaderImpl',
     provides: [l2ToplevelReader],
     consumes: [l2ToplevelItemReader],
-    loadModule: () => import('./l2-toplevel-reader'),
+    loadModule: () => import('./l2-toplevel-reader-impl'),
     factory: (m, deps) => new m.L2ToplevelReaderImpl(deps),
   });
 }

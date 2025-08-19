@@ -1,11 +1,11 @@
 import { ERROR, INTERNAL, ParseError } from './base';
+import { l1Parser } from './l1-parser/l1-parser';
 import { L1ParseResult } from './l1-parser/l1-types';
+import { l2Parser } from './l2-parser/l2-parser';
 import { L2ParseResult } from './l2-parser/l2-types';
 import { layer3Parse } from './l3-parser';
 import { L3ParseResult, L3Module } from './l3-types';
-import { l1Parser } from './l1-parser/_bean-interfaces';
 import { getBeans } from '@/util/beans';
-import { l2Parser } from './l2-parser/_bean-interfaces';
 
 export type CompileResult = {
   output: string;

@@ -1,14 +1,14 @@
 import { combinePos, ERROR, fallbackPos, Pos } from '@/beans/base';
 import { Bean } from '@/util/beans';
-import { L2ToplevelItemReader } from './_bean-interfaces';
+import { L2ToplevelItemReader } from './l2-toplevel-item-reader';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
 import { L2Variable } from './l2-variable';
-import { L2Expression } from '../l2-expression/l2-expression-reader';
+import { L2Expression } from '../l2-expression/l2-expression';
 import { L1Identifier, L1Keyword } from '../l1-reader/l1-word';
 import { L1Operator } from '../l1-reader/l1-operator';
 import { L1Separator } from '../l1-reader/l1-separator';
-import { L2TypeReader } from '../l2-type/_bean-interfaces';
-import { L2ExpressionReader } from '../l2-expression/_bean-interfaces';
+import { L2TypeReader } from '../l2-type/l2-type-reader';
+import { L2ExpressionReader } from '../l2-expression/l2-expression-reader';
 
 export class L2VariableReader extends Bean implements L2ToplevelItemReader {
   typeReaders: L2TypeReader[];
