@@ -20,16 +20,16 @@
 
 import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
-import { Base, INTERNAL, ParseError } from './parser/base';
-import { L3Argument, L3CallableType, L3LibraryMethod, L3Method, L3Module, STRING, VOID } from './parser/l3-types';
-import { Runner } from './parser/runner';
+import { Base, INTERNAL, ParseError } from './beans/base';
+import { L3Argument, L3CallableType, L3LibraryMethod, L3Method, L3Module, STRING, VOID } from './beans/l3-types';
+import { Runner } from './beans/runner';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
-import { layer3Parse } from './parser/l3-parser';
+import { layer3Parse } from './beans/l3-parser';
 import { Tile } from './ui/tile';
-import { compile, CompileResult } from './parser/compiler';
+import { compile, CompileResult } from './beans/compiler';
 import { Toolbar } from './ui/toolbar';
 import { ToolButton } from './ui/tool-button';
 import { Play } from 'feather-icons-react';

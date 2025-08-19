@@ -17,13 +17,34 @@ type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (
 
 type WithInterfaces<T extends BeanInterface<any>[]> = UnionToIntersection<InterfaceOf<T[number]>>;
 
-type BeansOf<L extends BeanInterface<any>[]> = { [I in keyof L]: (Bean & InterfaceOf<L[I]>)[] };
+type BeansOf<L extends BeanInterface<any>[]> = { [I in keyof L]: BeanList<InterfaceOf<L[I]>> };
+
+export class BeanList<T = any> extends Array<Bean & T> {
+  private loaded: boolean = false;
+  private onLoadCallbacks: ((items: T[]) => void)[] = [];
+
+  onLoad(callback: (items: T[]) => void) {
+    if (this.loaded) {
+      callback(this);
+    } else {
+      this.onLoadCallbacks.push(callback);
+    }
+  }
+
+  triggerOnLoad() {
+    this.loaded = true;
+    for (const callback of this.onLoadCallbacks) {
+      callback(this);
+    }
+    this.onLoadCallbacks = [];
+  }
+}
 
 type BeanCreator<Module extends {} = any> = {
   key: symbol;
   consumes: BeanInterface<any>[];
   loadModule: () => Promise<Module>;
-  factory: (module: Module, deps: Bean[][]) => Bean;
+  factory: (module: Module, deps: BeanList[]) => Bean;
   loadModulePromise?: Promise<Module>;
   module?: Module;
 };
@@ -31,7 +52,7 @@ type BeanCreator<Module extends {} = any> = {
 const registry: {
   [key: symbol]: {
     creators: BeanCreator[];
-    beans?: Bean[];
+    beans?: BeanList;
   };
 } = {};
 
@@ -63,7 +84,7 @@ function internalLoadModules(
   }
 }
 
-function internalGetBeans(interfaceKey: symbol): Bean[] {
+function internalGetBeans(interfaceKey: symbol): BeanList {
   console.log(`internalGetBeans(${String(interfaceKey)})`);
 
   let registryKey = registry[interfaceKey];
@@ -79,7 +100,7 @@ function internalGetBeans(interfaceKey: symbol): Bean[] {
 
   console.log(`will create`);
 
-  registryKey.beans = beans = [];
+  registryKey.beans = beans = new BeanList();
   for (const creator of registryKey.creators) {
     beans.push(
       creator.factory(
@@ -89,6 +110,7 @@ function internalGetBeans(interfaceKey: symbol): Bean[] {
     );
   }
   beans.sort((a, b) => (b._priority ?? 0) - (a._priority ?? 0));
+  beans.triggerOnLoad();
 
   console.log(`returning ${beans.length} item(s)`);
   return beans;
@@ -119,7 +141,7 @@ export function declareBean<Provides extends BeanInterface[], Consumes extends B
     key: Symbol(name),
     consumes,
     loadModule,
-    factory: factory as (module: Module, deps: Bean[][]) => Bean,
+    factory: factory as (module: Module, deps: BeanList[]) => Bean,
   };
   for (const provide of provides) {
     let registryKey = registry[provide.key];
