@@ -11,13 +11,13 @@ import { L2CallableTypeReader } from './l2-callable-type-reader';
 import { L2ArgumentReader } from './l2-argument-reader';
 
 export class L2CallableTypeReaderImpl extends Bean implements L2TypeItemReader, L2CallableTypeReader {
-  typeReaders: L2TypeReader[];
-  argumentReaders: L2ArgumentReader[];
+  typeReader: L2TypeReader;
+  argumentReader: L2ArgumentReader;
 
-  constructor([typeReaders, argumentReaders]: [L2TypeReader[], L2ArgumentReader[]]) {
+  constructor([typeReader, argumentReader]: [L2TypeReader, L2ArgumentReader]) {
     super();
-    this.typeReaders = typeReaders;
-    this.argumentReaders = argumentReaders;
+    this.typeReader = typeReader;
+    this.argumentReader = argumentReader;
   }
 
   read(c: L2ParseContext): ReadResult<L2CallableType> {
@@ -30,14 +30,14 @@ export class L2CallableTypeReaderImpl extends Bean implements L2TypeItemReader, 
     let returnType: L2Type | null = null;
 
     const c1 = new L2ParseContext(t1.tokenList);
-    const args = this.argumentReaders[0].readList(c1);
+    const args = this.argumentReader.readList(c1);
     c.errors.push(...c1.errors);
 
     const t2 = c.current;
     if (L1Operator.matches(t2, ':')) {
       c.consume();
 
-      const _returnType = this.typeReaders[0].read(c);
+      const _returnType = this.typeReader.read(c);
       if (_returnType === INVALID) {
         return INVALID;
       }

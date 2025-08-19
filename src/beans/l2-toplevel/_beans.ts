@@ -1,4 +1,4 @@
-import { declareBean } from '@/util/beans';
+import { declareBean, list, single } from '@/util/beans';
 import { l2ToplevelItemReader } from './l2-toplevel-item-reader';
 import { l2StatementReader } from '../l2-statement/l2-statement-reader';
 import { l2ToplevelReader } from '../l2-parser/l2-toplevel-reader';
@@ -10,28 +10,28 @@ export function declareBeans() {
   declareBean({
     name: 'L2MethodReader',
     provides: [l2ToplevelItemReader],
-    consumes: [l2StatementReader, l2CallableTypeReader],
+    dependencies: [single(l2StatementReader), single(l2CallableTypeReader)],
     loadModule: () => import('./l2-method-reader'),
     factory: (m, deps) => new m.L2MethodReader(deps),
   });
   declareBean({
     name: 'L2UseReader',
     provides: [l2ToplevelItemReader],
-    consumes: [],
+    dependencies: [],
     loadModule: () => import('./l2-use-reader'),
     factory: (m) => new m.L2UseReader(),
   });
   declareBean({
     name: 'L2VariableReader',
     provides: [l2ToplevelItemReader],
-    consumes: [l2TypeReader, l2ExpressionReader],
+    dependencies: [single(l2TypeReader), single(l2ExpressionReader)],
     loadModule: () => import('./l2-variable-reader'),
     factory: (m, deps) => new m.L2VariableReader(deps),
   });
   declareBean({
     name: 'L2ToplevelReaderImpl',
     provides: [l2ToplevelReader],
-    consumes: [l2ToplevelItemReader],
+    dependencies: [list(l2ToplevelItemReader)],
     loadModule: () => import('./l2-toplevel-reader-impl'),
     factory: (m, deps) => new m.L2ToplevelReaderImpl(deps),
   });

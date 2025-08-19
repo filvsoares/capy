@@ -1,4 +1,4 @@
-import { Bean, BeanList } from '@/util/beans';
+import { Bean } from '@/util/beans';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
 import { L2ExpressionStatement } from './l2-expression-statement';
 import { combinePos, ERROR, fallbackPos } from '@/beans/base';
@@ -7,11 +7,11 @@ import { L2StatementItemReader } from './l2-statement-item-reader';
 import { L2ExpressionReader } from '../l2-expression/l2-expression-reader';
 
 export class L2ExpressionStatementReader extends Bean implements L2StatementItemReader {
-  expressionReader?: L2ExpressionReader;
+  expressionReader: L2ExpressionReader;
 
-  constructor([expressionReaders]: [BeanList<L2ExpressionReader>]) {
+  constructor([expressionReaders]: [L2ExpressionReader]) {
     super();
-    expressionReaders.onLoad((val) => (this.expressionReader = val[0]));
+    this.expressionReader = expressionReaders;
   }
 
   read(c: L2ParseContext): ReadResult<L2ExpressionStatement> {

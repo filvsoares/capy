@@ -14,11 +14,11 @@ export function isBracketEnd(c: string) {
 }
 
 export class L1BracketReader extends Bean implements L1Reader {
-  parsers: L1Parser[];
+  parser: L1Parser;
 
-  constructor([parsers]: [L1Parser[]]) {
+  constructor([parser]: [L1Parser]) {
     super();
-    this.parsers = parsers;
+    this.parser = parser;
   }
   read(c: L1ParseContext): L1Bracket | undefined {
     if (!isBracketStart(c.current)) {
@@ -46,7 +46,7 @@ export class L1BracketReader extends Bean implements L1Reader {
       if (isBracketEnd(c.current)) {
         break;
       }
-      const item = this.parsers[0].read(c);
+      const item = this.parser.read(c);
       if (!item) {
         c.errors.push({
           level: ERROR,

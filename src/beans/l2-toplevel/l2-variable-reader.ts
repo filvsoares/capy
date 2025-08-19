@@ -11,13 +11,13 @@ import { L2TypeReader } from '../l2-type/l2-type-reader';
 import { L2ExpressionReader } from '../l2-expression/l2-expression-reader';
 
 export class L2VariableReader extends Bean implements L2ToplevelItemReader {
-  typeReaders: L2TypeReader[];
-  expressionReaders: L2ExpressionReader[];
+  typeReader: L2TypeReader;
+  expressionReader: L2ExpressionReader;
 
-  constructor([typeReaders, expressionReaders]: [L2TypeReader[], L2ExpressionReader[]]) {
+  constructor([typeReader, expressionReader]: [L2TypeReader, L2ExpressionReader]) {
     super();
-    this.typeReaders = typeReaders;
-    this.expressionReaders = expressionReaders;
+    this.typeReader = typeReader;
+    this.expressionReader = expressionReader;
   }
 
   read(c: L2ParseContext): ReadResult<L2Variable> {
@@ -50,7 +50,7 @@ export class L2VariableReader extends Bean implements L2ToplevelItemReader {
     c.consume();
 
     const t4 = c.current;
-    const type = t4 && this.typeReaders[0].read(c);
+    const type = t4 && this.typeReader.read(c);
     if (type === INVALID) {
       return INVALID;
     }
@@ -69,7 +69,7 @@ export class L2VariableReader extends Bean implements L2ToplevelItemReader {
       c.consume();
 
       const t4 = c.current;
-      const _initExpr = t4 && this.expressionReaders[0].read(c);
+      const _initExpr = t4 && this.expressionReader.read(c);
       if (_initExpr === INVALID) {
         return INVALID;
       }

@@ -1,4 +1,4 @@
-import { Bean, BeanList } from '@/util/beans';
+import { Bean } from '@/util/beans';
 import { L2OperationProcessor } from '../l2-expression/l2-operation-processor';
 import { L2Expression, L2OperationStep } from '../l2-expression/l2-expression';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
@@ -12,11 +12,11 @@ export class L2MethodCallProcessor extends Bean implements L2OperationProcessor 
   pass = 0;
   priority = 100;
 
-  expressionReader?: L2ExpressionReader;
+  expressionReader: L2ExpressionReader;
 
-  constructor([expressionReaders]: [BeanList<L2ExpressionReader>]) {
+  constructor([expressionReaders]: [L2ExpressionReader]) {
     super();
-    expressionReaders.onLoad((val) => (this.expressionReader = val[0]));
+    this.expressionReader = expressionReaders;
   }
 
   process(

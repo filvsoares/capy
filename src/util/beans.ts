@@ -17,140 +17,143 @@ type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (
 
 type WithInterfaces<T extends BeanInterface<any>[]> = UnionToIntersection<InterfaceOf<T[number]>>;
 
-type BeansOf<L extends BeanInterface<any>[]> = { [I in keyof L]: BeanList<InterfaceOf<L[I]>> };
-
-export class BeanList<T = any> extends Array<Bean & T> {
-  private loaded: boolean = false;
-  private onLoadCallbacks: ((items: T[]) => void)[] = [];
-
-  onLoad(callback: (items: T[]) => void) {
-    if (this.loaded) {
-      callback(this);
-    } else {
-      this.onLoadCallbacks.push(callback);
-    }
-  }
-
-  triggerOnLoad() {
-    this.loaded = true;
-    for (const callback of this.onLoadCallbacks) {
-      callback(this);
-    }
-    this.onLoadCallbacks = [];
-  }
-}
-
-type BeanCreator<Module extends {} = any> = {
+type BeanContainer<Module extends {} = any> = {
+  bean?: Bean;
   key: symbol;
-  consumes: BeanInterface<any>[];
+  dependencies: BeanDependencySpec[];
   loadModule: () => Promise<Module>;
-  factory: (module: Module, deps: BeanList[]) => Bean;
+  factory: (module: Module, dependencies: any[]) => Bean;
   loadModulePromise?: Promise<Module>;
   module?: Module;
 };
 
-const registry: {
-  [key: symbol]: {
-    creators: BeanCreator[];
-    beans?: BeanList;
+type BeanDependencySpec<T = any> = {
+  load: (loader: BeanLoader) => void;
+  resolve: () => T;
+};
+
+type DependencyOf<K> = K extends BeanDependencySpec<infer T> ? T : never;
+
+type DependenciesOf<L extends BeanDependencySpec[]> = { [I in keyof L]: DependencyOf<L[I]> };
+
+export function list<T>(i: BeanInterface<T>): BeanDependencySpec<(Bean & T)[]> {
+  return {
+    load: (loader) => {
+      for (const bc of registry[i.key] ?? []) {
+        loader.load(bc);
+      }
+    },
+    resolve: () => {
+      const result = (registry[i.key] ?? [])
+        .map((bc) => internalGetBean(bc))
+        .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+      return result as (Bean & T)[];
+    },
   };
+}
+
+export function single<T>(i: BeanInterface<T>): BeanDependencySpec<Bean & T> {
+  return {
+    load: (loader) => {
+      for (const bc of registry[i.key] ?? []) {
+        loader.load(bc);
+      }
+    },
+    resolve: () => {
+      const result = (registry[i.key] ?? [])
+        .map((bc) => internalGetBean(bc))
+        .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+      return result[0] as Bean & T;
+    },
+  };
+}
+
+async function loadAndResolve<T>(spec: BeanDependencySpec<T>): Promise<T> {
+  const loader = new BeanLoader();
+  spec.load(loader);
+  await loader.getPromise();
+  return spec.resolve();
+}
+
+const registry: {
+  [key: symbol]: BeanContainer[];
 } = {};
 
-function internalLoadModules(
-  interfaceKey: symbol,
-  processedCreators: Set<symbol>,
-  loadModulePromises: Promise<void>[]
-) {
-  console.log(`internalLoadModules(${String(interfaceKey)})`);
-  for (const creator of registry[interfaceKey]?.creators ?? []) {
-    if (processedCreators.has(creator.key)) {
-      console.log(`  creator ${String(creator.key)} already processed`);
-      continue;
-    }
-    console.log(`  creator ${String(creator.key)}`);
-    processedCreators.add(creator.key);
+class BeanLoader {
+  private promises: Promise<void>[] = [];
+  private processedBCs = new Set<symbol>();
 
-    if (!creator.loadModulePromise) {
-      creator.loadModulePromise = (async () => {
-        await Promise.resolve();
-        creator.module = await creator.loadModule();
-      })();
+  load(bc: BeanContainer) {
+    if (this.processedBCs.has(bc.key)) {
+      return;
     }
-    loadModulePromises.push(creator.loadModulePromise);
+    this.processedBCs.add(bc.key);
+    if (!bc.module) {
+      if (!bc.loadModulePromise) {
+        console.log(`Loading "${bc.key.description}"...`);
+        bc.loadModulePromise = (async () => {
+          await Promise.resolve();
+          bc.module = await bc.loadModule();
+        })();
+      }
+      this.promises.push(bc.loadModulePromise);
+    }
+    for (const dep of bc.dependencies) {
+      dep.load(this);
+    }
+  }
 
-    for (const consume of creator.consumes) {
-      internalLoadModules(consume.key, processedCreators, loadModulePromises);
-    }
+  getPromise() {
+    return Promise.all(this.promises);
   }
 }
 
-function internalGetBeans(interfaceKey: symbol): BeanList {
-  console.log(`internalGetBeans(${String(interfaceKey)})`);
-
-  let registryKey = registry[interfaceKey];
-  if (!registryKey) {
-    registry[interfaceKey] = registryKey = { creators: [] };
+function internalGetBean(bc: BeanContainer) {
+  if (bc.bean) {
+    return bc.bean;
   }
-
-  let beans = registryKey.beans;
-  if (beans) {
-    console.log(`already has, returning ${beans.length} item(s)`);
-    return beans;
-  }
-
-  console.log(`will create`);
-
-  registryKey.beans = beans = new BeanList();
-  for (const creator of registryKey.creators) {
-    beans.push(
-      creator.factory(
-        creator.module!,
-        creator.consumes.map((i) => internalGetBeans(i.key))
-      )
-    );
-  }
-  beans.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-  beans.triggerOnLoad();
-
-  console.log(`returning ${beans.length} item(s)`);
-  return beans;
+  const dst = (bc.bean = {});
+  const src = bc.factory(
+    bc.module!,
+    bc.dependencies.map((dep) => dep.resolve())
+  );
+  Object.setPrototypeOf(dst, Object.getPrototypeOf(src));
+  Object.defineProperties(dst, Object.getOwnPropertyDescriptors(src));
+  return bc.bean;
 }
 
 export async function getBeans<T>(i: BeanInterface<T>): Promise<(Bean & T)[]> {
-  const processedCreators = new Set<symbol>();
-  const loadModulePromises: Promise<void>[] = [];
-  internalLoadModules(i.key, processedCreators, loadModulePromises);
-  await Promise.all(loadModulePromises);
-  return internalGetBeans(i.key) as (Bean & T)[];
+  return await loadAndResolve(list(i));
 }
 
-export function declareBean<Provides extends BeanInterface[], Consumes extends BeanInterface[], Module extends {}>({
+export function declareBean<
+  Provides extends BeanInterface[],
+  Dependencies extends BeanDependencySpec[],
+  Module extends {}
+>({
   name,
   provides,
-  consumes,
+  dependencies,
   loadModule,
   factory,
 }: {
   name: string;
   provides: [...Provides];
-  consumes: [...Consumes];
+  dependencies: [...Dependencies];
   loadModule: () => Promise<Module>;
-  factory: (module: Module, deps: BeansOf<Consumes>) => Bean & WithInterfaces<Provides>;
+  factory: (module: Module, dependencies: DependenciesOf<Dependencies>) => Bean & WithInterfaces<Provides>;
 }) {
-  const wrapper: BeanCreator<Module> = {
+  const bc: BeanContainer<Module> = {
     key: Symbol(name),
-    consumes,
+    dependencies,
     loadModule,
-    factory: factory as (module: Module, deps: BeanList[]) => Bean,
+    factory: factory as (module: Module, dependencies: any[]) => Bean,
   };
   for (const provide of provides) {
     let registryKey = registry[provide.key];
     if (!registryKey) {
-      registry[provide.key] = registryKey = { creators: [] };
+      registry[provide.key] = registryKey = [];
     }
-    if (registryKey.beans) {
-      throw new Error(`getBeans() already performed on key '${provide.key.description}'`);
-    }
-    registryKey.creators.push(wrapper);
+    registryKey.push(bc);
   }
 }

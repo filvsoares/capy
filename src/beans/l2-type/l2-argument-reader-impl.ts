@@ -9,11 +9,11 @@ import { L2TypeReader } from './l2-type-reader';
 import { L2ArgumentReader } from './l2-argument-reader';
 
 export class L2ArgumentReaderImpl extends Bean implements L2ArgumentReader {
-  typeReaders: L2TypeReader[];
+  typeReader: L2TypeReader;
 
-  constructor([typeReaders]: [L2TypeReader[]]) {
+  constructor([typeReader]: [L2TypeReader]) {
     super();
-    this.typeReaders = typeReaders;
+    this.typeReader = typeReader;
   }
 
   read(c: L2ParseContext): ReadResult<L2Argument> {
@@ -35,7 +35,7 @@ export class L2ArgumentReaderImpl extends Bean implements L2ArgumentReader {
     c.consume();
 
     const t3 = c.current;
-    const type = this.typeReaders[0].read(c);
+    const type = this.typeReader.read(c);
     if (!type) {
       c.errors.push({
         level: ERROR,

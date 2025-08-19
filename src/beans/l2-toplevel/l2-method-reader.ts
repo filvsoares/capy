@@ -9,13 +9,13 @@ import { L1Bracket } from '../l1-reader/l1-bracket';
 import { L2CallableTypeReader } from '../l2-type/l2-callable-type-reader';
 
 export class L2MethodReader extends Bean implements L2ToplevelItemReader {
-  statementReaders: L2StatementReader[];
-  callableTypeReaders: L2CallableTypeReader[];
+  statementReader: L2StatementReader;
+  callableTypeReader: L2CallableTypeReader;
 
-  constructor([statementReaders, callableTypeReaders]: [L2StatementReader[], L2CallableTypeReader[]]) {
+  constructor([statementReader, callableTypeReader]: [L2StatementReader, L2CallableTypeReader]) {
     super();
-    this.statementReaders = statementReaders;
-    this.callableTypeReaders = callableTypeReaders;
+    this.statementReader = statementReader;
+    this.callableTypeReader = callableTypeReader;
   }
 
   read(c: L2ParseContext): ReadResult<L2Method> {
@@ -37,7 +37,7 @@ export class L2MethodReader extends Bean implements L2ToplevelItemReader {
     c.consume();
 
     const t3 = c.current;
-    let type = t3 && this.callableTypeReaders[0].read(c);
+    let type = t3 && this.callableTypeReader.read(c);
     if (type === INVALID) {
       return INVALID;
     }
@@ -62,7 +62,7 @@ export class L2MethodReader extends Bean implements L2ToplevelItemReader {
     c.consume();
 
     const c1 = new L2ParseContext(t4.tokenList);
-    const statementList = this.statementReaders[0].readList(c1);
+    const statementList = this.statementReader.readList(c1);
     c.errors.push(...c1.errors);
 
     return new L2Method(t2.name, type, statementList, combinePos(t1.pos, t4.pos));

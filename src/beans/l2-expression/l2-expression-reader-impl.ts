@@ -8,7 +8,7 @@ import { L1String } from '../l1-reader/l1-string';
 import { L1Separator } from '../l1-reader/l1-separator';
 import { L1Bracket } from '../l1-reader/l1-bracket';
 import { L2OperationProcessor } from './l2-operation-processor';
-import { Bean, BeanList } from '@/util/beans';
+import { Bean } from '@/util/beans';
 import { L2ExpressionReader, ReadExpressionOpts } from './l2-expression-reader';
 import { L2Expression, L2Identifier, L2Number, L2Operation, L2OperationStep, L2String } from './l2-expression';
 import { L2UnaryMinus } from '../l2-operation/l2-unary-minus';
@@ -23,16 +23,14 @@ import { L2Assignment } from '../l2-operation/l2-assignment';
 export class L2ExpressionReaderImpl extends Bean implements L2ExpressionReader {
   operationProcessors: L2OperationProcessor[][] = [];
 
-  constructor([operationProcessors]: [BeanList<L2OperationProcessor>]) {
+  constructor([operationProcessors]: [L2OperationProcessor[]]) {
     super();
-    operationProcessors.onLoad((val) => {
-      for (const item of val) {
-        while (this.operationProcessors.length <= item.pass) {
-          this.operationProcessors.push([]);
-        }
-        this.operationProcessors[item.pass].push(item);
+    for (const item of operationProcessors) {
+      while (this.operationProcessors.length <= item.pass) {
+        this.operationProcessors.push([]);
       }
-    });
+      this.operationProcessors[item.pass].push(item);
+    }
   }
 
   isExpressionEnd(t: L1Base | undefined) {

@@ -11,11 +11,11 @@ import { L2ExpressionReader } from '../l2-expression/l2-expression-reader';
 export class L2ReturnStatementReader extends Bean implements L2StatementItemReader {
   priority = 100;
 
-  expressionReaders: L2ExpressionReader[];
+  expressionReader: L2ExpressionReader;
 
-  constructor([expressionReaders]: [L2ExpressionReader[]]) {
+  constructor([expressionReader]: [L2ExpressionReader]) {
     super();
-    this.expressionReaders = expressionReaders;
+    this.expressionReader = expressionReader;
   }
 
   read(c: L2ParseContext): ReadResult<L2ReturnStatement> {
@@ -31,7 +31,7 @@ export class L2ReturnStatementReader extends Bean implements L2StatementItemRead
       return new L2ReturnStatement(null, combinePos(t1.pos, t2.pos));
     }
 
-    const val = this.expressionReaders[0].read(c, {
+    const val = this.expressionReader.read(c, {
       unexpectedTokenErrorMsg: (t) => `Expected expression but found ${t}`,
     });
     if (val === INVALID) {
