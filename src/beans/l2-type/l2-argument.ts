@@ -1,7 +1,7 @@
-import { combinePos, ERROR, fallbackPos, INTERNAL, Pos } from '@/beans/base';
+import { Pos } from '@/base';
 
+import { L2Base } from '../l2-parser/l2-types';
 import { L2Type } from './l2-type';
-import { Invalid, INVALID, L2Base, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
 
 export class L2Argument extends L2Base {
   name: string;

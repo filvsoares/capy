@@ -1,4 +1,4 @@
-import { Pos } from '@/beans/base';
+import { Pos } from '@/base';
 import { L2Statement } from './l2-statement';
 
 export class L2StatementList extends L2Statement {

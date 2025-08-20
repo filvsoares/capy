@@ -1,11 +1,11 @@
-import { combinePos, ERROR, fallbackPos, Pos } from '@/beans/base';
-import { INVALID, L2Base, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
+import { combinePos, ERROR, fallbackPos } from '@/base';
 import { Bean } from '@/util/beans';
+import { L1Separator } from '../l1-reader/l1-separator';
+import { L1String } from '../l1-reader/l1-string';
+import { L1Keyword } from '../l1-reader/l1-word';
+import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
 import { L2ToplevelItemReader } from './l2-toplevel-item-reader';
 import { L2Use } from './l2-use';
-import { L1Keyword } from '../l1-reader/l1-word';
-import { L1String } from '../l1-reader/l1-string';
-import { L1Separator } from '../l1-reader/l1-separator';
 
 export class L2UseReader extends Bean implements L2ToplevelItemReader {
   read(c: L2ParseContext): ReadResult<L2Use> {

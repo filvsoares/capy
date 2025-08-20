@@ -1,5 +1,5 @@
-import { Pos } from '@/beans/base';
-import { L2Base, L2Toplevel } from '../l2-parser/l2-types';
+import { Pos } from '@/base';
+import { L2Toplevel } from '../l2-parser/l2-types';
 
 export class L2Use extends L2Toplevel {
   value: string;

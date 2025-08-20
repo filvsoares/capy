@@ -1,6 +1,6 @@
-import { Pos } from '@/beans/base';
+import { Pos } from '@/base';
+import { L2Toplevel } from '../l2-parser/l2-types';
 import { L2Type } from '../l2-type/l2-type';
-import { L2Base, L2Toplevel } from '../l2-parser/l2-types';
 
 export abstract class L2Definition<T extends L2Type = L2Type> extends L2Toplevel {
   type: T;

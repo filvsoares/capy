@@ -19,30 +19,28 @@
  */
 
 import {
-  L3Base,
+  L3ArgumentVariable,
+  L3Assignment,
+  L3CapyMethod,
   L3Expression,
   L3ExpressionStatement,
   L3LibraryMethod,
+  L3LocalVariableReference,
   L3Method,
   L3MethodCall,
+  L3MethodReference,
+  L3Module,
+  L3ModuleVariableReference,
   L3Number,
   L3Operation,
-  L3Statement,
+  L3ReadVariable,
+  L3ReturnStatement,
+  L3StatementList,
   L3String,
   L3StringConcat,
-  L3Module,
-  L3ReturnStatement,
   L3Symbol,
-  L3ArgumentVariable,
-  L3ReadVariable,
-  L3Assignment,
   L3Variable,
-  L3MethodReference,
-  L3ModuleVariableReference,
-  L3LocalVariableReference,
-  L3CapyMethod,
-  L3StatementList,
-} from './l3-types';
+} from './beans/l3-parser/l3-types';
 
 class Variable {
   value: any;

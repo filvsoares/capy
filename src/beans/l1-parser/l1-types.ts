@@ -18,7 +18,7 @@
  * @file Type definitions for layer-1 parser.
  */
 
-import { Base, ParseError } from '@/beans/base';
+import { Base, ParseError } from '@/base';
 
 export class L1ParseContext {
   s: string;

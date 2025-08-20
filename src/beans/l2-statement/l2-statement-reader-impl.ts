@@ -1,10 +1,10 @@
+import { ERROR, INTERNAL } from '@/base';
 import { Bean } from '@/util/beans';
-import { L2StatementReader } from './l2-statement-reader';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
 import { L2Statement } from './l2-statement';
-import { L2StatementList } from './l2-statement-list';
-import { ERROR, INTERNAL } from '@/beans/base';
 import { L2StatementItemReader } from './l2-statement-item-reader';
+import { L2StatementList } from './l2-statement-list';
+import { L2StatementReader } from './l2-statement-reader';
 
 export class L2StatementReaderImpl extends Bean implements L2StatementReader {
   itemReaders: L2StatementItemReader[];

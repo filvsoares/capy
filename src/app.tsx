@@ -20,19 +20,27 @@
 
 import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
-import { Base, INTERNAL, ParseError } from './beans/base';
-import { L3Argument, L3CallableType, L3LibraryMethod, L3Method, L3Module, STRING, VOID } from './beans/l3-types';
-import { Runner } from './beans/runner';
+import { Base, INTERNAL, ParseError } from './base';
+import {
+  L3Argument,
+  L3CallableType,
+  L3LibraryMethod,
+  L3Method,
+  L3Module,
+  STRING,
+  VOID,
+} from './beans/l3-parser/l3-types';
+import { Runner } from './runner';
 import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
-import { layer3Parse } from './beans/l3-parser';
 import { Tile } from './ui/tile';
-import { compile, CompileResult } from './beans/compiler';
 import { Toolbar } from './ui/toolbar';
 import { ToolButton } from './ui/tool-button';
 import { Play } from 'feather-icons-react';
+import { compiler, CompileResult } from './beans/compiler/compiler';
+import { getBeans } from './util/beans';
 
 const initialCode = `use "io";
 
@@ -65,7 +73,8 @@ export default function App() {
   };
 
   const onRunClick = async () => {
-    const r = await compile(content, [io], { debugL1: true, debugL2: true, debugL3: true });
+    const _compiler = (await getBeans(compiler))[0];
+    const r = _compiler.compile(content, [io], { debugL1: true, debugL2: true, debugL3: true });
     setCompileResult(r);
     if (r.errors.length === 0) {
       const runner = new Runner();

@@ -1,9 +1,9 @@
 import { Bean } from '@/util/beans';
-import { L1Reader } from '../l1-parser/l1-reader';
+import { ERROR } from '../../base';
 import { L1Parser } from '../l1-parser/l1-parser';
+import { L1Reader } from '../l1-parser/l1-reader';
 import { L1Base, L1ParseContext } from '../l1-parser/l1-types';
 import { L1Bracket } from './l1-bracket';
-import { ERROR } from '../base';
 
 export function isBracketStart(c: string) {
   return c === '(' || c === '[' || c === '{';

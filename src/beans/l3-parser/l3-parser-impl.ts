@@ -18,61 +18,59 @@
  * @file Layer-3 parser implementation.
  */
 
-import { Base, ERROR, INTERNAL, ParseError, Pos } from './base';
+import { ERROR, ParseError } from '../../base';
 
+import { L2Expression, L2Identifier, L2Number, L2Operation, L2String } from '../l2-expression/l2-expression';
+import { L2CallableType } from '../l2-type/l2-callable-type';
 import {
-  L3Method,
-  L3Type,
-  L3Variable,
-  L3Module as L3Module,
-  L3Statement,
-  L3Operation,
-  L3OperationStep,
-  L3Base,
-  L3PrimitiveType,
-  L3SimpleType,
-  L3CallableType,
-  L3MethodCall,
-  L3String,
-  L3Number,
-  L3ExpressionStatement,
-  L3Expression,
   isStringType,
-  L3ReadVariable,
-  L3StringConcat,
-  L3ParseResult,
-  L3Argument,
-  VOID,
-  STRING,
-  L3ReturnStatement,
   isVoidType,
-  L3Symbol,
-  L3LocalVariable as L3LocalVariable,
+  L3Argument,
   L3ArgumentVariable,
   L3Assignment,
-  L3VariableReference,
-  L3MethodReference,
-  L3LocalVariableReference,
-  L3ModuleVariableReference,
-  L3StatementList,
-  L3UnresolvedMethod,
+  L3CallableType,
   L3CapyMethod,
+  L3Expression,
+  L3ExpressionStatement,
+  L3LocalVariable,
+  L3LocalVariableReference,
+  L3Method,
+  L3MethodCall,
+  L3MethodReference,
+  L3Module,
+  L3ModuleVariableReference,
+  L3Number,
+  L3Operation,
+  L3OperationStep,
+  L3ReadVariable,
+  L3ReturnStatement,
+  L3SimpleType,
+  L3StatementList,
+  L3String,
+  L3StringConcat,
+  L3Symbol,
+  L3Type,
+  L3UnresolvedMethod,
+  L3Variable,
+  L3VariableReference,
+  STRING,
+  VOID,
 } from './l3-types';
-import { L2CallableType } from './l2-type/l2-callable-type';
-import { L2Expression, L2Identifier, L2Number, L2Operation, L2String } from './l2-expression/l2-expression';
 
-import { L2SimpleType } from './l2-type/l2-simple-type';
-import { L2Type } from './l2-type/l2-type';
-import { L2Base } from './l2-parser/l2-types';
-import { L2Use } from './l2-toplevel/l2-use';
-import { L2Variable } from './l2-toplevel/l2-variable';
-import { L2Method } from './l2-toplevel/l2-method';
-import { L2StatementList } from './l2-statement/l2-statement-list';
-import { L2ExpressionStatement } from './l2-statement/l2-expression-statement';
-import { L2ReturnStatement } from './l2-statement/l2-return-statement';
-import { L2MethodCall } from './l2-operation/l2-method-call';
-import { L2Addition } from './l2-operation/l2-addition';
-import { L2Assignment } from './l2-operation/l2-assignment';
+import { Bean } from '@/util/beans';
+import { L2Addition } from '../l2-operation/l2-addition';
+import { L2Assignment } from '../l2-operation/l2-assignment';
+import { L2MethodCall } from '../l2-operation/l2-method-call';
+import { L2Base } from '../l2-parser/l2-types';
+import { L2ExpressionStatement } from '../l2-statement/l2-expression-statement';
+import { L2ReturnStatement } from '../l2-statement/l2-return-statement';
+import { L2StatementList } from '../l2-statement/l2-statement-list';
+import { L2Method } from '../l2-toplevel/l2-method';
+import { L2Use } from '../l2-toplevel/l2-use';
+import { L2Variable } from '../l2-toplevel/l2-variable';
+import { L2SimpleType } from '../l2-type/l2-simple-type';
+import { L2Type } from '../l2-type/l2-type';
+import { L3Parser, L3ParseResult } from './l3-parser';
 
 const INVALID = Symbol();
 type Invalid = typeof INVALID;
@@ -115,7 +113,7 @@ class MethodStack {
   }
 }
 
-export class L3Parser {
+export class L3ParserImpl extends Bean implements L3Parser {
   errors: ParseError[] = [];
   mySymbols: { [name: string]: L3Symbol } = {};
   modules: { [name: string]: L3Module } = {};
@@ -612,8 +610,4 @@ export class L3Parser {
     });
     return INVALID;
   }
-}
-
-export function layer3Parse(moduleName: string, list: L2Base[], modules: L3Module[]) {
-  return new L3Parser().parse(moduleName, list, modules);
 }

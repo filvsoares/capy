@@ -1,8 +1,8 @@
 import { Bean } from '@/util/beans';
-import { L1String } from './l1-string';
+import { ERROR } from '../../base';
 import { L1Reader } from '../l1-parser/l1-reader';
 import { L1ParseContext } from '../l1-parser/l1-types';
-import { ERROR } from '../base';
+import { L1String } from './l1-string';
 
 export class L1StringReader extends Bean implements L1Reader {
   read(c: L1ParseContext): L1String | undefined {

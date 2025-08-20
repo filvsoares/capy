@@ -1,4 +1,4 @@
-import { Pos } from '../base';
+import { Pos } from '../../base';
 import { L2Expression, L2OperationStep } from '../l2-expression/l2-expression';
 
 export class L2Division extends L2OperationStep {

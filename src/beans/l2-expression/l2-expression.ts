@@ -1,4 +1,4 @@
-import { Pos } from '../base';
+import { Pos } from '../../base';
 import { L2Base } from '../l2-parser/l2-types';
 
 export abstract class L2Expression extends L2Base {

@@ -18,8 +18,8 @@
  * @file Type definitions for layer-3 parser.
  */
 
-import { Base, INTERNAL, ParseError, Pos } from './base';
-import { Runner } from './runner';
+import { Base, INTERNAL, Pos } from '../../base';
+import { Runner } from '../../runner';
 
 export abstract class L3Base extends Base {
   isL3() {
@@ -531,8 +531,3 @@ export class L3Module extends L3Base {
     });
   }
 }
-
-export type L3ParseResult = {
-  runnable: L3Module;
-  errors: ParseError[];
-};

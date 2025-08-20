@@ -1,8 +1,8 @@
-import { ERROR } from '@/beans/base';
-import { INVALID, L2Base, L2ParseContext, L2Toplevel, ReadResult } from '../l2-parser/l2-types';
-import { L2ToplevelItemReader } from './l2-toplevel-item-reader';
+import { ERROR } from '@/base';
 import { Bean } from '@/util/beans';
 import { L2ToplevelReader } from '../l2-parser/l2-toplevel-reader';
+import { INVALID, L2ParseContext, L2Toplevel, ReadResult } from '../l2-parser/l2-types';
+import { L2ToplevelItemReader } from './l2-toplevel-item-reader';
 
 export class L2ToplevelReaderImpl extends Bean implements L2ToplevelReader {
   itemReaders: L2ToplevelItemReader[];

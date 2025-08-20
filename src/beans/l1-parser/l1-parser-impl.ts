@@ -18,11 +18,11 @@
  * @file Layer-1 parser implementation.
  */
 
-import { ERROR } from '@/beans/base';
-import { L1Base, L1ParseContext, L1ParseResult } from './l1-types';
-import { L1Reader } from './l1-reader';
+import { ERROR } from '@/base';
 import { Bean } from '@/util/beans';
 import { L1Parser } from './l1-parser';
+import { L1Reader } from './l1-reader';
+import { L1Base, L1ParseContext, L1ParseResult } from './l1-types';
 
 export class L1ParserImpl extends Bean implements L1Parser {
   readers: L1Reader[];

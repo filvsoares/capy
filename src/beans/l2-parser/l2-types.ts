@@ -18,7 +18,7 @@
  * @file Type definitions for layer-2 parser.
  */
 
-import { Base, ParseError, Pos } from '@/beans/base';
+import { Base, ParseError } from '@/base';
 import { L1Base } from '@/beans/l1-parser/l1-types';
 
 export abstract class L2Base extends Base {

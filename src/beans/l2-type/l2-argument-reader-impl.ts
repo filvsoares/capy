@@ -1,12 +1,12 @@
 import { Bean } from '@/util/beans';
+import { combinePos, ERROR, fallbackPos, INTERNAL } from '../../base';
+import { L1Operator } from '../l1-reader/l1-operator';
+import { L1Separator } from '../l1-reader/l1-separator';
+import { L1Identifier } from '../l1-reader/l1-word';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-types';
 import { L2Argument } from './l2-argument';
-import { L1Identifier } from '../l1-reader/l1-word';
-import { L1Operator } from '../l1-reader/l1-operator';
-import { combinePos, ERROR, fallbackPos, INTERNAL } from '../base';
-import { L1Separator } from '../l1-reader/l1-separator';
-import { L2TypeReader } from './l2-type-reader';
 import { L2ArgumentReader } from './l2-argument-reader';
+import { L2TypeReader } from './l2-type-reader';
 
 export class L2ArgumentReaderImpl extends Bean implements L2ArgumentReader {
   typeReader: L2TypeReader;

@@ -1,4 +1,4 @@
-import { Pos } from '@/beans/base';
+import { Pos } from '@/base';
 import { L2Argument } from './l2-argument';
 import { L2Type } from './l2-type';
 

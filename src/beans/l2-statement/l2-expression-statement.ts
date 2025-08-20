@@ -1,6 +1,6 @@
-import { combinePos, ERROR, fallbackPos, Pos } from '@/beans/base';
-import { L2Statement } from './l2-statement';
+import { Pos } from '@/base';
 import { L2Expression } from '../l2-expression/l2-expression';
+import { L2Statement } from './l2-statement';
 
 export class L2ExpressionStatement extends L2Statement {
   expr: L2Expression;
