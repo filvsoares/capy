@@ -18,21 +18,63 @@
  * @file Layer-2 parser implementation.
  */
 
+import { ERROR } from '@/base';
+import { Bean } from '@/util/beans';
 import { L1Base } from '../l1-parser/l1-types';
-import { L2Parser } from './l2-parser';
+import { INVALID, L2ParseContext, ReadResult } from './l2-base';
+import { L2Parser, L2ParseResult, L2Toplevel } from './l2-parser';
 import { L2ToplevelReader } from './l2-toplevel-reader';
-import { L2ParseContext, L2ParseResult } from './l2-types';
 
-export class L2ParserImpl implements L2Parser {
-  toplevelReaders: L2ToplevelReader[];
-
-  constructor([toplevelReaders]: [L2ToplevelReader[]]) {
-    this.toplevelReaders = toplevelReaders;
+export class L2ParserImpl extends Bean implements L2Parser {
+  constructor(private toplevelReaders: L2ToplevelReader[]) {
+    super();
   }
 
   parse(list: L1Base[]): L2ParseResult {
     const c = new L2ParseContext(list);
-    const outList = this.toplevelReaders[0].readList(c);
+    const outList = this.readToplevelList(c);
     return { list: outList, errors: c.errors };
+  }
+
+  private readToplevel(c: L2ParseContext): ReadResult<L2Toplevel> {
+    for (const reader of this.toplevelReaders) {
+      const result = reader.read(c);
+      if (result) {
+        return result;
+      }
+    }
+  }
+
+  readToplevelList(c: L2ParseContext): L2Toplevel[] {
+    const outList: L2Toplevel[] = [];
+    let error = false;
+    while (c.current) {
+      const val = this.readToplevel(c);
+      if (val === INVALID) {
+        error = true;
+        continue;
+      }
+      if (!val) {
+        if (!error) {
+          error = true;
+          const t = c.current;
+          c.errors.push({
+            level: ERROR,
+            message: `Unexpected ${t}`,
+            pos: {
+              lin1: t.pos.lin1,
+              col1: t.pos.col1,
+              lin2: t.pos.lin2,
+              col2: t.pos.col2,
+            },
+          });
+        }
+        c.consume();
+        continue;
+      }
+      error = false;
+      outList.push(val);
+    }
+    return outList;
   }
 }

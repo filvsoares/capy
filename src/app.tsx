@@ -18,28 +18,20 @@
  * @file App component.
  */
 
-import { ChangeEventHandler, useEffect, useRef, useState } from 'react';
-import classes from './app.module.css';
-import { Base, INTERNAL, ParseError } from './base';
-import {
-  L3Argument,
-  L3CallableType,
-  L3LibraryMethod,
-  L3Method,
-  L3Module,
-  STRING,
-  VOID,
-} from './beans/l3-parser/l3-types';
-import { Runner } from './runner';
-import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
-import { Tile } from './ui/tile';
-import { Toolbar } from './ui/toolbar';
-import { ToolButton } from './ui/tool-button';
 import { Play } from 'feather-icons-react';
+import { useState } from 'react';
+import AceEditor from 'react-ace';
+import classes from './app.module.css';
+import { INTERNAL } from './base';
 import { compiler, CompileResult } from './beans/compiler/compiler';
+import { L3Argument, L3CallableType, L3LibraryMethod, L3Module, STRING, VOID } from './beans/type/l3-types';
+import { Runner } from './runner';
+import { Tile } from './ui/tile';
+import { ToolButton } from './ui/tool-button';
+import { Toolbar } from './ui/toolbar';
 import { getBeans } from './util/beans';
 
 const initialCode = `use "io";

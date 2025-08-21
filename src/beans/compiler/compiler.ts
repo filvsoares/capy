@@ -1,6 +1,6 @@
 import { declareBeanInterface } from '@/util/beans';
 import { ParseError } from '../../base';
-import { L3Module } from '../l3-parser/l3-types';
+import { L3Module } from '../type/l3-types';
 
 export type CompileResult = {
   output: string;

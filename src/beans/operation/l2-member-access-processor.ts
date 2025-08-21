@@ -1,0 +1,30 @@
+import { Bean } from '@/util/beans';
+import { combinePos, ERROR } from '../../base';
+import { L2ExpressionReader } from '../expression/l2-expression-reader';
+import { L2OperationProcessor, ProcessResult, ProcessToken } from '../expression/l2-operation-processor';
+import { L1Operator } from '../l1-parser/l1-operator';
+import { L1Identifier } from '../l1-parser/l1-word';
+import { INVALID, L2ParseContext } from '../l2-parser/l2-base';
+import { L2MemberAccess } from './l2-member-access';
+
+export class L2MemberAccessProcessor extends Bean implements L2OperationProcessor {
+  pass = 0;
+
+  constructor(private expressionReader: L2ExpressionReader) {
+    super();
+  }
+
+  process(c: L2ParseContext, t1: ProcessToken, t2?: ProcessToken, t3?: ProcessToken): ProcessResult {
+    if (this.expressionReader!.isOperand(t1) && L1Operator.matches(t2, '.') && this.expressionReader!.isOperand(t3)) {
+      if (!L1Identifier.matches(t3)) {
+        c.errors.push({
+          level: ERROR,
+          message: `Expected identifier`,
+          pos: t3?.pos ?? t2.pos,
+        });
+        return INVALID;
+      }
+      return { step: new L2MemberAccess(t3.name, combinePos(t1.pos, t3.pos)), skip: 2 };
+    }
+  }
+}

@@ -2,10 +2,9 @@ import { Bean } from '@/util/beans';
 import { ERROR, INTERNAL, ParseError } from '../../base';
 import { L1Parser } from '../l1-parser/l1-parser';
 import { L1ParseResult } from '../l1-parser/l1-types';
-import { L2Parser } from '../l2-parser/l2-parser';
-import { L2ParseResult } from '../l2-parser/l2-types';
+import { L2Parser, L2ParseResult } from '../l2-parser/l2-parser';
 import { L3Parser, L3ParseResult } from '../l3-parser/l3-parser';
-import { L3Module } from '../l3-parser/l3-types';
+import { L3Module } from '../type/l3-types';
 import { CompileOpts, Compiler, CompileResult } from './compiler';
 
 export class CompilerImpl extends Bean implements Compiler {

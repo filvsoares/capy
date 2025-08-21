@@ -40,7 +40,7 @@ import {
   L3StringConcat,
   L3Symbol,
   L3Variable,
-} from './beans/l3-parser/l3-types';
+} from './beans/type/l3-types';
 
 class Variable {
   value: any;
@@ -164,7 +164,7 @@ export class Runner {
   }
 
   resolveSymbol(moduleName: string, symbolName: string) {
-    let resolvedModule = this.resolvedModules[moduleName];
+    const resolvedModule = this.resolvedModules[moduleName];
     if (!resolvedModule) {
       throw new Error(`Module "${moduleName}" not found`);
     }

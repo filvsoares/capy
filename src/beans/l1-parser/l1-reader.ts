@@ -1,5 +1,5 @@
+import { L1Base, L1ParseContext } from '@/beans/l1-parser/l1-types';
 import { declareBeanInterface } from '@/util/beans';
-import { L1Base, L1ParseContext, L1ParseResult } from '@/beans/l1-parser/l1-types';
 
 export interface L1Reader {
   read(c: L1ParseContext): L1Base | true | undefined;
