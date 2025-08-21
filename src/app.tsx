@@ -18,9 +18,6 @@
  * @file App component.
  */
 
-import 'ace-builds/src-noconflict/mode-typescript';
-import 'ace-builds/src-noconflict/mode-yaml';
-import 'ace-builds/src-noconflict/theme-github_light_default';
 import { Play } from 'feather-icons-react';
 import { useState } from 'react';
 import AceEditor from 'react-ace';
@@ -33,6 +30,10 @@ import { Tile } from './ui/tile';
 import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 import { getBeans } from './util/beans';
+
+import 'ace-builds/src-noconflict/mode-typescript';
+import 'ace-builds/src-noconflict/mode-yaml';
+import 'ace-builds/src-noconflict/theme-github_light_default';
 
 const initialCode = `use "io";
 
