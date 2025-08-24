@@ -1,6 +1,9 @@
 import { declareBean, single } from '@/util/beans';
 import { l2ExpressionReader } from '../expression/l2-expression-reader';
 import { l2OperationProcessor } from '../expression/l2-operation-processor';
+import { l3ExpressionProcessor } from '../expression/l3-expression-processor';
+import { l3OperationProcessor } from '../expression/l3-operation-processor';
+import { l3TypeProcessor } from '../type/l3-type-processor';
 
 export function declareBeans() {
   declareBean({
@@ -72,5 +75,12 @@ export function declareBeans() {
     dependencies: [single(l2ExpressionReader)],
     loadModule: () => import('./l2-remainder-processor'),
     factory: (m, deps) => new m.L2RemainderProcessor(...deps),
+  });
+  declareBean({
+    name: 'L3OperationProcessorImpl',
+    provides: [l3OperationProcessor],
+    dependencies: [single(l3ExpressionProcessor), single(l3TypeProcessor)],
+    loadModule: () => import('./l3-operation-processor-impl'),
+    factory: (m, deps) => new m.L3OperationProcessorImpl(...deps),
   });
 }

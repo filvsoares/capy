@@ -1,7 +1,7 @@
 import { Pos } from '@/base';
 import { L2Expression } from '../expression/l2-expression';
+import { L2Definition } from '../impexp/l2-definition';
 import { L2Type } from '../type/l2-type';
-import { L2Definition } from './l2-definition';
 
 export class L2Variable extends L2Definition {
   initExpr: L2Expression | null;

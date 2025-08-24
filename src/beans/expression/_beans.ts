@@ -3,6 +3,8 @@ import { l3TypeProcessor } from '../type/l3-type-processor';
 import { l2ExpressionReader } from './l2-expression-reader';
 import { l2OperationProcessor } from './l2-operation-processor';
 import { l3ExpressionProcessor } from './l3-expression-processor';
+import { l3OperationProcessor } from './l3-operation-processor';
+import { l3ReferenceProcessor } from './l3-reference-processor';
 
 export function declareBeans() {
   declareBean({
@@ -15,7 +17,7 @@ export function declareBeans() {
   declareBean({
     name: 'L3ExpressionProcessorImpl',
     provides: [l3ExpressionProcessor],
-    dependencies: [single(l3TypeProcessor)],
+    dependencies: [list(l3OperationProcessor), list(l3ReferenceProcessor), single(l3TypeProcessor)],
     loadModule: () => import('../expression/l3-expression-processor-impl'),
     factory: (m, deps) => new m.L3ExpressionProcessorImpl(...deps),
   });

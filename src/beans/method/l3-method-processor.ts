@@ -1,14 +1,15 @@
 import { ERROR } from '@/base';
 import { Bean } from '@/util/beans';
 import { L2Identifier } from '../expression/l2-expression';
+import { L2Definition } from '../impexp/l2-definition';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3ToplevelProcessor } from '../l3-parser/l3-toplevel-processor';
 import { L2StatementList } from '../statement/l2-statement-list';
 import { L3StatementProcessor } from '../statement/l3-statement-processor';
 import { L3TypeProcessor } from '../type/l3-type-processor';
-import { INVALID, L3ArgumentVariable, L3CapyMethod, L3LocalVariable, L3UnresolvedMethod } from '../type/l3-types';
-import { L2Definition } from './l2-definition';
+import { INVALID } from '../type/l3-types';
 import { L2Method } from './l2-method';
+import { L3ArgumentVariable, L3CapyMethod, L3LocalVariable, L3UnresolvedMethod } from './l3-method';
 
 export class MethodStack {
   parent: MethodStack | null;

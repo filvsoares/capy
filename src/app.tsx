@@ -24,7 +24,7 @@ import AceEditor from 'react-ace';
 import classes from './app.module.css';
 import { INTERNAL } from './base';
 import { compiler, CompileResult } from './beans/compiler/compiler';
-import { L3Argument, L3CallableType, L3LibraryMethod, L3Module, STRING, VOID } from './beans/type/l3-types';
+import { L3Argument, L3CallableType, STRING, VOID } from './beans/type/l3-types';
 import { Runner } from './runner';
 import { Tile } from './ui/tile';
 import { ToolButton } from './ui/tool-button';
@@ -34,6 +34,8 @@ import { getBeans } from './util/beans';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
+import { L3Module } from './beans/l3-parser/l3-parser';
+import { L3LibraryMethod } from './beans/method/l3-method';
 
 const initialCode = `use "io";
 

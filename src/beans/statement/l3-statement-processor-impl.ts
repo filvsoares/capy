@@ -1,23 +1,19 @@
 import { ERROR } from '@/base';
+import { L2Variable } from '@/beans/variable/l2-variable';
 import { Bean } from '@/util/beans';
-import { L2Variable } from '../definition/l2-variable';
-import { MethodStack } from '../definition/l3-method-processor';
-import { L3ExpressionProcessor } from '../expression/l3-expression-processor';
+import { L3Expression, L3ExpressionProcessor } from '../expression/l3-expression-processor';
 import { L3ParseContext } from '../l3-parser/l3-parser';
-import { L3TypeProcessor } from '../type/l3-type-processor';
 import {
-  INVALID,
-  isVoidType,
-  L3Assignment,
-  L3Expression,
   L3ExpressionStatement,
   L3LocalVariable,
   L3LocalVariableReference,
-  L3Operation,
   L3ReturnStatement,
   L3StatementList,
-  L3Type,
-} from '../type/l3-types';
+} from '../method/l3-method';
+import { MethodStack } from '../method/l3-method-processor';
+import { L3Assignment } from '../operation/l3-operation-processor';
+import { L3TypeProcessor } from '../type/l3-type-processor';
+import { INVALID, isVoidType, L3Type } from '../type/l3-types';
 import { L2ExpressionStatement } from './l2-expression-statement';
 import { L2ReturnStatement } from './l2-return-statement';
 import { L2StatementList } from './l2-statement-list';
@@ -39,7 +35,7 @@ export class L3StatementProcessorImpl extends Bean implements L3StatementProcess
   processReturnStatement(c: L3ParseContext, src: L2ReturnStatement, stack: MethodStack, expectedType: L3Type) {
     const expr =
       src.expr &&
-      this.l3ExpressionProcessor.readVariable(this.l3ExpressionProcessor.processExpression(c, src.expr, stack));
+      this.l3ExpressionProcessor.readReference(c, this.l3ExpressionProcessor.processExpression(c, src.expr, stack));
     if (expr === INVALID) {
       return INVALID;
     }
@@ -103,12 +99,7 @@ export class L3StatementProcessorImpl extends Bean implements L3StatementProcess
     }
     if (l3expr) {
       return new L3ExpressionStatement(
-        new L3Operation(
-          l3expr,
-          [new L3Assignment(new L3LocalVariableReference(index, src.name, type, src.pos), src.pos)],
-          type,
-          src.pos
-        ),
+        new L3Assignment(l3expr, new L3LocalVariableReference(index, src.name, type, src.pos), type, src.pos),
         src.pos
       );
     }

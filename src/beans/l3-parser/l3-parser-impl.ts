@@ -20,12 +20,9 @@
 
 import { ERROR, ParseError } from '../../base';
 
-import { L3Module, L3Symbol } from '../type/l3-types';
-
 import { Bean } from '@/util/beans';
-import { L2Definition } from '../definition/l2-definition';
 import { L2Base } from '../l2-parser/l2-base';
-import { L3ParseContext, L3Parser, L3ParseResult } from './l3-parser';
+import { L3Module, L3ParseContext, L3Parser, L3ParseResult, L3Symbol } from './l3-parser';
 import { L3ToplevelProcessor } from './l3-toplevel-processor';
 
 class L3ParseContextImpl implements L3ParseContext {
@@ -77,7 +74,7 @@ export class L3ParserImpl extends Bean implements L3Parser {
     for (const item of list) {
       let processed = false;
       for (const processor of this.l3ToplevelProcessors) {
-        if (processor.process(c, item as L2Definition)) {
+        if (processor.process(c, item)) {
           processed = true;
           break;
         }

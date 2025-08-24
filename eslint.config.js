@@ -4,6 +4,10 @@ import react from 'eslint-plugin-react';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
+function bean(name) {
+  return ['bean', { name }];
+}
+
 export default defineConfig([
   {
     extends: [eslint.configs.recommended, tseslint.configs.recommended],
@@ -33,12 +37,52 @@ export default defineConfig([
           default: 'disallow',
           rules: [
             {
-              from: 'l1-parser',
-              allow: ['l2-parser'],
+              from: [bean('compiler')],
+              allow: ['bean'],
             },
             {
-              from: 'l2-parser',
-              allow: [],
+              from: [bean('expression')],
+              allow: [bean('type'), bean('l1-parser'), bean('l2-parser'), bean('l3-parser')],
+            },
+            {
+              from: [bean('impexp')],
+              allow: ['bean'],
+            },
+            {
+              from: [bean('l1-parser')],
+              allow: ['bean'],
+            },
+            {
+              from: [bean('l2-parser')],
+              allow: ['bean'],
+            },
+            {
+              from: [bean('l3-parser')],
+              allow: [bean('l2-parser')],
+            },
+            {
+              from: [bean('method')],
+              allow: ['bean'],
+            },
+            {
+              from: [bean('operation')],
+              allow: ['bean'],
+            },
+            {
+              from: [bean('runner')],
+              allow: ['bean'],
+            },
+            {
+              from: [bean('statement')],
+              allow: ['bean'],
+            },
+            {
+              from: [bean('type')],
+              allow: [bean('l1-parser'), bean('l2-parser'), bean('l3-parser')],
+            },
+            {
+              from: [bean('variable')],
+              allow: ['bean'],
             },
           ],
         },
@@ -52,16 +96,9 @@ export default defineConfig([
       },
       'boundaries/elements': [
         {
-          type: 'l1-parser',
-          pattern: 'beans/l1-parser',
-        },
-        {
-          type: 'l1-parser',
-          pattern: 'beans/l1-parser',
-        },
-        {
-          type: 'l2-parser',
-          pattern: 'beans/l2-parser',
+          type: 'bean',
+          pattern: 'beans/*',
+          capture: ['name'],
         },
       ],
     },

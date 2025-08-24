@@ -1,7 +1,50 @@
+import { Base, INTERNAL, ParseError, Pos } from '@/base';
+import { L2Base } from '@/beans/l2-parser/l2-base';
 import { declareBeanInterface } from '@/util/beans';
-import { ParseError } from '../../base';
-import { L2Base } from '../l2-parser/l2-base';
-import { L3Module, L3Symbol } from '../type/l3-types';
+
+export abstract class L3Base extends Base {
+  isL3() {
+    return true;
+  }
+}
+
+export abstract class L3Symbol extends L3Base {
+  name: string;
+
+  constructor(name: string, pos: Pos) {
+    super(pos);
+    this.name = name;
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}\n`);
+  }
+}
+
+export class L3Module extends L3Base {
+  name: string;
+  symbols: L3Symbol[] = [];
+
+  constructor(name: string, symbols: L3Symbol[]) {
+    super(INTERNAL);
+    this.name = name;
+    this.symbols = symbols;
+  }
+
+  toString(): string {
+    return 'runnable';
+  }
+
+  debugPrint(out: string[], prefix: string): void {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  symbols:\n`);
+    this.symbols.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val?.debugPrint(out, `${prefix}      `);
+    });
+  }
+}
 
 export type L3ParseContext = {
   modules: { [name: string]: L3Module };

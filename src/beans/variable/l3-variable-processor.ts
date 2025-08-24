@@ -2,11 +2,12 @@ import { ERROR } from '@/base';
 import { Bean } from '@/util/beans';
 import { L2Expression } from '../expression/l2-expression';
 import { L3ExpressionProcessor } from '../expression/l3-expression-processor';
+import { L2Definition } from '../impexp/l2-definition';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3ToplevelProcessor } from '../l3-parser/l3-toplevel-processor';
+import { L3Variable } from '../method/l3-method';
 import { L3TypeProcessor } from '../type/l3-type-processor';
-import { INVALID, L3Variable } from '../type/l3-types';
-import { L2Definition } from './l2-definition';
+import { INVALID } from '../type/l3-types';
 import { L2Variable } from './l2-variable';
 
 export class L3VariableProcessor extends Bean implements L3ToplevelProcessor {

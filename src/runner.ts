@@ -18,29 +18,22 @@
  * @file Runner implementation.
  */
 
+import { L3Expression, L3Number, L3String } from './beans/expression/l3-expression-processor';
+import { L3Module, L3Symbol } from './beans/l3-parser/l3-parser';
 import {
   L3ArgumentVariable,
-  L3Assignment,
   L3CapyMethod,
-  L3Expression,
   L3ExpressionStatement,
   L3LibraryMethod,
   L3LocalVariableReference,
   L3Method,
-  L3MethodCall,
   L3MethodReference,
-  L3Module,
   L3ModuleVariableReference,
-  L3Number,
-  L3Operation,
-  L3ReadVariable,
   L3ReturnStatement,
   L3StatementList,
-  L3String,
-  L3StringConcat,
-  L3Symbol,
   L3Variable,
-} from './beans/type/l3-types';
+} from './beans/method/l3-method';
+import { L3Assignment, L3MethodCall, L3ReadVariable, L3StringConcat } from './beans/operation/l3-operation-processor';
 
 class Variable {
   value: any;
@@ -59,7 +52,7 @@ export class Runner {
 
   constructor() {}
 
-  runExpression(obj: L3Expression, deps: any[]) {
+  runExpression(obj: L3Expression, deps: any[]): any {
     if (obj instanceof L3String) {
       return obj.value;
     }
@@ -94,46 +87,37 @@ export class Runner {
     if (obj instanceof L3LocalVariableReference) {
       return deps[obj.index];
     }
-    if (obj instanceof L3Operation) {
-      return this.runOperation(obj, deps);
+    if (obj instanceof L3MethodCall) {
+      const argList: any[] = [];
+      for (const arg of obj.argList) {
+        argList.push(this.runExpression(arg, deps));
+      }
+      if (obj.operand instanceof L3LibraryMethod) {
+        return obj.operand.callback(argList, this);
+      }
+      if (obj.operand instanceof L3CapyMethod) {
+        return this.runMethod(obj.operand, argList);
+      }
+      throw new Error(`Cannot run ${obj.operand.constructor.name}`);
+    }
+    if (obj instanceof L3StringConcat) {
+      const other = this.runExpression(obj.other, deps);
+      return (obj.operand += other);
+    }
+    if (obj instanceof L3ReadVariable) {
+      if (!(obj.operand instanceof Variable)) {
+        throw new Error(`Current is not variable`);
+      }
+      return obj.operand.value;
+    }
+    if (obj instanceof L3Assignment) {
+      const target = this.runExpression(obj.target, deps);
+      if (!(target instanceof Variable)) {
+        throw new Error('Assignment target is not variable');
+      }
+      return obj;
     }
     throw new Error(`Cannot read value from ${obj.constructor.name}`);
-  }
-
-  runOperation(op: L3Operation, deps: any[]) {
-    let current: any = this.runExpression(op.operand, deps);
-    for (const step of op.steps) {
-      if (step instanceof L3MethodCall) {
-        const argList: any[] = [];
-        for (const arg of step.argList) {
-          argList.push(this.runExpression(arg, deps));
-        }
-        if (current instanceof L3LibraryMethod) {
-          current = current.callback(argList, this);
-        } else if (current instanceof L3CapyMethod) {
-          current = this.runMethod(current, argList);
-        } else {
-          throw new Error(`Cannot run ${current.constructor.name}`);
-        }
-      } else if (step instanceof L3StringConcat) {
-        const other = this.runExpression(step.other, deps);
-        current += other;
-      } else if (step instanceof L3ReadVariable) {
-        if (!(current instanceof Variable)) {
-          throw new Error(`Current is not variable`);
-        }
-        current = current.value;
-      } else if (step instanceof L3Assignment) {
-        const target = this.runExpression(step.target, deps);
-        if (!(target instanceof Variable)) {
-          throw new Error('Assignment target is not variable');
-        }
-        target.value = current;
-      } else {
-        throw new Error(`Unknown step ${step.constructor.name}`);
-      }
-    }
-    return current;
   }
 
   runStatementList(statementList: L3StatementList, stack: any[]): any {
