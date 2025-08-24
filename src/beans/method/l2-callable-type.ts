@@ -1,12 +1,12 @@
 import { Pos } from '@/base';
 import { L2Argument } from '@/beans/method/l2-argument';
-import { L2Type } from '@/beans/type/l2-type';
+import { Type } from '@/beans/type/type';
 
-export class L2CallableType extends L2Type {
+export class L2CallableType extends Type {
   argList: L2Argument[];
-  returnType: L2Type | null;
+  returnType: Type | null;
 
-  constructor(argList: L2Argument[], returnType: L2Type | null, pos: Pos) {
+  constructor(argList: L2Argument[], returnType: Type | null, pos: Pos) {
     super(pos);
     this.argList = argList;
     this.returnType = returnType;

@@ -1,17 +1,17 @@
 import { L2CallableType } from '@/beans/method/l2-callable-type';
 import { L2CallableTypeReader } from '@/beans/method/l2-callable-type-reader';
-import { L2Type } from '@/beans/type/l2-type';
-import { L2TypeItemReader } from '@/beans/type/l2-type-item-reader';
-import { L2TypeReader } from '@/beans/type/l2-type-reader';
+import { Type } from '@/beans/type/type';
+import { TypeItemReader } from '@/beans/type/type-item-reader';
+import { TypeReader } from '@/beans/type/type-reader';
 import { Bean } from '@/util/beans';
 import { combinePos, ERROR } from '../../base';
-import { L1Bracket } from '../l1-parser/l1-bracket';
-import { L1Operator } from '../l1-parser/l1-operator';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
+import { L1Bracket } from '../parser/bracket';
+import { Operator } from '../parser/operator';
 import { L2ArgumentReader } from './l2-argument-reader';
 
-export class L2CallableTypeReaderImpl extends Bean implements L2TypeItemReader, L2CallableTypeReader {
-  constructor(private typeReader: L2TypeReader, private argumentReader: L2ArgumentReader) {
+export class L2CallableTypeReaderImpl extends Bean implements TypeItemReader, L2CallableTypeReader {
+  constructor(private typeReader: TypeReader, private argumentReader: L2ArgumentReader) {
     super();
   }
 
@@ -22,14 +22,14 @@ export class L2CallableTypeReaderImpl extends Bean implements L2TypeItemReader, 
     }
     c.consume();
 
-    let returnType: L2Type | null = null;
+    let returnType: Type | null = null;
 
     const c1 = new L2ParseContext(t1.tokenList);
     const args = this.argumentReader.readList(c1);
     c.errors.push(...c1.errors);
 
     const t2 = c.current;
-    if (L1Operator.matches(t2, ':')) {
+    if (Operator.matches(t2, ':')) {
       c.consume();
 
       const _returnType = this.typeReader.read(c);

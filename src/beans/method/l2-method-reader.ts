@@ -1,11 +1,11 @@
 import { combinePos, ERROR, fallbackPos } from '@/base';
-import { L1Keyword } from '@/beans/l1-parser/l1-keyword';
 import { L2CallableTypeReader } from '@/beans/method/l2-callable-type-reader';
+import { Keyword } from '@/beans/parser/keyword';
 import { Bean } from '@/util/beans';
-import { L1Bracket } from '../l1-parser/l1-bracket';
-import { L1Identifier } from '../l1-parser/l1-identifier';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
-import { L2ToplevelReader } from '../l2-parser/l2-toplevel-reader';
+import { L1Bracket } from '../parser/bracket';
+import { L1Identifier } from '../parser/identifier';
+import { L2ToplevelReader } from '../parser/toplevel-reader';
 import { L2StatementReader } from '../statement/l2-statement-reader';
 import { L2Method } from './l2-method';
 
@@ -16,7 +16,7 @@ export class L2MethodReader extends Bean implements L2ToplevelReader {
 
   read(c: L2ParseContext): ReadResult<L2Method> {
     const t1 = c.current;
-    if (!L1Keyword.matches(t1, 'function')) {
+    if (!Keyword.matches(t1, 'function')) {
       return;
     }
     c.consume();

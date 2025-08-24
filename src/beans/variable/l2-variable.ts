@@ -1,14 +1,14 @@
 import { Pos } from '@/base';
 import { L2Toplevel } from '@/beans/l2-parser/l2-parser';
 import { L2Expression } from '../expression/l2-expression';
-import { L2Type } from '../type/l2-type';
+import { Type } from '../type/type';
 
 export class L2Variable extends L2Toplevel {
-  type: L2Type;
+  type: Type;
   name: string;
   initExpr: L2Expression | null;
 
-  constructor(name: string, type: L2Type, initExpr: L2Expression | null, pos: Pos) {
+  constructor(name: string, type: Type, initExpr: L2Expression | null, pos: Pos) {
     super(pos);
     this.name = name;
     this.type = type;

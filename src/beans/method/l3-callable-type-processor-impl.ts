@@ -4,11 +4,11 @@ import { L2CallableType } from '@/beans/method/l2-callable-type';
 import { L3Argument } from '@/beans/method/l3-argument';
 import { L3CallableType } from '@/beans/method/l3-callable-type';
 import { L3CallableTypeProcessor } from '@/beans/method/l3-callable-type-processor';
-import { L2Type } from '@/beans/type/l2-type';
-import { VOID } from '@/beans/type/l3-simple-type';
 import { L3Type } from '@/beans/type/l3-type';
 import { L3TypeItemProcessor } from '@/beans/type/l3-type-item-processor';
 import { L3TypeProcessor } from '@/beans/type/l3-type-processor';
+import { VOID } from '@/beans/type/simple-type';
+import { Type } from '@/beans/type/type';
 import { Bean } from '@/util/beans';
 
 export class L3CallableTypeProcessorImpl extends Bean implements L3TypeItemProcessor, L3CallableTypeProcessor {
@@ -16,7 +16,7 @@ export class L3CallableTypeProcessorImpl extends Bean implements L3TypeItemProce
     super();
   }
 
-  processType(c: L3ParseContext, obj: L2Type): L3Type | Invalid | undefined {
+  processType(c: L3ParseContext, obj: Type): L3Type | Invalid | undefined {
     if (obj instanceof L2CallableType) {
       return this.processCallableType(c, obj);
     }

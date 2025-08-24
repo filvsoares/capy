@@ -8,9 +8,9 @@ import { L3ReturnStatement } from '@/beans/statement/l3-return-statement';
 import { L3Statement } from '@/beans/statement/l3-statement';
 import { L3StatementContext } from '@/beans/statement/l3-statement-context';
 import { L3StatementHandler } from '@/beans/statement/l3-statement-handler';
-import { isVoidType } from '@/beans/type/l3-simple-type';
 import { L3Type } from '@/beans/type/l3-type';
 import { L3TypeProcessor } from '@/beans/type/l3-type-processor';
+import { isVoidType } from '@/beans/type/simple-type';
 import { Bean } from '@/util/beans';
 
 export class L3ReturnStatementHandler extends Bean implements L3StatementHandler {

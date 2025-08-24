@@ -1,13 +1,13 @@
 import { Pos } from '@/base';
 
-import { L2Type } from '@/beans/type/l2-type';
+import { Type } from '@/beans/type/type';
 import { L2Base } from '../l2-parser/l2-base';
 
 export class L2Argument extends L2Base {
   name: string;
-  type: L2Type;
+  type: Type;
 
-  constructor(name: string, type: L2Type, pos: Pos) {
+  constructor(name: string, type: Type, pos: Pos) {
     super(pos);
     this.name = name;
     this.type = type;

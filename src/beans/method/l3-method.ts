@@ -1,11 +1,11 @@
 import { INTERNAL, Pos } from '@/base';
-import { L3Expression } from '@/beans/expression/l3-expression';
+import { L3Expression } from '@/beans/expression/expression';
 import { L3Base } from '@/beans/l3-parser/l3-base';
 import { L3CallableType } from '@/beans/method/l3-callable-type';
 import { L3StatementList } from '@/beans/statement/l3-statement-list';
 import { L3Type } from '@/beans/type/l3-type';
 import { Runner } from '@/runner';
-import { L3TypedSymbol } from '../type/l3-simple-type';
+import { L3TypedSymbol } from '../type/simple-type';
 
 export abstract class L3VariableReference extends L3Expression {
   get isReference(): boolean {

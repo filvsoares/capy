@@ -24,7 +24,7 @@ import AceEditor from 'react-ace';
 import classes from './app.module.css';
 import { INTERNAL } from './base';
 import { compiler, CompileResult } from './beans/compiler/compiler';
-import { STRING, VOID } from './beans/type/l3-simple-type';
+import { STRING, VOID } from './beans/type/simple-type';
 import { Runner } from './runner';
 import { Tile } from './ui/tile';
 import { ToolButton } from './ui/tool-button';

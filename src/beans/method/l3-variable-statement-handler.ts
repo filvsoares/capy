@@ -1,5 +1,5 @@
 import { ERROR } from '@/base';
-import { L3Expression } from '@/beans/expression/l3-expression';
+import { L3Expression } from '@/beans/expression/expression';
 import { L3ExpressionProcessor } from '@/beans/expression/l3-expression-processor';
 import { INVALID, Invalid } from '@/beans/l3-parser/l3-base';
 import { L3ParseContext } from '@/beans/l3-parser/l3-parser';

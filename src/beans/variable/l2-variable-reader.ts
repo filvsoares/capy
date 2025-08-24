@@ -1,21 +1,21 @@
 import { combinePos, ERROR, fallbackPos } from '@/base';
-import { L1Keyword } from '@/beans/l1-parser/l1-keyword';
+import { Keyword } from '@/beans/parser/keyword';
 import { Bean } from '@/util/beans';
+import { L2ExpressionReader } from '../expression/expression-reader';
 import { L2Expression } from '../expression/l2-expression';
-import { L2ExpressionReader } from '../expression/l2-expression-reader';
-import { L1Identifier } from '../l1-parser/l1-identifier';
-import { L1Operator } from '../l1-parser/l1-operator';
-import { L1Separator } from '../l1-parser/l1-separator';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
-import { L2ToplevelReader } from '../l2-parser/l2-toplevel-reader';
-import { L2TypeReader } from '../type/l2-type-reader';
+import { L1Identifier } from '../parser/identifier';
+import { Operator } from '../parser/operator';
+import { Separator } from '../parser/separator';
+import { L2ToplevelReader } from '../parser/toplevel-reader';
+import { TypeReader } from '../type/type-reader';
 import { L2Variable } from './l2-variable';
 
 export class L2VariableReader extends Bean implements L2ToplevelReader {
-  typeReader: L2TypeReader;
+  typeReader: TypeReader;
   expressionReader: L2ExpressionReader;
 
-  constructor([typeReader, expressionReader]: [L2TypeReader, L2ExpressionReader]) {
+  constructor([typeReader, expressionReader]: [TypeReader, L2ExpressionReader]) {
     super();
     this.typeReader = typeReader;
     this.expressionReader = expressionReader;
@@ -23,7 +23,7 @@ export class L2VariableReader extends Bean implements L2ToplevelReader {
 
   read(c: L2ParseContext): ReadResult<L2Variable> {
     const t1 = c.current;
-    if (!L1Keyword.matches(t1, 'var')) {
+    if (!Keyword.matches(t1, 'var')) {
       return;
     }
     c.consume();
@@ -40,7 +40,7 @@ export class L2VariableReader extends Bean implements L2ToplevelReader {
     c.consume();
 
     let t3 = c.current;
-    if (!L1Operator.matches(t3, ':')) {
+    if (!Operator.matches(t3, ':')) {
       c.errors.push({
         level: ERROR,
         message: `Expected ":"`,
@@ -66,7 +66,7 @@ export class L2VariableReader extends Bean implements L2ToplevelReader {
 
     t3 = c.current;
     let initExpr: L2Expression | null = null;
-    if (L1Operator.matches(t3, '=')) {
+    if (Operator.matches(t3, '=')) {
       c.consume();
 
       const t4 = c.current;
@@ -86,7 +86,7 @@ export class L2VariableReader extends Bean implements L2ToplevelReader {
     }
 
     const t5 = c.current;
-    if (L1Separator.matches(t5, ';')) {
+    if (Separator.matches(t5, ';')) {
       c.consume();
     } else {
       c.errors.push({

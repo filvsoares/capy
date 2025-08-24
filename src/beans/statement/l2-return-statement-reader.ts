@@ -1,10 +1,10 @@
 import { Bean } from '@/util/beans';
 
 import { combinePos, ERROR, fallbackPos } from '@/base';
-import { L1Keyword } from '@/beans/l1-parser/l1-keyword';
-import { L2ExpressionReader } from '../expression/l2-expression-reader';
-import { L1Separator } from '../l1-parser/l1-separator';
+import { Keyword } from '@/beans/parser/keyword';
+import { L2ExpressionReader } from '../expression/expression-reader';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
+import { Separator } from '../parser/separator';
 import { L2ReturnStatement } from './l2-return-statement';
 import { L2StatementItemReader } from './l2-statement-item-reader';
 
@@ -20,13 +20,13 @@ export class L2ReturnStatementReader extends Bean implements L2StatementItemRead
 
   read(c: L2ParseContext): ReadResult<L2ReturnStatement> {
     const t1 = c.current;
-    if (!L1Keyword.matches(t1, 'return')) {
+    if (!Keyword.matches(t1, 'return')) {
       return;
     }
     c.consume();
 
     const t2 = c.current;
-    if (L1Separator.matches(t2, ';')) {
+    if (Separator.matches(t2, ';')) {
       c.consume();
       return new L2ReturnStatement(null, combinePos(t1.pos, t2.pos));
     }
@@ -47,7 +47,7 @@ export class L2ReturnStatementReader extends Bean implements L2StatementItemRead
     }
 
     const t3 = c.current;
-    if (L1Separator.matches(t3, ';')) {
+    if (Separator.matches(t3, ';')) {
       c.consume();
     } else {
       c.errors.push({

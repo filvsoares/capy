@@ -1,8 +1,8 @@
 import { Pos } from '@/base';
-import { L3Reference } from '@/beans/expression/l3-reference';
+import { Reference } from '@/beans/expression/reference';
 import { L3Type } from '@/beans/type/l3-type';
 
-export class L3MethodReference extends L3Reference {
+export class L3MethodReference extends Reference {
   module: string;
   name: string;
 

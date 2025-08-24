@@ -1,15 +1,15 @@
 import { L2Argument } from '@/beans/method/l2-argument';
-import { L2TypeReader } from '@/beans/type/l2-type-reader';
+import { TypeReader } from '@/beans/type/type-reader';
 import { Bean } from '@/util/beans';
 import { combinePos, ERROR, fallbackPos, INTERNAL } from '../../base';
-import { L1Identifier } from '../l1-parser/l1-identifier';
-import { L1Operator } from '../l1-parser/l1-operator';
-import { L1Separator } from '../l1-parser/l1-separator';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
+import { L1Identifier } from '../parser/identifier';
+import { Operator } from '../parser/operator';
+import { Separator } from '../parser/separator';
 import { L2ArgumentReader } from './l2-argument-reader';
 
 export class L2ArgumentReaderImpl extends Bean implements L2ArgumentReader {
-  constructor(private typeReader: L2TypeReader) {
+  constructor(private typeReader: TypeReader) {
     super();
   }
 
@@ -21,7 +21,7 @@ export class L2ArgumentReaderImpl extends Bean implements L2ArgumentReader {
     c.consume();
 
     const t2 = c.current;
-    if (!L1Operator.matches(t2, ':')) {
+    if (!Operator.matches(t2, ':')) {
       c.errors.push({
         level: ERROR,
         message: `Expected ":" but found ${t2 ?? '")"'}`,
@@ -78,7 +78,7 @@ export class L2ArgumentReaderImpl extends Bean implements L2ArgumentReader {
       if (!t2) {
         break;
       }
-      if (!L1Separator.matches(t2, ',')) {
+      if (!Separator.matches(t2, ',')) {
         error = true;
         c.errors.push({
           level: ERROR,

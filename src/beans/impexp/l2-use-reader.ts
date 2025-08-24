@@ -1,22 +1,22 @@
 import { combinePos, ERROR, fallbackPos } from '@/base';
-import { L1Keyword } from '@/beans/l1-parser/l1-keyword';
+import { Keyword } from '@/beans/parser/keyword';
 import { Bean } from '@/util/beans';
-import { L1Separator } from '../l1-parser/l1-separator';
-import { L1String } from '../l1-parser/l1-string';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
-import { L2ToplevelReader } from '../l2-parser/l2-toplevel-reader';
+import { Separator } from '../parser/separator';
+import { String } from '../parser/string';
+import { L2ToplevelReader } from '../parser/toplevel-reader';
 import { L2Use } from './l2-use';
 
 export class L2UseReader extends Bean implements L2ToplevelReader {
   read(c: L2ParseContext): ReadResult<L2Use> {
     const t1 = c.current;
-    if (!L1Keyword.matches(t1, 'use')) {
+    if (!Keyword.matches(t1, 'use')) {
       return;
     }
     c.consume();
 
     const t2 = c.current;
-    if (!L1String.matches(t2)) {
+    if (!String.matches(t2)) {
       c.errors.push({
         level: ERROR,
         message: `Expected string`,
@@ -27,7 +27,7 @@ export class L2UseReader extends Bean implements L2ToplevelReader {
     c.consume();
 
     const t3 = c.current;
-    if (L1Separator.matches(t3, ';')) {
+    if (Separator.matches(t3, ';')) {
       c.consume();
     } else {
       c.errors.push({

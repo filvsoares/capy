@@ -18,9 +18,9 @@
  * @file Runner implementation.
  */
 
-import { L3Expression } from '@/beans/expression/l3-expression';
-import { L3Number } from '@/beans/expression/l3-number';
-import { L3String } from '@/beans/expression/l3-string';
+import { L3Expression } from '@/beans/expression/expression';
+import { NumberLiteral } from '@/beans/expression/number-literal';
+import { StringLiteral } from '@/beans/expression/string-literal';
 import { L3MethodReference } from '@/beans/method/l3-method-reference';
 import { L3ExpressionStatement } from '@/beans/statement/l3-expression-statement';
 import { L3ReturnStatement } from '@/beans/statement/l3-return-statement';
@@ -55,10 +55,10 @@ export class Runner {
   constructor() {}
 
   runExpression(obj: L3Expression, deps: any[]): any {
-    if (obj instanceof L3String) {
+    if (obj instanceof StringLiteral) {
       return obj.value;
     }
-    if (obj instanceof L3Number) {
+    if (obj instanceof NumberLiteral) {
       return obj.value;
     }
     if (obj instanceof L3MethodReference) {

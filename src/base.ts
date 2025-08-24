@@ -94,6 +94,9 @@ export abstract class Base {
 export const WARNING = 1;
 export const ERROR = 2;
 
+export const INVALID = 1;
+export type Invalid = typeof INVALID;
+
 export type ParseError = {
   level: typeof WARNING | typeof ERROR;
   pos: Pos;

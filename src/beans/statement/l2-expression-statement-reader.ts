@@ -1,8 +1,8 @@
 import { combinePos, ERROR, fallbackPos } from '@/base';
 import { Bean } from '@/util/beans';
-import { L2ExpressionReader } from '../expression/l2-expression-reader';
-import { L1Separator } from '../l1-parser/l1-separator';
+import { L2ExpressionReader } from '../expression/expression-reader';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
+import { Separator } from '../parser/separator';
 import { L2ExpressionStatement } from './l2-expression-statement';
 import { L2StatementItemReader } from './l2-statement-item-reader';
 
@@ -26,7 +26,7 @@ export class L2ExpressionStatementReader extends Bean implements L2StatementItem
     }
 
     const t = c.current;
-    if (L1Separator.matches(t, ';')) {
+    if (Separator.matches(t, ';')) {
       c.consume();
     } else {
       c.errors.push({

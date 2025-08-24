@@ -42,23 +42,11 @@ export default defineConfig([
             },
             {
               from: [bean('expression')],
-              allow: [bean('type'), bean('l1-parser'), bean('l2-parser'), bean('l3-parser')],
+              allow: [bean('type'), bean('parser')],
             },
             {
               from: [bean('impexp')],
               allow: ['bean'],
-            },
-            {
-              from: [bean('l1-parser')],
-              allow: ['bean'],
-            },
-            {
-              from: [bean('l2-parser')],
-              allow: ['bean'],
-            },
-            {
-              from: [bean('l3-parser')],
-              allow: [bean('l2-parser')],
             },
             {
               from: [bean('method')],
@@ -67,6 +55,10 @@ export default defineConfig([
             {
               from: [bean('operation')],
               allow: ['bean'],
+            },
+            {
+              from: [bean('parser')],
+              allow: [],
             },
             {
               from: [bean('runner')],
@@ -78,7 +70,7 @@ export default defineConfig([
             },
             {
               from: [bean('type')],
-              allow: [bean('l1-parser'), bean('l2-parser'), bean('l3-parser')],
+              allow: [bean('parser')],
             },
             {
               from: [bean('variable')],

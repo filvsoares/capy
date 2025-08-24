@@ -1,12 +1,12 @@
 import { Bean } from '@/util/beans';
 import { ERROR, INTERNAL, ParseError } from '../../base';
-import { L1Parser, L1ParserResult } from '../l1-parser/l1-parser';
 import { L2Parser, L2ParseResult } from '../l2-parser/l2-parser';
 import { L3Module, L3Parser, L3ParseResult } from '../l3-parser/l3-parser';
+import { Parser, ParserResult } from '../parser/parser';
 import { CompileOpts, Compiler, CompileResult } from './compiler';
 
 export class CompilerImpl extends Bean implements Compiler {
-  constructor(private l1Parser: L1Parser, private l2Parser: L2Parser, private l3Parser: L3Parser) {
+  constructor(private l1Parser: Parser, private l2Parser: L2Parser, private l3Parser: L3Parser) {
     super();
   }
 
@@ -14,7 +14,7 @@ export class CompilerImpl extends Bean implements Compiler {
     const errors: ParseError[] = [];
     const out: string[] = [];
 
-    let p1: L1ParserResult | undefined;
+    let p1: ParserResult | undefined;
     let p2: L2ParseResult | undefined;
     let p3: L3ParseResult | undefined;
 

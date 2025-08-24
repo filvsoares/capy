@@ -1,7 +1,7 @@
 import { Pos } from '@/base';
-import { L3Expression } from '@/beans/expression/l3-expression';
-import { L3TypedSymbol } from '@/beans/type/l3-simple-type';
+import { L3Expression } from '@/beans/expression/expression';
 import { L3Type } from '@/beans/type/l3-type';
+import { L3TypedSymbol } from '@/beans/type/simple-type';
 
 export class L3Variable extends L3TypedSymbol {
   initExpr: L3Expression | null;

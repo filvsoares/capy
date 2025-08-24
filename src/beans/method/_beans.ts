@@ -3,13 +3,13 @@ import { l2ArgumentReader } from '@/beans/method/l2-argument-reader';
 import { l2CallableTypeReader } from '@/beans/method/l2-callable-type-reader';
 import { l3CallableTypeProcessor } from '@/beans/method/l3-callable-type-processor';
 import { l3StatementHandler } from '@/beans/statement/l3-statement-handler';
-import { l2TypeItemReader } from '@/beans/type/l2-type-item-reader';
-import { l2TypeReader } from '@/beans/type/l2-type-reader';
 import { l3TypeItemProcessor } from '@/beans/type/l3-type-item-processor';
+import { typeItemReader } from '@/beans/type/type-item-reader';
+import { typeReader } from '@/beans/type/type-reader';
 import { declareBean, single } from '@/util/beans';
-import { l3ReferenceProcessor } from '../expression/l3-reference-processor';
-import { l2ToplevelReader } from '../l2-parser/l2-toplevel-reader';
+import { l3ReferenceProcessor } from '../expression/reference-processor';
 import { l3ToplevelProcessor } from '../l3-parser/l3-toplevel-processor';
+import { l2ToplevelReader } from '../parser/toplevel-reader';
 import { l2StatementReader } from '../statement/l2-statement-reader';
 import { l3StatementProcessor } from '../statement/l3-statement-processor';
 import { l3TypeProcessor } from '../type/l3-type-processor';
@@ -18,14 +18,14 @@ export function declareBeans() {
   declareBean({
     name: 'L2ArgumentReaderImpl',
     provides: [l2ArgumentReader],
-    dependencies: [single(l2TypeReader)],
+    dependencies: [single(typeReader)],
     loadModule: () => import('./l2-argument-reader-impl'),
     factory: (m, deps) => new m.L2ArgumentReaderImpl(...deps),
   });
   declareBean({
     name: 'L2CallableTypeReader',
-    provides: [l2TypeItemReader, l2CallableTypeReader],
-    dependencies: [single(l2TypeReader), single(l2ArgumentReader)],
+    provides: [typeItemReader, l2CallableTypeReader],
+    dependencies: [single(typeReader), single(l2ArgumentReader)],
     loadModule: () => import('./l2-callable-type-reader-impl'),
     factory: (m, deps) => new m.L2CallableTypeReaderImpl(...deps),
   });

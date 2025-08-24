@@ -1,5 +1,5 @@
 import { Pos } from '@/base';
-import { L3Expression } from '@/beans/expression/l3-expression';
+import { L3Expression } from '@/beans/expression/expression';
 import { L3Statement } from '@/beans/statement/l3-statement';
 
 export class L3ExpressionStatement extends L3Statement {

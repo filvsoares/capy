@@ -2,7 +2,7 @@ import { l3ExpressionProcessor } from '@/beans/expression/l3-expression-processo
 import { l3StatementHandler } from '@/beans/statement/l3-statement-handler';
 import { l3TypeProcessor } from '@/beans/type/l3-type-processor';
 import { declareBean, list, single } from '@/util/beans';
-import { l2ExpressionReader } from '../expression/l2-expression-reader';
+import { l2ExpressionReader } from '../expression/expression-reader';
 import { l2StatementItemReader } from './l2-statement-item-reader';
 import { l2StatementReader } from './l2-statement-reader';
 import { l3StatementProcessor } from './l3-statement-processor';
