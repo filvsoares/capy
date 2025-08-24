@@ -1,141 +1,40 @@
 import { ERROR } from '@/base';
-import { L3Expression } from '@/beans/expression/l3-expression';
 import { INVALID } from '@/beans/l3-parser/l3-base';
+import { L3StatementContext } from '@/beans/statement/l3-statement-context';
+import { L3StatementHandler } from '@/beans/statement/l3-statement-handler';
+import { L3StatementList } from '@/beans/statement/l3-statement-list';
 import { L3Type } from '@/beans/type/l3-type';
-import { L2Variable } from '@/beans/variable/l2-variable';
 import { Bean } from '@/util/beans';
-import { L3ExpressionProcessor } from '../expression/l3-expression-processor';
 import { L3ParseContext } from '../l3-parser/l3-parser';
-import {
-  L3ExpressionStatement,
-  L3LocalVariable,
-  L3LocalVariableReference,
-  L3ReturnStatement,
-  L3StatementList,
-} from '../method/l3-method';
-import { MethodStack } from '../method/l3-method-processor';
-import { L3Assignment } from '../operation/l3-operation-processor';
-import { isVoidType } from '../type/l3-simple-type';
-import { L3TypeProcessor } from '../type/l3-type-processor';
-import { L2ExpressionStatement } from './l2-expression-statement';
-import { L2ReturnStatement } from './l2-return-statement';
 import { L2StatementList } from './l2-statement-list';
 import { L3StatementProcessor } from './l3-statement-processor';
 
 export class L3StatementProcessorImpl extends Bean implements L3StatementProcessor {
-  constructor(private l3ExpressionProcessor: L3ExpressionProcessor, private l3TypeProcessor: L3TypeProcessor) {
+  constructor(private l3StatementHandlers: L3StatementHandler[]) {
     super();
   }
 
-  processExpressionStatement(c: L3ParseContext, src: L2ExpressionStatement, stack: MethodStack) {
-    const expr = this.l3ExpressionProcessor.processExpression(c, src.expr, stack);
-    if (expr === INVALID) {
-      return INVALID;
-    }
-    return new L3ExpressionStatement(expr, src.pos);
-  }
-
-  processReturnStatement(c: L3ParseContext, src: L2ReturnStatement, stack: MethodStack, expectedType: L3Type) {
-    const expr =
-      src.expr &&
-      this.l3ExpressionProcessor.readReference(c, this.l3ExpressionProcessor.processExpression(c, src.expr, stack));
-    if (expr === INVALID) {
-      return INVALID;
-    }
-    const isVoid = isVoidType(expectedType);
-    if (expr && isVoid) {
-      c.errors.push({
-        level: ERROR,
-        message: `Cannot return expression when method has void return type`,
-        pos: src.pos,
-      });
-      return INVALID;
-    }
-    if (!expr && !isVoid) {
-      c.errors.push({
-        level: ERROR,
-        message: `Must return expression of type ${expectedType}`,
-        pos: src.pos,
-      });
-      return INVALID;
-    }
-    if (expr && !isVoid && !this.l3TypeProcessor.isAssignable(expr.type, expectedType)) {
-      c.errors.push({
-        level: ERROR,
-        message: `Return expects ${expectedType} but ${expr.type} was provided`,
-        pos: expr.pos,
-      });
-      return INVALID;
-    }
-    return new L3ReturnStatement(expr, src.pos);
-  }
-
-  processLocalVariable(c: L3ParseContext, src: L2Variable, stack: MethodStack) {
-    const type = this.l3TypeProcessor.processType(c, src.type);
-    if (type === INVALID) {
-      return INVALID;
-    }
-    let l3expr: L3Expression | null = null;
-    if (src.initExpr) {
-      const _l3expr = this.l3ExpressionProcessor.processExpression(c, src.initExpr, stack);
-      if (_l3expr === INVALID) {
-        return INVALID;
-      }
-      l3expr = _l3expr;
-      if (!this.l3TypeProcessor.isAssignable(_l3expr.type, type)) {
-        c.errors.push({
-          level: ERROR,
-          message: `Variable has type "${type}" but initializer has type "${_l3expr.type}"`,
-          pos: src.pos,
-        });
-      }
-    }
-    const localVariable = new L3LocalVariable(src.name, type, src.pos);
-    const index = stack.add(localVariable);
-    if (index === false) {
-      c.errors.push({
-        level: ERROR,
-        message: `Identifier "${src.name}" already declared`,
-        pos: src.pos,
-      });
-      return INVALID;
-    }
-    if (l3expr) {
-      return new L3ExpressionStatement(
-        new L3Assignment(l3expr, new L3LocalVariableReference(index, src.name, type, src.pos), type, src.pos),
-        src.pos
-      );
-    }
-  }
-
-  processStatementList(c: L3ParseContext, src: L2StatementList, stack: MethodStack, expectedReturnType: L3Type) {
+  processStatementList(
+    c: L3ParseContext,
+    src: L2StatementList,
+    context: L3StatementContext,
+    expectedReturnType: L3Type
+  ) {
     const dst = new L3StatementList([], src.pos);
-    for (const item of src.list) {
-      if (item instanceof L2ExpressionStatement) {
-        const dstItem = this.processExpressionStatement(c, item, stack);
-        if (dstItem !== INVALID) {
-          dst.list.push(dstItem);
-        }
-        continue;
-      }
-      if (item instanceof L2ReturnStatement) {
-        const dstItem = this.processReturnStatement(c, item, stack, expectedReturnType);
-        if (dstItem !== INVALID) {
-          dst.list.push(dstItem);
-        }
-        continue;
-      }
-      if (item instanceof L2Variable) {
-        const dstItem = this.processLocalVariable(c, item, stack);
-        if (dstItem && dstItem !== INVALID) {
-          dst.list.push(dstItem);
-        }
-        continue;
-      }
+    loop: for (const item of src.list) {
       if (item instanceof L2StatementList) {
-        const dstItem = this.processStatementList(c, item, stack.createChild(), expectedReturnType);
+        const dstItem = this.processStatementList(c, item, context.createChild(), expectedReturnType);
         dst.list.push(dstItem);
         continue;
+      }
+      for (const h of this.l3StatementHandlers) {
+        const result = h.processStatement(c, item, context, expectedReturnType);
+        if (result) {
+          if (result !== INVALID) {
+            dst.list.push(result);
+          }
+          continue loop;
+        }
       }
       c.errors.push({
         level: ERROR,

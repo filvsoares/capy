@@ -1,16 +1,11 @@
 import { Pos } from '@/base';
+import { L2Toplevel } from '@/beans/l2-parser/l2-parser';
 import { L2CallableType } from '@/beans/method/l2-callable-type';
-import { L2Definition } from '../impexp/l2-definition';
 import { L2StatementList } from '../statement/l2-statement-list';
 
-export class L2Method extends L2Definition<L2CallableType> {
-  statementList: L2StatementList;
-
-  constructor(name: string, type: L2CallableType, statementList: L2StatementList, pos: Pos) {
-    super(name, type, pos);
-    this.name = name;
-    this.type = type;
-    this.statementList = statementList;
+export class L2Method extends L2Toplevel {
+  constructor(public name: string, public type: L2CallableType, public statementList: L2StatementList, pos: Pos) {
+    super(pos);
   }
 
   toString(): string {

@@ -10,13 +10,8 @@ import { L2StatementReader } from '../statement/l2-statement-reader';
 import { L2Method } from './l2-method';
 
 export class L2MethodReader extends Bean implements L2ToplevelReader {
-  statementReader: L2StatementReader;
-  callableTypeReader: L2CallableTypeReader;
-
-  constructor([statementReader, callableTypeReader]: [L2StatementReader, L2CallableTypeReader]) {
+  constructor(private statementReader: L2StatementReader, private callableTypeReader: L2CallableTypeReader) {
     super();
-    this.statementReader = statementReader;
-    this.callableTypeReader = callableTypeReader;
   }
 
   read(c: L2ParseContext): ReadResult<L2Method> {

@@ -1,7 +1,8 @@
+import { l3ExpressionProcessor } from '@/beans/expression/l3-expression-processor';
+import { l3StatementHandler } from '@/beans/statement/l3-statement-handler';
+import { l3TypeProcessor } from '@/beans/type/l3-type-processor';
 import { declareBean, list, single } from '@/util/beans';
 import { l2ExpressionReader } from '../expression/l2-expression-reader';
-import { l3ExpressionProcessor } from '../expression/l3-expression-processor';
-import { l3TypeProcessor } from '../type/l3-type-processor';
 import { l2StatementItemReader } from './l2-statement-item-reader';
 import { l2StatementReader } from './l2-statement-reader';
 import { l3StatementProcessor } from './l3-statement-processor';
@@ -29,9 +30,23 @@ export function declareBeans() {
     factory: (m, deps) => new m.L2StatementReaderImpl(deps),
   });
   declareBean({
+    name: 'L3ExpressionStatementHandler',
+    provides: [l3StatementHandler],
+    dependencies: [single(l3ExpressionProcessor)],
+    loadModule: () => import('./l3-expression-statement-handler'),
+    factory: (m, deps) => new m.L3ExpressionStatementHandler(...deps),
+  });
+  declareBean({
+    name: 'L3ReturnStatementHandler',
+    provides: [l3StatementHandler],
+    dependencies: [single(l3ExpressionProcessor), single(l3TypeProcessor)],
+    loadModule: () => import('./l3-return-statement-handler'),
+    factory: (m, deps) => new m.L3ReturnStatementHandler(...deps),
+  });
+  declareBean({
     name: 'L3StatementProcessorImpl',
     provides: [l3StatementProcessor],
-    dependencies: [single(l3ExpressionProcessor), single(l3TypeProcessor)],
+    dependencies: [list(l3StatementHandler)],
     loadModule: () => import('./l3-statement-processor-impl'),
     factory: (m, deps) => new m.L3StatementProcessorImpl(...deps),
   });

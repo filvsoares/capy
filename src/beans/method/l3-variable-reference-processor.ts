@@ -2,6 +2,7 @@ import { ERROR } from '@/base';
 import { L3Expression } from '@/beans/expression/l3-expression';
 import { INVALID, Invalid } from '@/beans/l3-parser/l3-base';
 import { L3MethodReference } from '@/beans/method/l3-method-reference';
+import { L3Variable } from '@/beans/variable/l3-variable';
 import { Bean } from '@/util/beans';
 import { L2Identifier } from '../expression/l2-expression';
 import { L3ExpressionContext } from '../expression/l3-expression-processor';
@@ -9,13 +10,7 @@ import { L3Reference } from '../expression/l3-reference';
 import { L3ReferenceProcessor } from '../expression/l3-reference-processor';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3ReadVariable } from '../operation/l3-operation-processor';
-import {
-  L3LocalVariableReference,
-  L3Method,
-  L3ModuleVariableReference,
-  L3Variable,
-  L3VariableReference,
-} from './l3-method';
+import { L3LocalVariableReference, L3Method, L3ModuleVariableReference, L3VariableReference } from './l3-method';
 import { MethodStack } from './l3-method-processor';
 
 export class L3VariableReferenceProcessor extends Bean implements L3ReferenceProcessor {

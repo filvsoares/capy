@@ -22,18 +22,18 @@ import { L3Expression } from '@/beans/expression/l3-expression';
 import { L3Number } from '@/beans/expression/l3-number';
 import { L3String } from '@/beans/expression/l3-string';
 import { L3MethodReference } from '@/beans/method/l3-method-reference';
+import { L3ExpressionStatement } from '@/beans/statement/l3-expression-statement';
+import { L3ReturnStatement } from '@/beans/statement/l3-return-statement';
+import { L3StatementList } from '@/beans/statement/l3-statement-list';
+import { L3Variable } from '@/beans/variable/l3-variable';
 import { L3Module, L3Symbol } from './beans/l3-parser/l3-parser';
 import {
   L3ArgumentVariable,
   L3CapyMethod,
-  L3ExpressionStatement,
   L3LibraryMethod,
   L3LocalVariableReference,
   L3Method,
   L3ModuleVariableReference,
-  L3ReturnStatement,
-  L3StatementList,
-  L3Variable,
 } from './beans/method/l3-method';
 import { L3Assignment, L3MethodCall, L3ReadVariable, L3StringConcat } from './beans/operation/l3-operation-processor';
 

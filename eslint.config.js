@@ -74,7 +74,7 @@ export default defineConfig([
             },
             {
               from: [bean('statement')],
-              allow: ['bean'],
+              allow: [bean('expression'), bean('type'), bean('l1-parser'), bean('l2-parser'), bean('l3-parser')],
             },
             {
               from: [bean('type')],
@@ -82,7 +82,7 @@ export default defineConfig([
             },
             {
               from: [bean('variable')],
-              allow: ['bean'],
+              allow: [bean('expression'), bean('type'), bean('l1-parser'), bean('l2-parser'), bean('l3-parser')],
             },
           ],
         },

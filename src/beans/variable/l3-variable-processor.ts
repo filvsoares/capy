@@ -1,12 +1,12 @@
 import { ERROR } from '@/base';
+import { L2Toplevel } from '@/beans/l2-parser/l2-parser';
 import { INVALID } from '@/beans/l3-parser/l3-base';
+import { L3Variable } from '@/beans/variable/l3-variable';
 import { Bean } from '@/util/beans';
 import { L2Expression } from '../expression/l2-expression';
 import { L3ExpressionProcessor } from '../expression/l3-expression-processor';
-import { L2Definition } from '../impexp/l2-definition';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3ToplevelProcessor } from '../l3-parser/l3-toplevel-processor';
-import { L3Variable } from '../method/l3-method';
 import { L3TypeProcessor } from '../type/l3-type-processor';
 import { L2Variable } from './l2-variable';
 
@@ -15,7 +15,7 @@ export class L3VariableProcessor extends Bean implements L3ToplevelProcessor {
     super();
   }
 
-  process(c: L3ParseContext, def: L2Definition): boolean {
+  process(c: L3ParseContext, def: L2Toplevel): boolean {
     if (!(def instanceof L2Variable)) {
       return false;
     }

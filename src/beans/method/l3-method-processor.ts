@@ -1,9 +1,9 @@
 import { ERROR } from '@/base';
+import { L2Toplevel } from '@/beans/l2-parser/l2-parser';
 import { INVALID } from '@/beans/l3-parser/l3-base';
 import { L3CallableTypeProcessor } from '@/beans/method/l3-callable-type-processor';
 import { Bean } from '@/util/beans';
 import { L2Identifier } from '../expression/l2-expression';
-import { L2Definition } from '../impexp/l2-definition';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3ToplevelProcessor } from '../l3-parser/l3-toplevel-processor';
 import { L2StatementList } from '../statement/l2-statement-list';
@@ -57,7 +57,7 @@ export class L3MethodProcessor extends Bean implements L3ToplevelProcessor {
     super();
   }
 
-  process(c: L3ParseContext, def: L2Definition): boolean {
+  process(c: L3ParseContext, def: L2Toplevel): boolean {
     if (!(def instanceof L2Method)) {
       return false;
     }
