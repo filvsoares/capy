@@ -18,7 +18,10 @@
  * @file Runner implementation.
  */
 
-import { L3Expression, L3Number, L3String } from './beans/expression/l3-expression-processor';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { L3Number } from '@/beans/expression/l3-number';
+import { L3String } from '@/beans/expression/l3-string';
+import { L3MethodReference } from '@/beans/method/l3-method-reference';
 import { L3Module, L3Symbol } from './beans/l3-parser/l3-parser';
 import {
   L3ArgumentVariable,
@@ -27,7 +30,6 @@ import {
   L3LibraryMethod,
   L3LocalVariableReference,
   L3Method,
-  L3MethodReference,
   L3ModuleVariableReference,
   L3ReturnStatement,
   L3StatementList,
@@ -92,23 +94,27 @@ export class Runner {
       for (const arg of obj.argList) {
         argList.push(this.runExpression(arg, deps));
       }
-      if (obj.operand instanceof L3LibraryMethod) {
-        return obj.operand.callback(argList, this);
+      const method = this.runExpression(obj.operand, deps);
+      if (method instanceof L3LibraryMethod) {
+        return method.callback(argList, this);
       }
-      if (obj.operand instanceof L3CapyMethod) {
-        return this.runMethod(obj.operand, argList);
+      if (method instanceof L3CapyMethod) {
+        return this.runMethod(method, argList);
       }
-      throw new Error(`Cannot run ${obj.operand.constructor.name}`);
+      throw new Error(`Cannot run ${method.constructor.name}`);
     }
     if (obj instanceof L3StringConcat) {
+      const operand = this.runExpression(obj.operand, deps);
       const other = this.runExpression(obj.other, deps);
-      return (obj.operand += other);
+      return operand + other;
     }
     if (obj instanceof L3ReadVariable) {
-      if (!(obj.operand instanceof Variable)) {
-        throw new Error(`Current is not variable`);
+      const variable = this.runExpression(obj.operand, deps);
+      console.log(variable);
+      if (!(variable instanceof Variable)) {
+        throw new Error(`${variable.constructor.name} is not variable`);
       }
-      return obj.operand.value;
+      return variable.value;
     }
     if (obj instanceof L3Assignment) {
       const target = this.runExpression(obj.target, deps);

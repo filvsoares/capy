@@ -1,7 +1,7 @@
+import { L1ParserContext } from '@/beans/l1-parser/l1-parser';
 import { Bean } from '@/util/beans';
 import { L1Operator } from './l1-operator';
 import { L1Reader } from './l1-reader';
-import { L1ParseContext } from './l1-types';
 
 type OperatorMap = { [name: string]: true | OperatorMap };
 
@@ -32,7 +32,7 @@ function isOperator(s: string) {
 }
 
 export class L1OperatorReader extends Bean implements L1Reader {
-  read(c: L1ParseContext): L1Operator | undefined {
+  read(c: L1ParserContext): L1Operator | undefined {
     if (!isOperator(c.current)) {
       return;
     }

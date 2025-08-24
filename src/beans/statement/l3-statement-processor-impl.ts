@@ -1,7 +1,10 @@
 import { ERROR } from '@/base';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { INVALID } from '@/beans/l3-parser/l3-base';
+import { L3Type } from '@/beans/type/l3-type';
 import { L2Variable } from '@/beans/variable/l2-variable';
 import { Bean } from '@/util/beans';
-import { L3Expression, L3ExpressionProcessor } from '../expression/l3-expression-processor';
+import { L3ExpressionProcessor } from '../expression/l3-expression-processor';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import {
   L3ExpressionStatement,
@@ -12,8 +15,8 @@ import {
 } from '../method/l3-method';
 import { MethodStack } from '../method/l3-method-processor';
 import { L3Assignment } from '../operation/l3-operation-processor';
+import { isVoidType } from '../type/l3-simple-type';
 import { L3TypeProcessor } from '../type/l3-type-processor';
-import { INVALID, isVoidType, L3Type } from '../type/l3-types';
 import { L2ExpressionStatement } from './l2-expression-statement';
 import { L2ReturnStatement } from './l2-return-statement';
 import { L2StatementList } from './l2-statement-list';

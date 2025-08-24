@@ -1,11 +1,11 @@
 import { ERROR } from '@/base';
-import { L1Base } from '@/beans/l1-parser/l1-types';
+import { L1Base } from '@/beans/l1-parser/l1-base';
 import { Bean } from '@/util/beans';
 import { L1Bracket } from '../l1-parser/l1-bracket';
+import { L1Identifier } from '../l1-parser/l1-identifier';
 import { L1Number } from '../l1-parser/l1-number';
 import { L1Separator } from '../l1-parser/l1-separator';
 import { L1String } from '../l1-parser/l1-string';
-import { L1Identifier } from '../l1-parser/l1-word';
 import { Invalid, INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
 import { L2Expression, L2Identifier, L2Number, L2Operation, L2OperationStep, L2String } from './l2-expression';
 import { L2ExpressionReader, ReadExpressionOpts } from './l2-expression-reader';

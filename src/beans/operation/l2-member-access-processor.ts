@@ -2,8 +2,8 @@ import { Bean } from '@/util/beans';
 import { combinePos, ERROR } from '../../base';
 import { L2ExpressionReader } from '../expression/l2-expression-reader';
 import { L2OperationProcessor, ProcessResult, ProcessToken } from '../expression/l2-operation-processor';
+import { L1Identifier } from '../l1-parser/l1-identifier';
 import { L1Operator } from '../l1-parser/l1-operator';
-import { L1Identifier } from '../l1-parser/l1-word';
 import { INVALID, L2ParseContext } from '../l2-parser/l2-base';
 import { L2MemberAccess } from './l2-member-access';
 

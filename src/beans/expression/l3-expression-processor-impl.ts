@@ -1,16 +1,13 @@
 import { ERROR } from '@/base';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { L3Number } from '@/beans/expression/l3-number';
+import { L3String } from '@/beans/expression/l3-string';
+import { INVALID, Invalid } from '@/beans/l3-parser/l3-base';
 import { Bean } from '@/util/beans';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3TypeProcessor } from '../type/l3-type-processor';
-import { INVALID, Invalid } from '../type/l3-types';
 import { L2Expression, L2Identifier, L2Number, L2Operation, L2String } from './l2-expression';
-import {
-  L3Expression,
-  L3ExpressionContext,
-  L3ExpressionProcessor,
-  L3Number,
-  L3String,
-} from './l3-expression-processor';
+import { L3ExpressionContext, L3ExpressionProcessor } from './l3-expression-processor';
 import { L3OperationProcessor } from './l3-operation-processor';
 import { L3Reference } from './l3-reference';
 import { L3ReferenceProcessor } from './l3-reference-processor';
@@ -52,7 +49,7 @@ export class L3ExpressionProcessorImpl extends Bean implements L3ExpressionProce
     }
     loop: for (const step of src.steps) {
       for (const p of this.l3OperationProcessors) {
-        const result = p.process(c, operand, step, context);
+        const result = p.processOperation(c, operand, step, context);
         if (result === INVALID) {
           return INVALID;
         }

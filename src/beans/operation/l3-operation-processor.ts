@@ -1,7 +1,7 @@
 import { Pos } from '@/base';
-import { L3Expression } from '../expression/l3-expression-processor';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { L3Type } from '@/beans/type/l3-type';
 import { L3Operation } from '../expression/l3-operation-processor';
-import { L3Type } from '../type/l3-types';
 
 export class L3ReadVariable extends L3Operation {
   constructor(operand: L3Expression, type: L3Type, pos: Pos) {

@@ -1,7 +1,7 @@
+import { L1ParserContext } from '@/beans/l1-parser/l1-parser';
 import { Bean } from '@/util/beans';
 import { L1Number } from './l1-number';
 import { L1Reader } from './l1-reader';
-import { L1ParseContext } from './l1-types';
 
 function isNumberStart(c: string) {
   return c >= '0' && c <= '9';
@@ -11,7 +11,7 @@ function isNumberMiddle(c: string) {
   return (c >= '0' && c <= '9') || c == '.';
 }
 export class L1NumberReader extends Bean implements L1Reader {
-  read(c: L1ParseContext): L1Number | undefined {
+  read(c: L1ParserContext): L1Number | undefined {
     if (!isNumberStart(c.current)) {
       return;
     }

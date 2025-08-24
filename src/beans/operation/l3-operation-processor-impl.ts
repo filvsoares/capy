@@ -1,12 +1,15 @@
 import { ERROR } from '@/base';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { INVALID, Invalid } from '@/beans/l3-parser/l3-base';
+import { L3CallableType } from '@/beans/method/l3-callable-type';
 import { Bean } from '@/util/beans';
 import { L2OperationStep } from '../expression/l2-expression';
-import { L3Expression, L3ExpressionContext, L3ExpressionProcessor } from '../expression/l3-expression-processor';
+import { L3ExpressionContext, L3ExpressionProcessor } from '../expression/l3-expression-processor';
 import { L3Operation, L3OperationProcessor } from '../expression/l3-operation-processor';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3VariableReference } from '../method/l3-method';
+import { isStringType, STRING } from '../type/l3-simple-type';
 import { L3TypeProcessor } from '../type/l3-type-processor';
-import { Invalid, INVALID, isStringType, L3CallableType, STRING } from '../type/l3-types';
 import { L2Addition } from './l2-addition';
 import { L2Assignment } from './l2-assignment';
 import { L2MethodCall } from './l2-method-call';
@@ -17,7 +20,7 @@ export class L3OperationProcessorImpl extends Bean implements L3OperationProcess
     super();
   }
 
-  process(
+  processOperation(
     c: L3ParseContext,
     operand: L3Expression,
     step: L2OperationStep,

@@ -1,14 +1,14 @@
+import { L1ParserContext } from '@/beans/l1-parser/l1-parser';
 import { Bean } from '@/util/beans';
 import { L1Reader } from './l1-reader';
 import { L1Separator } from './l1-separator';
-import { L1ParseContext } from './l1-types';
 
 function isSeparator(c: string) {
   return c === ';' || c === ',';
 }
 
 export class L1SeparatorReader extends Bean implements L1Reader {
-  read(c: L1ParseContext): L1Separator | undefined {
+  read(c: L1ParserContext): L1Separator | undefined {
     if (!isSeparator(c.current)) {
       return;
     }

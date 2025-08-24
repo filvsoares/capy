@@ -1,7 +1,7 @@
 import { Pos } from '@/base';
+import { L2CallableType } from '@/beans/method/l2-callable-type';
 import { L2Definition } from '../impexp/l2-definition';
 import { L2StatementList } from '../statement/l2-statement-list';
-import { L2CallableType } from '../type/l2-callable-type';
 
 export class L2Method extends L2Definition<L2CallableType> {
   statementList: L2StatementList;

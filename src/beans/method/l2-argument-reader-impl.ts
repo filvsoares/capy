@@ -1,19 +1,16 @@
+import { L2Argument } from '@/beans/method/l2-argument';
+import { L2TypeReader } from '@/beans/type/l2-type-reader';
 import { Bean } from '@/util/beans';
 import { combinePos, ERROR, fallbackPos, INTERNAL } from '../../base';
+import { L1Identifier } from '../l1-parser/l1-identifier';
 import { L1Operator } from '../l1-parser/l1-operator';
 import { L1Separator } from '../l1-parser/l1-separator';
-import { L1Identifier } from '../l1-parser/l1-word';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
-import { L2Argument } from './l2-argument';
 import { L2ArgumentReader } from './l2-argument-reader';
-import { L2TypeReader } from './l2-type-reader';
 
 export class L2ArgumentReaderImpl extends Bean implements L2ArgumentReader {
-  typeReader: L2TypeReader;
-
-  constructor([typeReader]: [L2TypeReader]) {
+  constructor(private typeReader: L2TypeReader) {
     super();
-    this.typeReader = typeReader;
   }
 
   read(c: L2ParseContext): ReadResult<L2Argument> {

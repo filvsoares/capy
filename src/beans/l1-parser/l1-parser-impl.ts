@@ -18,11 +18,43 @@
  * @file Layer-1 parser implementation.
  */
 
-import { ERROR } from '@/base';
+import { ERROR, ParseError } from '@/base';
+import { L1Base } from '@/beans/l1-parser/l1-base';
 import { Bean } from '@/util/beans';
-import { L1Parser } from './l1-parser';
+import { L1Parser, L1ParserContext, L1ParserResult } from './l1-parser';
 import { L1Reader } from './l1-reader';
-import { L1Base, L1ParseContext, L1ParseResult } from './l1-types';
+
+class L1ParserContextImpl {
+  s: string;
+  pos: number = 0;
+  lin: number = 1;
+  col: number = 1;
+  current: string;
+  errors: ParseError[] = [];
+
+  constructor(s: string) {
+    this.s = s;
+    this.current = s[0];
+  }
+
+  consume(): void {
+    if (!this.current) {
+      return;
+    }
+    this.pos++;
+    if (this.pos >= this.s.length) {
+      this.current = '';
+      return;
+    }
+    if (this.current === '\n') {
+      this.col = 1;
+      this.lin++;
+    } else {
+      this.col++;
+    }
+    this.current = this.s[this.pos];
+  }
+}
 
 export class L1ParserImpl extends Bean implements L1Parser {
   readers: L1Reader[];
@@ -32,7 +64,7 @@ export class L1ParserImpl extends Bean implements L1Parser {
     this.readers = readers;
   }
 
-  read(c: L1ParseContext) {
+  read(c: L1ParserContext) {
     for (const reader of this.readers) {
       const item = reader.read(c);
       if (item) {
@@ -40,8 +72,8 @@ export class L1ParserImpl extends Bean implements L1Parser {
       }
     }
   }
-  parse(s: string): L1ParseResult {
-    const c = new L1ParseContext(s);
+  parse(s: string): L1ParserResult {
+    const c = new L1ParserContextImpl(s);
 
     const list: L1Base[] = [];
 

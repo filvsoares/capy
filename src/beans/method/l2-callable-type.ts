@@ -1,6 +1,6 @@
 import { Pos } from '@/base';
-import { L2Argument } from './l2-argument';
-import { L2Type } from './l2-type';
+import { L2Argument } from '@/beans/method/l2-argument';
+import { L2Type } from '@/beans/type/l2-type';
 
 export class L2CallableType extends L2Type {
   argList: L2Argument[];

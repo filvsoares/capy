@@ -1,11 +1,11 @@
+import { L1ParserContext } from '@/beans/l1-parser/l1-parser';
 import { Bean } from '@/util/beans';
 import { ERROR } from '../../base';
 import { L1Reader } from './l1-reader';
 import { L1String } from './l1-string';
-import { L1ParseContext } from './l1-types';
 
 export class L1StringReader extends Bean implements L1Reader {
-  read(c: L1ParseContext): L1String | undefined {
+  read(c: L1ParserContext): L1String | undefined {
     if (c.current !== '"') {
       return;
     }

@@ -1,12 +1,7 @@
-import { Base, INTERNAL, ParseError, Pos } from '@/base';
+import { INTERNAL, ParseError, Pos } from '@/base';
 import { L2Base } from '@/beans/l2-parser/l2-base';
+import { L3Base } from '@/beans/l3-parser/l3-base';
 import { declareBeanInterface } from '@/util/beans';
-
-export abstract class L3Base extends Base {
-  isL3() {
-    return true;
-  }
-}
 
 export abstract class L3Symbol extends L3Base {
   name: string;

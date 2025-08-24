@@ -1,7 +1,6 @@
 import { Bean } from '@/util/beans';
 import { ERROR, INTERNAL, ParseError } from '../../base';
-import { L1Parser } from '../l1-parser/l1-parser';
-import { L1ParseResult } from '../l1-parser/l1-types';
+import { L1Parser, L1ParserResult } from '../l1-parser/l1-parser';
 import { L2Parser, L2ParseResult } from '../l2-parser/l2-parser';
 import { L3Module, L3Parser, L3ParseResult } from '../l3-parser/l3-parser';
 import { CompileOpts, Compiler, CompileResult } from './compiler';
@@ -15,7 +14,7 @@ export class CompilerImpl extends Bean implements Compiler {
     const errors: ParseError[] = [];
     const out: string[] = [];
 
-    let p1: L1ParseResult | undefined;
+    let p1: L1ParserResult | undefined;
     let p2: L2ParseResult | undefined;
     let p3: L3ParseResult | undefined;
 

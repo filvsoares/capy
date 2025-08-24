@@ -1,4 +1,4 @@
-import { L1ParseContext } from '@/beans/l1-parser/l1-types';
+import { L1ParserContext } from '@/beans/l1-parser/l1-parser';
 import { Bean } from '@/util/beans';
 import { L1Reader } from './l1-reader';
 
@@ -7,7 +7,7 @@ function isWhitespace(c: string) {
 }
 
 export class L1WhitespaceReader extends Bean implements L1Reader {
-  read(c: L1ParseContext): true | undefined {
+  read(c: L1ParserContext): true | undefined {
     if (!isWhitespace(c.current)) {
       return;
     }

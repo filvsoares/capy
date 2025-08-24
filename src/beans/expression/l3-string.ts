@@ -1,16 +1,21 @@
 import { Pos } from '@/base';
-import { L1Base } from '@/beans/l1-parser/l1-base';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { STRING } from '@/beans/type/l3-simple-type';
 
-export class L1Number extends L1Base {
+export class L3String extends L3Expression {
   value: string;
 
   constructor(value: string, pos: Pos) {
-    super(pos);
+    super(STRING, pos);
     this.value = value;
   }
 
+  get isReference(): boolean {
+    return false;
+  }
+
   toString(): string {
-    return `number "${this.value}"`;
+    return `string`;
   }
 
   debugPrint(out: string[], prefix: string): void {

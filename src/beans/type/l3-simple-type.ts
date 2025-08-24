@@ -18,15 +18,9 @@
  * @file Type definitions for layer-3 parser.
  */
 
-import { INTERNAL, Pos } from '../../base';
-import { L3Base } from '../l3-parser/l3-parser';
-
-export const INVALID = Symbol();
-export type Invalid = typeof INVALID;
-
-export type L3PrimitiveType = 'string' | 'number' | 'boolean' | 'void';
-
-export abstract class L3Type extends L3Base {}
+import { INTERNAL, Pos } from '@/base';
+import { L3Base } from '@/beans/l3-parser/l3-base';
+import { L3PrimitiveType, L3Type } from '@/beans/type/l3-type';
 
 export class L3SimpleType extends L3Type {
   primitive: L3PrimitiveType;
@@ -57,54 +51,6 @@ export function isStringType(type: L3Type) {
 
 export function isVoidType(type: L3Type) {
   return type instanceof L3SimpleType && type.primitive === 'void';
-}
-
-export class L3Argument extends L3Type {
-  name: string;
-  type: L3Type;
-
-  constructor(name: string, type: L3Type, pos: Pos) {
-    super(pos);
-    this.name = name;
-    this.type = type;
-  }
-
-  toString(): string {
-    return 'argument';
-  }
-
-  debugPrint(out: string[], prefix: string): void {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}\n`);
-    out.push(`${prefix}  type: `);
-    this.type.debugPrint(out, `${prefix}  `);
-  }
-}
-
-export class L3CallableType extends L3Type {
-  argList: L3Argument[];
-  returnType: L3Type;
-
-  constructor(argList: L3Argument[], returnType: L3Type, pos: Pos) {
-    super(pos);
-    this.argList = argList;
-    this.returnType = returnType;
-  }
-
-  debugPrint(out: string[], prefix: string): void {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  argList:\n`);
-    this.argList.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-    out.push(`${prefix}  returnType: `);
-    this.returnType.debugPrint(out, `${prefix}  `);
-  }
-
-  toString(): string {
-    return `callable`;
-  }
 }
 
 export abstract class L3TypedSymbol<T extends L3Type = L3Type> extends L3Base {

@@ -1,6 +1,6 @@
+import { l3Parser } from '@/beans/l3-parser/l3-parser';
+import { l3ToplevelProcessor } from '@/beans/l3-parser/l3-toplevel-processor';
 import { declareBean, list } from '@/util/beans';
-import { l3Parser } from './l3-parser';
-import { l3ToplevelProcessor } from './l3-toplevel-processor';
 
 export function declareBeans() {
   declareBean({

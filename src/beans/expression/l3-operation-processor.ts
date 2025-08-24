@@ -1,9 +1,11 @@
 import { Pos } from '@/base';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { Invalid } from '@/beans/l3-parser/l3-base';
+import { L3Type } from '@/beans/type/l3-type';
 import { declareBeanInterface } from '@/util/beans';
 import { L3ParseContext } from '../l3-parser/l3-parser';
-import { Invalid, L3Type } from '../type/l3-types';
 import { L2OperationStep } from './l2-expression';
-import { L3Expression, L3ExpressionContext } from './l3-expression-processor';
+import { L3ExpressionContext } from './l3-expression-processor';
 
 export abstract class L3Operation extends L3Expression {
   operand: L3Expression;
@@ -26,7 +28,7 @@ export abstract class L3Operation extends L3Expression {
 }
 
 export interface L3OperationProcessor {
-  process(
+  processOperation(
     c: L3ParseContext,
     operand: L3Expression,
     step: L2OperationStep,

@@ -1,6 +1,6 @@
+import { l1Parser } from '@/beans/l1-parser/l1-parser';
+import { l1Reader } from '@/beans/l1-parser/l1-reader';
 import { declareBean, list, single } from '@/util/beans';
-import { l1Parser } from './l1-parser';
-import { l1Reader } from './l1-reader';
 
 export function declareBeans() {
   declareBean({
@@ -15,7 +15,7 @@ export function declareBeans() {
     provides: [l1Reader],
     dependencies: [single(l1Parser)],
     loadModule: () => import('./l1-bracket-reader'),
-    factory: (m, deps) => new m.L1BracketReader(deps),
+    factory: (m, deps) => new m.L1BracketReader(...deps),
   });
   declareBean({
     name: 'L1NumberReader',

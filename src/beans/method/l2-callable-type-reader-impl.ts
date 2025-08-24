@@ -1,23 +1,18 @@
+import { L2CallableType } from '@/beans/method/l2-callable-type';
+import { L2CallableTypeReader } from '@/beans/method/l2-callable-type-reader';
+import { L2Type } from '@/beans/type/l2-type';
+import { L2TypeItemReader } from '@/beans/type/l2-type-item-reader';
+import { L2TypeReader } from '@/beans/type/l2-type-reader';
 import { Bean } from '@/util/beans';
 import { combinePos, ERROR } from '../../base';
 import { L1Bracket } from '../l1-parser/l1-bracket';
 import { L1Operator } from '../l1-parser/l1-operator';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
 import { L2ArgumentReader } from './l2-argument-reader';
-import { L2CallableType } from './l2-callable-type';
-import { L2CallableTypeReader } from './l2-callable-type-reader';
-import { L2Type } from './l2-type';
-import { L2TypeItemReader } from './l2-type-item-reader';
-import { L2TypeReader } from './l2-type-reader';
 
 export class L2CallableTypeReaderImpl extends Bean implements L2TypeItemReader, L2CallableTypeReader {
-  typeReader: L2TypeReader;
-  argumentReader: L2ArgumentReader;
-
-  constructor([typeReader, argumentReader]: [L2TypeReader, L2ArgumentReader]) {
+  constructor(private typeReader: L2TypeReader, private argumentReader: L2ArgumentReader) {
     super();
-    this.typeReader = typeReader;
-    this.argumentReader = argumentReader;
   }
 
   read(c: L2ParseContext): ReadResult<L2CallableType> {

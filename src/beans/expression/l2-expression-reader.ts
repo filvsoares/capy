@@ -1,5 +1,5 @@
+import { L1Base } from '@/beans/l1-parser/l1-base';
 import { declareBeanInterface } from '@/util/beans';
-import { L1Base } from '../l1-parser/l1-types';
 import { Invalid, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
 import { L2Expression } from './l2-expression';
 

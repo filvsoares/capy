@@ -1,4 +1,6 @@
 import { ERROR } from '@/base';
+import { INVALID } from '@/beans/l3-parser/l3-base';
+import { L3CallableTypeProcessor } from '@/beans/method/l3-callable-type-processor';
 import { Bean } from '@/util/beans';
 import { L2Identifier } from '../expression/l2-expression';
 import { L2Definition } from '../impexp/l2-definition';
@@ -6,8 +8,6 @@ import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3ToplevelProcessor } from '../l3-parser/l3-toplevel-processor';
 import { L2StatementList } from '../statement/l2-statement-list';
 import { L3StatementProcessor } from '../statement/l3-statement-processor';
-import { L3TypeProcessor } from '../type/l3-type-processor';
-import { INVALID } from '../type/l3-types';
 import { L2Method } from './l2-method';
 import { L3ArgumentVariable, L3CapyMethod, L3LocalVariable, L3UnresolvedMethod } from './l3-method';
 
@@ -50,7 +50,10 @@ export class MethodStack {
 }
 
 export class L3MethodProcessor extends Bean implements L3ToplevelProcessor {
-  constructor(private l3TypeProcessor: L3TypeProcessor, private l3StatementProcessor: L3StatementProcessor) {
+  constructor(
+    private l3CallableTypeProcessor: L3CallableTypeProcessor,
+    private l3StatementProcessor: L3StatementProcessor
+  ) {
     super();
   }
 
@@ -58,7 +61,7 @@ export class L3MethodProcessor extends Bean implements L3ToplevelProcessor {
     if (!(def instanceof L2Method)) {
       return false;
     }
-    const type = this.l3TypeProcessor.processCallableType(c, def.type);
+    const type = this.l3CallableTypeProcessor.processCallableType(c, def.type);
     if (type === INVALID) {
       return true;
     }

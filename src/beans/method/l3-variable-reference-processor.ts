@@ -1,18 +1,20 @@
 import { ERROR } from '@/base';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { INVALID, Invalid } from '@/beans/l3-parser/l3-base';
+import { L3MethodReference } from '@/beans/method/l3-method-reference';
 import { Bean } from '@/util/beans';
 import { L2Identifier } from '../expression/l2-expression';
-import { L3Expression, L3ExpressionContext } from '../expression/l3-expression-processor';
-import { L3Operation } from '../expression/l3-operation-processor';
+import { L3ExpressionContext } from '../expression/l3-expression-processor';
 import { L3Reference } from '../expression/l3-reference';
 import { L3ReferenceProcessor } from '../expression/l3-reference-processor';
 import { L3ParseContext } from '../l3-parser/l3-parser';
-import { INVALID, Invalid } from '../type/l3-types';
+import { L3ReadVariable } from '../operation/l3-operation-processor';
 import {
   L3LocalVariableReference,
   L3Method,
-  L3MethodReference,
   L3ModuleVariableReference,
   L3Variable,
+  L3VariableReference,
 } from './l3-method';
 import { MethodStack } from './l3-method-processor';
 
@@ -53,7 +55,12 @@ export class L3VariableReferenceProcessor extends Bean implements L3ReferencePro
     }
   }
 
-  readReference(c: L3ParseContext, obj: L3Expression): L3Operation | Invalid | undefined {
-    return undefined;
+  readReference(c: L3ParseContext, obj: L3Expression): L3Expression | Invalid | undefined {
+    if (obj instanceof L3MethodReference) {
+      return obj;
+    }
+    if (obj instanceof L3VariableReference) {
+      return new L3ReadVariable(obj, obj.type, obj.pos);
+    }
   }
 }

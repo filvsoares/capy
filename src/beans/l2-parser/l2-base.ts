@@ -19,7 +19,7 @@
  */
 
 import { Base, ParseError } from '@/base';
-import { L1Base } from '@/beans/l1-parser/l1-types';
+import { L1Base } from '@/beans/l1-parser/l1-base';
 
 export abstract class L2Base extends Base {
   isL2() {

@@ -1,9 +1,9 @@
 import { Bean } from '@/util/beans';
 
 import { combinePos, ERROR, fallbackPos } from '@/base';
+import { L1Keyword } from '@/beans/l1-parser/l1-keyword';
 import { L2ExpressionReader } from '../expression/l2-expression-reader';
 import { L1Separator } from '../l1-parser/l1-separator';
-import { L1Keyword } from '../l1-parser/l1-word';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
 import { L2ReturnStatement } from './l2-return-statement';
 import { L2StatementItemReader } from './l2-statement-item-reader';

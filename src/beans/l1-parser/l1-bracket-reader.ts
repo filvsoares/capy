@@ -1,26 +1,25 @@
+import { ERROR } from '@/base';
+import { L1Base } from '@/beans/l1-parser/l1-base';
+import { L1Bracket } from '@/beans/l1-parser/l1-bracket';
+import { L1Parser, L1ParserContext } from '@/beans/l1-parser/l1-parser';
+import { L1Reader } from '@/beans/l1-parser/l1-reader';
 import { Bean } from '@/util/beans';
-import { ERROR } from '../../base';
-import { L1Bracket } from './l1-bracket';
-import { L1Parser } from './l1-parser';
-import { L1Reader } from './l1-reader';
-import { L1Base, L1ParseContext } from './l1-types';
 
-export function isBracketStart(c: string) {
+function isBracketStart(c: string) {
   return c === '(' || c === '[' || c === '{';
 }
 
-export function isBracketEnd(c: string) {
+function isBracketEnd(c: string) {
   return c === ')' || c === ']' || c === '}';
 }
 
 export class L1BracketReader extends Bean implements L1Reader {
-  parser: L1Parser;
-
-  constructor([parser]: [L1Parser]) {
+  constructor(private parser: L1Parser) {
     super();
     this.parser = parser;
   }
-  read(c: L1ParseContext): L1Bracket | undefined {
+
+  read(c: L1ParserContext): L1Bracket | undefined {
     if (!isBracketStart(c.current)) {
       return;
     }

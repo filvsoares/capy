@@ -5,8 +5,7 @@ import { L2TypeItemReader } from './l2-type-item-reader';
 import { L2TypeReader } from './l2-type-reader';
 
 export class L2TypeReaderImpl extends Bean implements L2TypeReader {
-  itemReaders: L2TypeReader[];
-  constructor([itemReaders]: [L2TypeItemReader[]]) {
+  constructor(private itemReaders: L2TypeItemReader[]) {
     super();
     this.itemReaders = itemReaders;
   }

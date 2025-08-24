@@ -1,8 +1,8 @@
 import { combinePos, ERROR, fallbackPos } from '@/base';
+import { L1Keyword } from '@/beans/l1-parser/l1-keyword';
 import { Bean } from '@/util/beans';
 import { L1Separator } from '../l1-parser/l1-separator';
 import { L1String } from '../l1-parser/l1-string';
-import { L1Keyword } from '../l1-parser/l1-word';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
 import { L2ToplevelReader } from '../l2-parser/l2-toplevel-reader';
 import { L2Use } from './l2-use';

@@ -19,8 +19,8 @@
  */
 
 import { ERROR } from '@/base';
+import { L1Base } from '@/beans/l1-parser/l1-base';
 import { Bean } from '@/util/beans';
-import { L1Base } from '../l1-parser/l1-types';
 import { INVALID, L2ParseContext, ReadResult } from './l2-base';
 import { L2Parser, L2ParseResult, L2Toplevel } from './l2-parser';
 import { L2ToplevelReader } from './l2-toplevel-reader';

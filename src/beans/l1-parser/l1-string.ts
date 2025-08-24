@@ -1,5 +1,5 @@
 import { Pos } from '@/base';
-import { L1Base } from '@/beans/l1-parser/l1-types';
+import { L1Base } from '@/beans/l1-parser/l1-base';
 
 export class L1String extends L1Base {
   value: string;

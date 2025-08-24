@@ -1,33 +1,10 @@
 import { INTERNAL, Pos } from '@/base';
+import { L3Expression } from '@/beans/expression/l3-expression';
+import { L3Base } from '@/beans/l3-parser/l3-base';
+import { L3CallableType } from '@/beans/method/l3-callable-type';
+import { L3Type } from '@/beans/type/l3-type';
 import { Runner } from '@/runner';
-import { L3Expression } from '../expression/l3-expression-processor';
-import { L3Base } from '../l3-parser/l3-parser';
-import { L3CallableType, L3Type, L3TypedSymbol } from '../type/l3-types';
-
-export class L3MethodReference extends L3Expression {
-  module: string;
-  name: string;
-
-  get isReference(): boolean {
-    return true;
-  }
-
-  constructor(module: string, name: string, type: L3Type, pos: Pos) {
-    super(type, pos);
-    this.module = module;
-    this.name = name;
-  }
-
-  toString(): string {
-    return `identifier "${this.name}"`;
-  }
-
-  debugPrint(out: string[], prefix: string): void {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  module: ${this.module}\n`);
-    out.push(`${prefix}  name: ${this.name}\n`);
-  }
-}
+import { L3TypedSymbol } from '../type/l3-simple-type';
 
 export abstract class L3VariableReference extends L3Expression {
   get isReference(): boolean {
