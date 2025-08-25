@@ -45,6 +45,10 @@ export default defineConfig([
               allow: [bean('type'), bean('parser')],
             },
             {
+              from: [bean('global-variable')],
+              allow: [bean('expression'), bean('type'), bean('parser')],
+            },
+            {
               from: [bean('impexp')],
               allow: ['bean'],
             },
@@ -66,15 +70,11 @@ export default defineConfig([
             },
             {
               from: [bean('statement')],
-              allow: [bean('expression'), bean('type'), bean('l1-parser'), bean('l2-parser'), bean('l3-parser')],
+              allow: [bean('expression'), bean('type'), bean('parser')],
             },
             {
               from: [bean('type')],
               allow: [bean('parser')],
-            },
-            {
-              from: [bean('variable')],
-              allow: [bean('expression'), bean('type'), bean('l1-parser'), bean('l2-parser'), bean('l3-parser')],
             },
           ],
         },

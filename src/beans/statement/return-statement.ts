@@ -1,11 +1,11 @@
 import { Pos } from '@/base';
-import { L2Expression } from '../expression/l2-expression';
-import { L2Statement } from './l2-statement';
+import { Expression } from '@/beans/expression/expression';
+import { Statement } from '@/beans/statement/statement';
 
-export class L2ReturnStatement extends L2Statement {
-  expr: L2Expression | null;
+export class ReturnStatement extends Statement {
+  expr: Expression | null;
 
-  constructor(expr: L2Expression | null, pos: Pos) {
+  constructor(expr: Expression | null, pos: Pos) {
     super(pos);
     this.expr = expr;
   }

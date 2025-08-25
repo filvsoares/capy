@@ -6,8 +6,8 @@ import { Bean } from '@/util/beans';
 import { L2Identifier } from '../expression/l2-expression';
 import { L3ParseContext } from '../l3-parser/l3-parser';
 import { L3ToplevelProcessor } from '../l3-parser/l3-toplevel-processor';
-import { L2StatementList } from '../statement/l2-statement-list';
 import { L3StatementProcessor } from '../statement/l3-statement-processor';
+import { StatementList } from '../statement/statement-list';
 import { L2Method } from './l2-method';
 import { L3ArgumentVariable, L3CapyMethod, L3LocalVariable, L3UnresolvedMethod } from './l3-method';
 
@@ -79,7 +79,7 @@ export class L3MethodProcessor extends Bean implements L3ToplevelProcessor {
     return true;
   }
 
-  resolveMethod(c: L3ParseContext, src: L3UnresolvedMethod, srcStatementList: L2StatementList) {
+  resolveMethod(c: L3ParseContext, src: L3UnresolvedMethod, srcStatementList: StatementList) {
     const stack = new MethodStack();
 
     for (let i = 0; i < src.type.argList.length; i++) {

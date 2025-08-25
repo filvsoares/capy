@@ -1,53 +1,29 @@
-import { l3ExpressionProcessor } from '@/beans/expression/l3-expression-processor';
-import { l3StatementHandler } from '@/beans/statement/l3-statement-handler';
-import { l3TypeProcessor } from '@/beans/type/l3-type-processor';
+import { expressionReader } from '@/beans/expression/expression-reader';
+import { statementItemReader } from '@/beans/statement/statement-item-reader';
+import { statementReader } from '@/beans/statement/statement-reader';
+import { typeReader } from '@/beans/type/type-reader';
 import { declareBean, list, single } from '@/util/beans';
-import { l2ExpressionReader } from '../expression/expression-reader';
-import { l2StatementItemReader } from './l2-statement-item-reader';
-import { l2StatementReader } from './l2-statement-reader';
-import { l3StatementProcessor } from './l3-statement-processor';
 
 export function declareBeans() {
   declareBean({
-    name: 'L2ExpressionStatementReader',
-    provides: [l2StatementItemReader],
-    dependencies: [single(l2ExpressionReader)],
-    loadModule: () => import('./l2-expression-statement-reader'),
-    factory: (m, deps) => new m.L2ExpressionStatementReader(deps),
+    name: 'ExpressionStatementReader',
+    provides: [statementItemReader],
+    dependencies: [single(expressionReader)],
+    loadModule: () => import('./expression-statement-reader'),
+    factory: (m, deps) => new m.ExpressionStatementReader(...deps),
   });
   declareBean({
-    name: 'L2ReturnStatementReader',
-    provides: [l2StatementItemReader],
-    dependencies: [single(l2ExpressionReader)],
-    loadModule: () => import('./l2-return-statement-reader'),
-    factory: (m, deps) => new m.L2ReturnStatementReader(deps),
+    name: 'ReturnStatementReader',
+    provides: [statementItemReader],
+    dependencies: [single(expressionReader), single(typeReader)],
+    loadModule: () => import('./return-statement-reader'),
+    factory: (m, deps) => new m.ReturnStatementReader(...deps),
   });
   declareBean({
-    name: 'L2StatementReaderImpl',
-    provides: [l2StatementReader],
-    dependencies: [list(l2StatementItemReader)],
-    loadModule: () => import('./l2-statement-reader-impl'),
-    factory: (m, deps) => new m.L2StatementReaderImpl(deps),
-  });
-  declareBean({
-    name: 'L3ExpressionStatementHandler',
-    provides: [l3StatementHandler],
-    dependencies: [single(l3ExpressionProcessor)],
-    loadModule: () => import('./l3-expression-statement-handler'),
-    factory: (m, deps) => new m.L3ExpressionStatementHandler(...deps),
-  });
-  declareBean({
-    name: 'L3ReturnStatementHandler',
-    provides: [l3StatementHandler],
-    dependencies: [single(l3ExpressionProcessor), single(l3TypeProcessor)],
-    loadModule: () => import('./l3-return-statement-handler'),
-    factory: (m, deps) => new m.L3ReturnStatementHandler(...deps),
-  });
-  declareBean({
-    name: 'L3StatementProcessorImpl',
-    provides: [l3StatementProcessor],
-    dependencies: [list(l3StatementHandler)],
-    loadModule: () => import('./l3-statement-processor-impl'),
-    factory: (m, deps) => new m.L3StatementProcessorImpl(...deps),
+    name: 'StatementReaderImpl',
+    provides: [statementReader],
+    dependencies: [list(statementItemReader)],
+    loadModule: () => import('./statement-reader-impl'),
+    factory: (m, deps) => new m.StatementReaderImpl(...deps),
   });
 }

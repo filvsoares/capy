@@ -1,12 +1,12 @@
 import { combinePos, ERROR, fallbackPos } from '@/base';
-import { L2CallableTypeReader } from '@/beans/method/l2-callable-type-reader';
+import { L2CallableTypeReader } from '@/beans/method/callable-type-reader';
 import { Keyword } from '@/beans/parser/keyword';
 import { Bean } from '@/util/beans';
 import { INVALID, L2ParseContext, ReadResult } from '../l2-parser/l2-base';
 import { L1Bracket } from '../parser/bracket';
 import { L1Identifier } from '../parser/identifier';
 import { L2ToplevelReader } from '../parser/toplevel-reader';
-import { L2StatementReader } from '../statement/l2-statement-reader';
+import { L2StatementReader } from '../statement/statement-reader';
 import { L2Method } from './l2-method';
 
 export class L2MethodReader extends Bean implements L2ToplevelReader {

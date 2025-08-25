@@ -1,9 +1,7 @@
-import { Pos } from '@/base';
-
+import { Base, Pos } from '@/base';
 import { Type } from '@/beans/type/type';
-import { L2Base } from '../l2-parser/l2-base';
 
-export class L2Argument extends L2Base {
+export class Argument extends Base {
   name: string;
   type: Type;
 

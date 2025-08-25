@@ -1,10 +1,10 @@
 import { Pos } from '@/base';
 import { L2Toplevel } from '@/beans/l2-parser/l2-parser';
-import { L2CallableType } from '@/beans/method/l2-callable-type';
-import { L2StatementList } from '../statement/l2-statement-list';
+import { CallableType } from '@/beans/method/callable-type';
+import { StatementList } from '../statement/statement-list';
 
 export class L2Method extends L2Toplevel {
-  constructor(public name: string, public type: L2CallableType, public statementList: L2StatementList, pos: Pos) {
+  constructor(public name: string, public type: CallableType, public statementList: StatementList, pos: Pos) {
     super(pos);
   }
 

@@ -31,7 +31,7 @@ import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 import { getBeans } from './util/beans';
 
-import { L3Argument } from '@/beans/method/l3-argument';
+import { Argument } from '@/beans/method/argument';
 import { L3CallableType } from '@/beans/method/l3-callable-type';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
@@ -53,7 +53,7 @@ function hello(p: string): string {
 const io = new L3Module('io', [
   new L3LibraryMethod(
     'print',
-    new L3CallableType([new L3Argument('s', STRING, INTERNAL)], VOID, INTERNAL),
+    new L3CallableType([new Argument('s', STRING, INTERNAL)], VOID, INTERNAL),
     ([s], runner) => {
       runner.print(s);
     }

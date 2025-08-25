@@ -1,7 +1,7 @@
 import { Pos } from '@/base';
-import { L2Toplevel } from '../l2-parser/l2-parser';
+import { Toplevel } from '@/beans/parser/toplevel';
 
-export class L2Use extends L2Toplevel {
+export class Use extends Toplevel {
   value: string;
 
   constructor(value: string, pos: Pos) {

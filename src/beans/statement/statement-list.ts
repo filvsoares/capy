@@ -1,10 +1,10 @@
 import { Pos } from '@/base';
-import { L2Statement } from './l2-statement';
+import { Statement } from '@/beans/statement/statement';
 
-export class L2StatementList extends L2Statement {
-  list: L2Statement[];
+export class StatementList extends Statement {
+  list: Statement[];
 
-  constructor(list: L2Statement[], pos: Pos) {
+  constructor(list: Statement[], pos: Pos) {
     super(pos);
     this.list = list;
   }
