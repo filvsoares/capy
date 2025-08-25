@@ -69,6 +69,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
         consume: () => {
           currentToken = tokenList[++pos];
         },
+        findSymbols: () => undefined,
       };
       const r = this.readList(c1, context, {
         unexpectedTokenErrorMsg: (t) => `Expected ")" but found ${t}`,

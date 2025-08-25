@@ -36,6 +36,7 @@ export class CallableTypeReaderImpl extends Bean implements TypeItemReader, Call
       consume: () => {
         currentToken = tokenList[++pos];
       },
+      findSymbols: () => undefined,
     };
     const args = this.argumentReader.readList(c1);
 

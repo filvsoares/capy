@@ -2,7 +2,6 @@ import { ParseError } from '@/base';
 import { Module } from '@/beans/parser/module';
 import { Symbol } from '@/beans/parser/symbol';
 import { Token } from '@/beans/parser/token';
-import { Toplevel } from '@/beans/parser/toplevel';
 import { declareBeanInterface } from '@/util/beans';
 
 export interface TokenizerContext {
@@ -17,13 +16,17 @@ export interface ParserContext {
   current(): Token | undefined;
   addError(e: ParseError): void;
   consume(): void;
+  findSymbols(name: string): { module: string; symbol: Symbol }[] | undefined;
+}
+
+export interface ToplevelParserContext extends ParserContext {
   addToMySymbols(symbol: Symbol): boolean;
   addToAllSymbols(module: string, symbol: Symbol): void;
   getModule(name: string): Module | undefined;
 }
 
 export type ParserResult = {
-  symbols: Toplevel[];
+  module: Module;
   errors: ParseError[];
 };
 

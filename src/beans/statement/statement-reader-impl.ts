@@ -26,7 +26,7 @@ export class StatementReaderImpl extends Bean implements StatementReader {
   readList(c: ParserContext, context: StatementContext, expectedReturnType: Type): StatementList {
     const outList: Statement[] = [];
     let error = false;
-    while (c.current) {
+    while (c.current()) {
       const val = this.read(c, context, expectedReturnType);
       if (val === INVALID) {
         error = true;

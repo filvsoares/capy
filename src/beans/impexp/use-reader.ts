@@ -1,13 +1,13 @@
 import { ERROR, fallbackPos, INVALID, Invalid } from '@/base';
 import { Keyword } from '@/beans/parser/keyword';
-import { ParserContext } from '@/beans/parser/parser';
+import { ToplevelParserContext } from '@/beans/parser/parser';
 import { String } from '@/beans/parser/string';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
 import { Bean } from '@/util/beans';
 import { Separator } from '../parser/separator';
 
 export class UseReader extends Bean implements ToplevelReader {
-  read(c: ParserContext): true | Invalid | undefined {
+  read(c: ToplevelParserContext): true | Invalid | undefined {
     const t1 = c.current();
     if (!Keyword.matches(t1, 'use')) {
       return;
@@ -18,7 +18,7 @@ export class UseReader extends Bean implements ToplevelReader {
     if (!String.matches(t2)) {
       c.addError({
         level: ERROR,
-        message: `Expected string`,
+        message: `Expected import name but found ${t2?.constructor.name}`,
         pos: fallbackPos(t2?.pos, t1.pos),
       });
       return INVALID;

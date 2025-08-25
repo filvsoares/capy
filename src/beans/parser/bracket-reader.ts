@@ -34,7 +34,7 @@ export class BracketReader extends Bean implements TokenReader {
 
     const list: Token[] = [];
     while (true) {
-      if (!c.current) {
+      if (!c.current()) {
         c.addError({
           level: ERROR,
           pos: { lin1: c.lin(), col1: c.col(), lin2: c.lin(), col2: c.col() },
@@ -50,7 +50,7 @@ export class BracketReader extends Bean implements TokenReader {
         c.addError({
           level: ERROR,
           pos: { lin1: c.lin(), col1: c.col(), lin2: c.lin(), col2: c.col() + 1 },
-          message: `Unexpected char "${c.current}"`,
+          message: `Unexpected char "${c.current()}"`,
         });
         c.consume();
       }
@@ -67,7 +67,7 @@ export class BracketReader extends Bean implements TokenReader {
         c.addError({
           level: ERROR,
           pos: { lin1: c.lin(), col1: c.col(), lin2: c.lin(), col2: c.col() + 1 },
-          message: `Expected "${expectedBracketEnd}" but found ${c.current}`,
+          message: `Expected "${expectedBracketEnd}" but found ${c.current()}`,
         });
       }
       c.consume();

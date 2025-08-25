@@ -1,14 +1,12 @@
 import { declareBean, single } from '@/util/beans';
-import { l2Parser } from '../l2-parser/l2-parser';
-import { l3Parser } from '../l3-parser/l3-parser';
 import { parser } from '../parser/parser';
 import { compiler } from './compiler';
 
 export function declareBeans() {
   declareBean({
-    name: 'L3ParserImpl',
+    name: 'CompilerImpl',
     provides: [compiler],
-    dependencies: [single(parser), single(l2Parser), single(l3Parser)],
+    dependencies: [single(parser)],
     loadModule: () => import('./compiler-impl'),
     factory: (m, deps) => new m.CompilerImpl(...deps),
   });

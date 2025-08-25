@@ -1,5 +1,5 @@
 import { ExpressionContext, ExpressionReader } from '@/beans/expression/expression-reader';
-import { L3CallableType } from '@/beans/method/l3-callable-type';
+import { CallableType } from '@/beans/method/callable-type';
 import { MethodCall } from '@/beans/operation/method-call';
 import { Bracket } from '@/beans/parser/bracket';
 import { ParserContext } from '@/beans/parser/parser';
@@ -28,7 +28,7 @@ export class MethodCallProcessor extends Bean implements OperationProcessor {
       if (operand === INVALID) {
         return INVALID;
       }
-      if (!(operand.type instanceof L3CallableType)) {
+      if (!(operand.type instanceof CallableType)) {
         c.addError({
           level: ERROR,
           message: `${operand.type} is not callable`,
@@ -47,6 +47,7 @@ export class MethodCallProcessor extends Bean implements OperationProcessor {
         consume: () => {
           currentToken = tokenList[++pos];
         },
+        findSymbols: () => undefined,
       };
       const argList = this.expressionReader.readList(c1, context, {
         unexpectedTokenErrorMsg: (t) => `Expected "," or ")" but found ${t}`,

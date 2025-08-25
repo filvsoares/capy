@@ -8,7 +8,7 @@ import { Operator } from '../parser/operator';
 import { Separator } from '../parser/separator';
 import { ArgumentReader } from './argument-reader';
 
-export class L2ArgumentReaderImpl extends Bean implements ArgumentReader {
+export class ArgumentReaderImpl extends Bean implements ArgumentReader {
   constructor(private typeReader: TypeReader) {
     super();
   }

@@ -1,6 +1,6 @@
 import { combinePos, ERROR, INVALID } from '@/base';
 import { ExpressionContext, ExpressionReader } from '@/beans/expression/expression-reader';
-import { L3VariableReference } from '@/beans/method/l3-method';
+import { VariableReference } from '@/beans/method/variable-reference';
 import { Assignment } from '@/beans/operation/assignment';
 import { Operator } from '@/beans/parser/operator';
 import { ParserContext } from '@/beans/parser/parser';
@@ -31,7 +31,7 @@ export class AssignmentProcessor extends Bean implements OperationProcessor {
       if (target === INVALID) {
         return INVALID;
       }
-      if (!(target instanceof L3VariableReference)) {
+      if (!(target instanceof VariableReference)) {
         c.addError({
           level: ERROR,
           message: `Cannot assign value to ${target}`,

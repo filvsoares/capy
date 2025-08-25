@@ -32,12 +32,12 @@ import { Toolbar } from './ui/toolbar';
 import { getBeans } from './util/beans';
 
 import { Argument } from '@/beans/method/argument';
-import { L3CallableType } from '@/beans/method/l3-callable-type';
+import { CallableType } from '@/beans/method/callable-type';
+import { LibraryMethod } from '@/beans/method/library-method';
+import { Module } from '@/beans/parser/module';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
-import { L3Module } from './beans/l3-parser/l3-parser';
-import { L3LibraryMethod } from './beans/method/l3-method';
 
 const initialCode = `use "io";
 
@@ -50,14 +50,10 @@ function hello(p: string): string {
 }
 `;
 
-const io = new L3Module('io', [
-  new L3LibraryMethod(
-    'print',
-    new L3CallableType([new Argument('s', STRING, INTERNAL)], VOID, INTERNAL),
-    ([s], runner) => {
-      runner.print(s);
-    }
-  ),
+const io = new Module('io', [
+  new LibraryMethod('print', new CallableType([new Argument('s', STRING, INTERNAL)], VOID, INTERNAL), ([s], runner) => {
+    runner.print(s);
+  }),
 ]);
 
 export default function App() {
@@ -71,7 +67,7 @@ export default function App() {
 
   const onRunClick = async () => {
     const _compiler = (await getBeans(compiler))[0];
-    const r = _compiler.compile(content, [io], { debugL1: true, debugL2: true, debugL3: true });
+    const r = _compiler.compile(content, [io], { debugTree: true });
     setCompileResult(r);
     if (r.errors.length === 0) {
       const runner = new Runner();

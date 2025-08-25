@@ -1,16 +1,12 @@
 import { Pos } from '@/base';
-import { Reference } from '@/beans/expression/reference';
-import { L3Type } from '@/beans/type/l3-type';
+import { VariableReference } from '@/beans/method/variable-reference';
+import { Type } from '@/beans/type/type';
 
-export class L3MethodReference extends Reference {
+export class GlobalVariableReference extends VariableReference {
   module: string;
   name: string;
 
-  get isReference(): boolean {
-    return true;
-  }
-
-  constructor(module: string, name: string, type: L3Type, pos: Pos) {
+  constructor(module: string, name: string, type: Type, pos: Pos) {
     super(type, pos);
     this.module = module;
     this.name = name;

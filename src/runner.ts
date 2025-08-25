@@ -18,26 +18,28 @@
  * @file Runner implementation.
  */
 
-import { L3Expression } from '@/beans/expression/expression';
+import { Expression } from '@/beans/expression/expression';
 import { NumberLiteral } from '@/beans/expression/number-literal';
 import { StringLiteral } from '@/beans/expression/string-literal';
-import { L3MethodReference } from '@/beans/method/l3-method-reference';
-import { L3ExpressionStatement } from '@/beans/statement/l3-expression-statement';
-import { L3ReturnStatement } from '@/beans/statement/l3-return-statement';
-import { L3StatementList } from '@/beans/statement/l3-statement-list';
-import { L3Variable } from '@/beans/variable/l3-variable';
-import { L3Module, L3Symbol } from './beans/l3-parser/l3-parser';
-import {
-  L3ArgumentVariable,
-  L3CapyMethod,
-  L3LibraryMethod,
-  L3LocalVariableReference,
-  L3Method,
-  L3ModuleVariableReference,
-} from './beans/method/l3-method';
-import { L3Assignment, L3MethodCall, L3ReadVariable, L3StringConcat } from './beans/operation/l3-operation-processor';
+import { GlobalVariable } from '@/beans/global-variable/global-variable';
+import { ArgumentVariable } from '@/beans/method/argument-variable';
+import { CapyMethod } from '@/beans/method/capy-method';
+import { GlobalVariableReference } from '@/beans/method/global-variable-reference';
+import { LibraryMethod } from '@/beans/method/library-method';
+import { LocalVariableReference } from '@/beans/method/local-variable-reference';
+import { Method } from '@/beans/method/method';
+import { MethodReference } from '@/beans/method/method-reference';
+import { ReadVariable } from '@/beans/method/read-variable';
+import { Assignment } from '@/beans/operation/assignment';
+import { MethodCall } from '@/beans/operation/method-call';
+import { StringConcat } from '@/beans/operation/string-concat';
+import { Module } from '@/beans/parser/module';
+import { Symbol } from '@/beans/parser/symbol';
+import { ExpressionStatement } from '@/beans/statement/expression-statement';
+import { ReturnStatement } from '@/beans/statement/return-statement';
+import { StatementList } from '@/beans/statement/statement-list';
 
-class Variable {
+class MyVariable {
   value: any;
 
   constructor(value: any) {
@@ -46,31 +48,31 @@ class Variable {
 }
 
 export class Runner {
-  modules: L3Module[] = [];
-  resolvedModules: { [module: string]: { index: number; symbols?: { [symbol: string]: L3Symbol } } } = {};
-  variables: { [module: string]: { [name: string]: Variable } } = {};
+  modules: Module[] = [];
+  resolvedModules: { [module: string]: { index: number; symbols?: { [symbol: string]: Symbol } } } = {};
+  variables: { [module: string]: { [name: string]: MyVariable } } = {};
 
   stdout: string = '';
 
   constructor() {}
 
-  runExpression(obj: L3Expression, deps: any[]): any {
+  runExpression(obj: Expression, deps: any[]): any {
     if (obj instanceof StringLiteral) {
       return obj.value;
     }
     if (obj instanceof NumberLiteral) {
       return obj.value;
     }
-    if (obj instanceof L3MethodReference) {
+    if (obj instanceof MethodReference) {
       const symbol = this.resolveSymbol(obj.module, obj.name);
-      if (!(symbol instanceof L3Method)) {
+      if (!(symbol instanceof Method)) {
         throw new Error(`Expected method but found ${symbol.constructor.name}`);
       }
       return symbol;
     }
-    if (obj instanceof L3ModuleVariableReference) {
+    if (obj instanceof GlobalVariableReference) {
       const symbol = this.resolveSymbol(obj.module, obj.name);
-      if (!(symbol instanceof L3Variable)) {
+      if (!(symbol instanceof GlobalVariable)) {
         throw new Error(`Expected variable but found ${symbol.constructor.name}`);
       }
       let val1 = this.variables[obj.module];
@@ -79,46 +81,46 @@ export class Runner {
       }
       let val2 = val1[obj.name];
       if (!val2) {
-        val1[obj.name] = val2 = new Variable('');
+        val1[obj.name] = val2 = new MyVariable('');
         if (symbol.initExpr) {
           val2.value = this.runExpression(symbol.initExpr, []);
         }
       }
       return val2;
     }
-    if (obj instanceof L3LocalVariableReference) {
+    if (obj instanceof LocalVariableReference) {
       return deps[obj.index];
     }
-    if (obj instanceof L3MethodCall) {
+    if (obj instanceof MethodCall) {
       const argList: any[] = [];
       for (const arg of obj.argList) {
         argList.push(this.runExpression(arg, deps));
       }
       const method = this.runExpression(obj.operand, deps);
-      if (method instanceof L3LibraryMethod) {
+      if (method instanceof LibraryMethod) {
         return method.callback(argList, this);
       }
-      if (method instanceof L3CapyMethod) {
+      if (method instanceof CapyMethod) {
         return this.runMethod(method, argList);
       }
       throw new Error(`Cannot run ${method.constructor.name}`);
     }
-    if (obj instanceof L3StringConcat) {
+    if (obj instanceof StringConcat) {
       const operand = this.runExpression(obj.operand, deps);
       const other = this.runExpression(obj.other, deps);
       return operand + other;
     }
-    if (obj instanceof L3ReadVariable) {
+    if (obj instanceof ReadVariable) {
       const variable = this.runExpression(obj.operand, deps);
       console.log(variable);
-      if (!(variable instanceof Variable)) {
+      if (!(variable instanceof MyVariable)) {
         throw new Error(`${variable.constructor.name} is not variable`);
       }
       return variable.value;
     }
-    if (obj instanceof L3Assignment) {
+    if (obj instanceof Assignment) {
       const target = this.runExpression(obj.target, deps);
-      if (!(target instanceof Variable)) {
+      if (!(target instanceof MyVariable)) {
         throw new Error('Assignment target is not variable');
       }
       return obj;
@@ -126,13 +128,13 @@ export class Runner {
     throw new Error(`Cannot read value from ${obj.constructor.name}`);
   }
 
-  runStatementList(statementList: L3StatementList, stack: any[]): any {
+  runStatementList(statementList: StatementList, stack: any[]): any {
     for (const item of statementList.list) {
-      if (item instanceof L3ExpressionStatement) {
+      if (item instanceof ExpressionStatement) {
         this.runExpression(item.expr, stack);
-      } else if (item instanceof L3ReturnStatement) {
+      } else if (item instanceof ReturnStatement) {
         return item.expr && this.runExpression(item.expr, stack);
-      } else if (item instanceof L3StatementList) {
+      } else if (item instanceof StatementList) {
         const returned = this.runStatementList(item, stack);
         if (returned !== undefined) {
           return returned;
@@ -143,12 +145,12 @@ export class Runner {
     }
   }
 
-  runMethod(method: L3CapyMethod, args: any[]): any {
+  runMethod(method: CapyMethod, args: any[]): any {
     const stack = method.stack.map((item) => {
-      if (item instanceof L3ArgumentVariable) {
-        return new Variable(args[item.index]);
+      if (item instanceof ArgumentVariable) {
+        return new MyVariable(args[item.index]);
       }
-      return new Variable('');
+      return new MyVariable('');
     });
     return this.runStatementList(method.statementList, stack);
   }
@@ -173,13 +175,13 @@ export class Runner {
     return symbol;
   }
 
-  run(modules: L3Module[], mainModuleName: string) {
+  run(modules: Module[], mainModuleName: string) {
     this.modules = modules;
     for (let i = 0; i < modules.length; i++) {
       this.resolvedModules[modules[i].name] = { index: i };
     }
     const startMethod = this.resolveSymbol(mainModuleName, 'start');
-    if (!(startMethod instanceof L3CapyMethod)) {
+    if (!(startMethod instanceof CapyMethod)) {
       throw new Error(`Symbol "start" is not a method`);
     }
     this.runMethod(startMethod, []);

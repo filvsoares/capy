@@ -3,7 +3,7 @@ import { declareBean } from '@/util/beans';
 
 export function declareBeans() {
   declareBean({
-    name: 'L2UseReader',
+    name: 'UseReader',
     provides: [toplevelReader],
     dependencies: [],
     loadModule: () => import('./use-reader'),

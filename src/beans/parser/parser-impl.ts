@@ -20,10 +20,10 @@
 
 import { ERROR, INTERNAL, INVALID, ParseError } from '@/base';
 import { Module } from '@/beans/parser/module';
-import { Toplevel } from '@/beans/parser/toplevel';
+import { Symbol } from '@/beans/parser/symbol';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
 import { Bean } from '@/util/beans';
-import { Parser, ParserContext, ParserResult, TokenizerContext } from './parser';
+import { Parser, ParserResult, TokenizerContext, ToplevelParserContext } from './parser';
 import { TokenReader } from './token-reader';
 
 export class ParserImpl extends Bean implements Parser {
@@ -32,11 +32,11 @@ export class ParserImpl extends Bean implements Parser {
   }
 
   readToken(c: TokenizerContext) {
-    while (true) {
+    loop: while (c.current()) {
       for (const reader of this.l1Readers) {
         const item = reader.read(c);
         if (item === true) {
-          continue;
+          continue loop;
         }
         if (item) {
           return item;
@@ -87,10 +87,10 @@ export class ParserImpl extends Bean implements Parser {
 
     let currentToken = this.readToken(tokenizerContext);
 
-    const mySymbols: { [name: string]: Toplevel } = {};
-    const allSymbols: { [name: string]: { module: string; symbol: Toplevel }[] } = {};
+    const mySymbols: { [name: string]: Symbol } = {};
+    const allSymbols: { [name: string]: { module: string; symbol: Symbol }[] } = {};
 
-    const addToMySymbols: ParserContext['addToMySymbols'] = (symbol) => {
+    const addToMySymbols: ToplevelParserContext['addToMySymbols'] = (symbol) => {
       if (mySymbols[symbol.name]) {
         return false;
       }
@@ -99,7 +99,7 @@ export class ParserImpl extends Bean implements Parser {
       return true;
     };
 
-    const addToAllSymbols: ParserContext['addToAllSymbols'] = (module, symbol) => {
+    const addToAllSymbols: ToplevelParserContext['addToAllSymbols'] = (module, symbol) => {
       let list = allSymbols[symbol.name];
       if (!list) {
         allSymbols[symbol.name] = list = [];
@@ -107,7 +107,7 @@ export class ParserImpl extends Bean implements Parser {
       list.push({ module, symbol });
     };
 
-    const parserContext: ParserContext = {
+    const parserContext: ToplevelParserContext = {
       addError: (e) => {
         errors.push(e);
       },
@@ -118,17 +118,18 @@ export class ParserImpl extends Bean implements Parser {
       getModule: (name: string) => moduleMap[name],
       addToMySymbols,
       addToAllSymbols,
+      findSymbols: (name) => allSymbols[name],
     };
 
     this.readToplevelList(parserContext);
 
     return {
-      symbols: Object.values(mySymbols),
+      module: new Module(moduleName, Object.values(mySymbols)),
       errors,
     };
   }
 
-  private readToplevel(c: ParserContext) {
+  private readToplevel(c: ToplevelParserContext) {
     for (const reader of this.toplevelReaders) {
       const result = reader.read(c);
       if (result) {
@@ -137,9 +138,9 @@ export class ParserImpl extends Bean implements Parser {
     }
   }
 
-  readToplevelList(c: ParserContext) {
+  readToplevelList(c: ToplevelParserContext) {
     let error = false;
-    while (c.current) {
+    while (c.current()) {
       const val = this.readToplevel(c);
       if (val === INVALID) {
         error = true;
