@@ -1,4 +1,4 @@
-import { TokenizerContext } from '@/beans/parser/parser';
+import { TokenizerContext } from '@/beans/tokenizer/tokenizer-context';
 import { Bean } from '@/util/beans';
 import { TokenReader } from './token-reader';
 
@@ -8,11 +8,11 @@ function isWhitespace(c: string) {
 
 export class WhitespaceReader extends Bean implements TokenReader {
   read(c: TokenizerContext): true | undefined {
-    if (!isWhitespace(c.current())) {
+    if (!isWhitespace(c.current)) {
       return;
     }
     c.consume();
-    while (isWhitespace(c.current())) {
+    while (isWhitespace(c.current)) {
       c.consume();
     }
     return true;

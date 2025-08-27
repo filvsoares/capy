@@ -1,11 +1,11 @@
 import { ExpressionContext, ExpressionReader } from '@/beans/expression/expression-reader';
 import { StringConcat } from '@/beans/operation/string-concat';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { isStringType, STRING } from '@/beans/type/simple-type';
 import { Bean } from '@/util/beans';
 import { combinePos, ERROR, INVALID } from '../../base';
 import { OperationProcessor, ProcessResult, ProcessToken } from '../expression/operation-processor';
-import { Operator } from '../parser/operator';
+import { Operator } from '../tokenizer/operator';
 
 export class AdditionProcessor extends Bean implements OperationProcessor {
   pass = 3;

@@ -1,5 +1,5 @@
 import { Invalid } from '@/base';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { Bean } from '@/util/beans';
 import { Type } from './type';
 import { TypeItemReader } from './type-item-reader';

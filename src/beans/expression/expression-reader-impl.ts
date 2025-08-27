@@ -5,14 +5,14 @@ import { NumberLiteral } from '@/beans/expression/number-literal';
 import { Reference } from '@/beans/expression/reference';
 import { ReferenceProcessor } from '@/beans/expression/reference-processor';
 import { StringLiteral } from '@/beans/expression/string-literal';
-import { Bracket } from '@/beans/parser/bracket';
-import { Identifier } from '@/beans/parser/identifier';
-import { Number } from '@/beans/parser/number';
-import { ParserContext } from '@/beans/parser/parser';
-import { Token } from '@/beans/parser/token';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Bracket } from '@/beans/tokenizer/bracket';
+import { Identifier } from '@/beans/tokenizer/identifier';
+import { Number } from '@/beans/tokenizer/number';
+import { Token } from '@/beans/tokenizer/token';
 import { Bean } from '@/util/beans';
-import { Separator } from '../parser/separator';
-import { String } from '../parser/string';
+import { Separator } from '../tokenizer/separator';
+import { String } from '../tokenizer/string';
 import { OperationProcessor } from './operation-processor';
 
 export class ExpressionReaderImpl extends Bean implements ExpressionReader {
@@ -60,17 +60,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       return new StringLiteral(operand.value, operand.pos);
     }
     if (operand instanceof Bracket && operand.start === '(') {
-      const tokenList = operand.tokenList;
-      let currentToken = tokenList[0];
-      let pos = 0;
-      const c1: ParserContext = {
-        addError: (e) => c.addError(e),
-        current: () => currentToken,
-        consume: () => {
-          currentToken = tokenList[++pos];
-        },
-        findSymbols: () => undefined,
-      };
+      const c1 = c.derive(operand.tokenList);
       const r = this.readList(c1, context, {
         unexpectedTokenErrorMsg: (t) => `Expected ")" but found ${t}`,
       });
@@ -189,7 +179,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
     const list: (Token | Expression)[] = [];
 
     while (true) {
-      const t = c.current();
+      const t = c.current;
       if (this.isExpressionEnd(t)) {
         break;
       }
@@ -237,7 +227,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
   readList(c: ParserContext, context: ExpressionContext | null, opts?: ReadExpressionOpts): Expression[] {
     const outList: Expression[] = [];
     let error = false;
-    while (c.current()) {
+    while (c.current) {
       const val = this.read(c, context, opts);
       if (val === INVALID) {
         error = true;
@@ -246,7 +236,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       if (!val) {
         if (!error) {
           error = true;
-          const t = c.current()!;
+          const t = c.current!;
           c.addError({
             level: ERROR,
             message: `Unexpected ${t}`,
@@ -265,7 +255,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       outList.push(val);
       error = false;
 
-      const t1 = c.current();
+      const t1 = c.current;
       if (!t1) {
         break;
       }
@@ -285,7 +275,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       }
       c.consume();
 
-      const t2 = c.current();
+      const t2 = c.current;
       if (!t2) {
         c.addError({
           level: ERROR,

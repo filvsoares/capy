@@ -1,4 +1,4 @@
-import { TokenizerContext } from '@/beans/parser/parser';
+import { TokenizerContext } from '@/beans/tokenizer/tokenizer-context';
 import { Bean } from '@/util/beans';
 import { ERROR } from '../../base';
 import { String } from './string';
@@ -6,32 +6,32 @@ import { TokenReader } from './token-reader';
 
 export class StringReader extends Bean implements TokenReader {
   read(c: TokenizerContext): String | undefined {
-    if (c.current() !== '"') {
+    if (c.current !== '"') {
       return;
     }
     let value = '';
-    const lin1 = c.lin();
-    const col1 = c.col();
-    let lin2 = c.lin();
-    let col2 = c.col() + 1;
+    const lin1 = c.lin;
+    const col1 = c.col;
+    let lin2 = c.lin;
+    let col2 = c.col + 1;
     c.consume();
 
     while (true) {
-      if (!c.current()) {
+      if (!c.current) {
         c.addError({
           level: ERROR,
-          pos: { lin1: c.lin(), col1: c.col(), lin2: c.lin(), col2: c.col() },
+          pos: { lin1: c.lin, col1: c.col, lin2: c.lin, col2: c.col },
           message: `Unterminated string`,
         });
         break;
       }
-      if (c.current() === '"') {
+      if (c.current === '"') {
         c.consume();
         break;
       }
-      value += c.current();
-      lin2 = c.lin();
-      col2 = c.col() + 1;
+      value += c.current;
+      lin2 = c.lin;
+      col2 = c.col + 1;
       c.consume();
     }
     return new String(value, { lin1, col1, lin2, col2 });

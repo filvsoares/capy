@@ -2,6 +2,7 @@ import { expressionReader } from '@/beans/expression/expression-reader';
 import { referenceProcessor } from '@/beans/expression/reference-processor';
 import { argumentReader } from '@/beans/method/argument-reader';
 import { callableTypeReader } from '@/beans/method/callable-type-reader';
+import { parser } from '@/beans/parser/parser';
 import { toplevelReader } from '@/beans/parser/toplevel-reader';
 import { statementItemReader } from '@/beans/statement/statement-item-reader';
 import { statementReader } from '@/beans/statement/statement-reader';
@@ -34,9 +35,9 @@ export function declareBeans() {
   declareBean({
     name: 'VariableReferenceProcessor',
     provides: [referenceProcessor],
-    dependencies: [],
+    dependencies: [single(parser)],
     loadModule: () => import('./variable-reference-processor'),
-    factory: (m) => new m.VariableReferenceProcessor(),
+    factory: (m, deps) => new m.VariableReferenceProcessor(...deps),
   });
   declareBean({
     name: 'VariableStatementReader',

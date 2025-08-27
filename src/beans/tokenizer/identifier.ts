@@ -1,5 +1,5 @@
 import { Pos } from '@/base';
-import { Token } from '@/beans/parser/token';
+import { Token } from '@/beans/tokenizer/token';
 
 export class Identifier extends Token {
   name: string;

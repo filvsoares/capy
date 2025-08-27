@@ -1,7 +1,7 @@
 import { Invalid } from '@/base';
 import { Expression } from '@/beans/expression/expression';
-import { ParserContext } from '@/beans/parser/parser';
-import { Token } from '@/beans/parser/token';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Token } from '@/beans/tokenizer/token';
 import { declareBeanInterface } from '@/util/beans';
 
 export interface ExpressionContext {}

@@ -1,8 +1,8 @@
 import { ExpressionContext, ExpressionReader } from '@/beans/expression/expression-reader';
 import { CallableType } from '@/beans/method/callable-type';
 import { MethodCall } from '@/beans/operation/method-call';
-import { Bracket } from '@/beans/parser/bracket';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Bracket } from '@/beans/tokenizer/bracket';
 import { TypeReader } from '@/beans/type/type-reader';
 import { Bean } from '@/util/beans';
 import { combinePos, ERROR, INVALID } from '../../base';
@@ -36,19 +36,7 @@ export class MethodCallProcessor extends Bean implements OperationProcessor {
         });
         return INVALID;
       }
-      const tokenList = t2.tokenList;
-      let currentToken = tokenList[0];
-      let pos = 0;
-      const c1: ParserContext = {
-        addError: (e) => {
-          c.addError(e);
-        },
-        current: () => currentToken,
-        consume: () => {
-          currentToken = tokenList[++pos];
-        },
-        findSymbols: () => undefined,
-      };
+      const c1 = c.derive(t2.tokenList);
       const argList = this.expressionReader.readList(c1, context, {
         unexpectedTokenErrorMsg: (t) => `Expected "," or ")" but found ${t}`,
       });

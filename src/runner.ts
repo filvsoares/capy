@@ -33,7 +33,6 @@ import { ReadVariable } from '@/beans/method/read-variable';
 import { Assignment } from '@/beans/operation/assignment';
 import { MethodCall } from '@/beans/operation/method-call';
 import { StringConcat } from '@/beans/operation/string-concat';
-import { Module } from '@/beans/parser/module';
 import { Symbol } from '@/beans/parser/symbol';
 import { ExpressionStatement } from '@/beans/statement/expression-statement';
 import { ReturnStatement } from '@/beans/statement/return-statement';
@@ -48,8 +47,7 @@ class MyVariable {
 }
 
 export class Runner {
-  modules: Module[] = [];
-  resolvedModules: { [module: string]: { index: number; symbols?: { [symbol: string]: Symbol } } } = {};
+  modules: { [moduleName: string]: { [symbolName: string]: Symbol } } = {};
   variables: { [module: string]: { [name: string]: MyVariable } } = {};
 
   stdout: string = '';
@@ -156,30 +154,19 @@ export class Runner {
   }
 
   resolveSymbol(moduleName: string, symbolName: string) {
-    const resolvedModule = this.resolvedModules[moduleName];
-    if (!resolvedModule) {
+    const module = this.modules[moduleName];
+    if (!module) {
       throw new Error(`Module "${moduleName}" not found`);
     }
-    let symbols = resolvedModule.symbols;
-    if (!symbols) {
-      const module = this.modules[resolvedModule.index];
-      resolvedModule.symbols = symbols = {};
-      for (const symbol of module.symbols) {
-        symbols[symbol.name] = symbol;
-      }
-    }
-    const symbol = symbols[symbolName];
+    const symbol = module[symbolName];
     if (!symbol) {
       throw new Error(`Symbol "${symbolName}" not found in module ${moduleName}`);
     }
     return symbol;
   }
 
-  run(modules: Module[], mainModuleName: string) {
+  run(modules: { [moduleName: string]: { [symbolName: string]: Symbol } }, mainModuleName: string) {
     this.modules = modules;
-    for (let i = 0; i < modules.length; i++) {
-      this.resolvedModules[modules[i].name] = { index: i };
-    }
     const startMethod = this.resolveSymbol(mainModuleName, 'start');
     if (!(startMethod instanceof CapyMethod)) {
       throw new Error(`Symbol "start" is not a method`);

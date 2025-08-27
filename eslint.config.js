@@ -42,11 +42,11 @@ export default defineConfig([
             },
             {
               from: [bean('expression')],
-              allow: [bean('type'), bean('parser')],
+              allow: [bean('type'), bean('parser'), bean('tokenizer')],
             },
             {
               from: [bean('global-variable')],
-              allow: [bean('expression'), bean('type'), bean('parser')],
+              allow: [bean('expression'), bean('type'), bean('parser'), bean('tokenizer')],
             },
             {
               from: [bean('impexp')],
@@ -62,7 +62,7 @@ export default defineConfig([
             },
             {
               from: [bean('parser')],
-              allow: [],
+              allow: [bean('tokenizer')],
             },
             {
               from: [bean('runner')],
@@ -70,11 +70,15 @@ export default defineConfig([
             },
             {
               from: [bean('statement')],
-              allow: [bean('expression'), bean('type'), bean('parser')],
+              allow: [bean('expression'), bean('type'), bean('parser'), bean('tokenizer')],
+            },
+            {
+              from: [bean('tokenizer')],
+              allow: [],
             },
             {
               from: [bean('type')],
-              allow: [bean('parser')],
+              allow: [bean('parser'), bean('tokenizer')],
             },
           ],
         },

@@ -1,6 +1,6 @@
 import { Invalid } from '@/base';
 import { Argument } from '@/beans/method/argument';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { declareBeanInterface } from '@/util/beans';
 
 export interface ArgumentReader {

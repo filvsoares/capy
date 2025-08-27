@@ -1,11 +1,11 @@
 import { combinePos, ERROR, fallbackPos, INVALID, Invalid } from '@/base';
 import { ExpressionReader } from '@/beans/expression/expression-reader';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { ExpressionStatement } from '@/beans/statement/expression-statement';
 import { StatementContext } from '@/beans/statement/statement-context';
 import { Type } from '@/beans/type/type';
 import { Bean } from '@/util/beans';
-import { Separator } from '../parser/separator';
+import { Separator } from '../tokenizer/separator';
 import { StatementItemReader } from './statement-item-reader';
 
 export class ExpressionStatementReader extends Bean implements StatementItemReader {
@@ -28,7 +28,7 @@ export class ExpressionStatementReader extends Bean implements StatementItemRead
       return;
     }
 
-    const t = c.current();
+    const t = c.current;
     if (Separator.matches(t, ';')) {
       c.consume();
     } else {

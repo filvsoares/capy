@@ -1,5 +1,5 @@
 import { Invalid } from '@/base';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { declareBeanInterface } from '@/util/beans';
 import { CallableType } from './callable-type';
 

@@ -1,6 +1,6 @@
-import { Identifier } from '@/beans/parser/identifier';
-import { Keyword } from '@/beans/parser/keyword';
-import { TokenizerContext } from '@/beans/parser/parser';
+import { Identifier } from '@/beans/tokenizer/identifier';
+import { Keyword } from '@/beans/tokenizer/keyword';
+import { TokenizerContext } from '@/beans/tokenizer/tokenizer-context';
 import { Bean } from '@/util/beans';
 import { TokenReader } from './token-reader';
 
@@ -16,20 +16,20 @@ export const KEYWORDS = new Set(['use', 'string', 'number', 'boolean', 'return',
 
 export class WordReader extends Bean implements TokenReader {
   read(c: TokenizerContext): Keyword | Identifier | undefined {
-    if (!isWordStart(c.current())) {
+    if (!isWordStart(c.current)) {
       return;
     }
-    let value = c.current();
-    const lin1 = c.lin();
-    const col1 = c.col();
-    let lin2 = c.lin();
-    let col2 = c.col() + 1;
+    let value = c.current;
+    const lin1 = c.lin;
+    const col1 = c.col;
+    let lin2 = c.lin;
+    let col2 = c.col + 1;
     c.consume();
 
-    while (isWordMiddle(c.current())) {
-      value += c.current();
-      lin2 = c.lin();
-      col2 = c.col() + 1;
+    while (isWordMiddle(c.current)) {
+      value += c.current;
+      lin2 = c.lin;
+      col2 = c.col + 1;
       c.consume();
     }
     return KEYWORDS.has(value)

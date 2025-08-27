@@ -1,7 +1,7 @@
 import { ERROR, INVALID, Invalid, Pos } from '@/base';
-import { Identifier } from '@/beans/parser/identifier';
-import { Keyword } from '@/beans/parser/keyword';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Identifier } from '@/beans/tokenizer/identifier';
+import { Keyword } from '@/beans/tokenizer/keyword';
 import { SimpleType } from '@/beans/type/simple-type';
 import { Type } from '@/beans/type/type';
 import { Bean } from '@/util/beans';
@@ -9,7 +9,7 @@ import { TypeItemReader } from './type-item-reader';
 
 export class SimpleTypeReader extends Bean implements TypeItemReader {
   read(c: ParserContext): Type | Invalid | undefined {
-    const t1 = c.current();
+    const t1 = c.current;
     if (Keyword.matches(t1) || Identifier.matches(t1)) {
       c.consume();
       return this.process(c, t1.name, t1.pos);

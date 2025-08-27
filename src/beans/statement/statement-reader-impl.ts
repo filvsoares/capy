@@ -1,5 +1,5 @@
 import { ERROR, INTERNAL, INVALID, Invalid } from '@/base';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { Statement } from '@/beans/statement/statement';
 import { StatementContext } from '@/beans/statement/statement-context';
 import { StatementReader } from '@/beans/statement/statement-reader';
@@ -26,7 +26,7 @@ export class StatementReaderImpl extends Bean implements StatementReader {
   readList(c: ParserContext, context: StatementContext, expectedReturnType: Type): StatementList {
     const outList: Statement[] = [];
     let error = false;
-    while (c.current()) {
+    while (c.current) {
       const val = this.read(c, context, expectedReturnType);
       if (val === INVALID) {
         error = true;
@@ -35,7 +35,7 @@ export class StatementReaderImpl extends Bean implements StatementReader {
       if (!val) {
         if (!error) {
           error = true;
-          const t = c.current()!;
+          const t = c.current!;
           c.addError({
             level: ERROR,
             message: `Unexpected ${t}`,

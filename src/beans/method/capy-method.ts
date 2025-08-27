@@ -8,8 +8,15 @@ export class CapyMethod extends Method {
   stack: LocalVariable[];
   statementList: StatementList;
 
-  constructor(name: string, type: CallableType, deps: LocalVariable[], statementList: StatementList, pos: Pos) {
-    super(name, type, pos);
+  constructor(
+    module: string,
+    name: string,
+    type: CallableType,
+    deps: LocalVariable[],
+    statementList: StatementList,
+    pos: Pos
+  ) {
+    super(module, name, type, pos);
     this.stack = deps;
     this.statementList = statementList;
   }

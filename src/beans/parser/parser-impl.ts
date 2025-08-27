@@ -19,147 +19,66 @@
  */
 
 import { ERROR, INTERNAL, INVALID, ParseError } from '@/base';
-import { Module } from '@/beans/parser/module';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { Symbol } from '@/beans/parser/symbol';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
+import { Tokenizer } from '@/beans/tokenizer/tokenizer';
 import { Bean } from '@/util/beans';
-import { Parser, ParserResult, TokenizerContext, ToplevelParserContext } from './parser';
-import { TokenReader } from './token-reader';
+import { Parser, ParserResult } from './parser';
 
 export class ParserImpl extends Bean implements Parser {
-  constructor(private l1Readers: TokenReader[], private toplevelReaders: ToplevelReader[]) {
+  constructor(private tokenizer: Tokenizer, private toplevelReaders: ToplevelReader[]) {
     super();
   }
 
-  readToken(c: TokenizerContext) {
-    loop: while (c.current()) {
-      for (const reader of this.l1Readers) {
-        const item = reader.read(c);
-        if (item === true) {
-          continue loop;
-        }
-        if (item) {
-          return item;
-        }
-      }
-      return;
-    }
-  }
-
-  parse(moduleName: string, s: string, modules: Module[]): ParserResult {
-    const moduleMap: { [name: string]: Module } = {};
-    for (const module of modules) {
-      moduleMap[module.name] = module;
-    }
+  parse(srcModules: { [moduleName: string]: string }): ParserResult {
+    const modules: { [moduleName: string]: { [symbolName: string]: Symbol } } = {};
 
     const errors: ParseError[] = [];
 
-    let pos = 0;
-    let lin = 1;
-    let col = 1;
-    let currentChar = s[0];
+    for (const moduleName in srcModules) {
+      const { tokenList, errors: tokenizerErrors } = this.tokenizer.process(srcModules[moduleName]);
+      errors.push(...tokenizerErrors);
+      const c = new ParserContext(modules, moduleName, tokenList, errors);
+      modules[moduleName] = this.readToplevelList(c);
+    }
 
-    const tokenizerContext: TokenizerContext = {
-      lin: () => lin,
-      col: () => col,
-      addError: (e) => {
-        errors.push(e);
-      },
-      current: () => currentChar,
-      consume: () => {
-        if (!currentChar) {
-          return;
-        }
-        pos++;
-        if (pos >= s.length) {
-          currentChar = '';
-          return;
-        }
-        if (currentChar === '\n') {
-          col = 1;
-          lin++;
-        } else {
-          col++;
-        }
-        currentChar = s[pos];
-      },
-    };
-
-    let currentToken = this.readToken(tokenizerContext);
-
-    const mySymbols: { [name: string]: Symbol } = {};
-    const allSymbols: { [name: string]: { module: string; symbol: Symbol }[] } = {};
-
-    const addToMySymbols: ToplevelParserContext['addToMySymbols'] = (symbol) => {
-      if (mySymbols[symbol.name]) {
-        return false;
-      }
-      mySymbols[symbol.name] = symbol;
-      addToAllSymbols(moduleName, symbol);
-      return true;
-    };
-
-    const addToAllSymbols: ToplevelParserContext['addToAllSymbols'] = (module, symbol) => {
-      let list = allSymbols[symbol.name];
-      if (!list) {
-        allSymbols[symbol.name] = list = [];
-      }
-      list.push({ module, symbol });
-    };
-
-    const parserContext: ToplevelParserContext = {
-      addError: (e) => {
-        errors.push(e);
-      },
-      current: () => currentToken,
-      consume: () => {
-        currentToken = this.readToken(tokenizerContext);
-      },
-      getModule: (name: string) => moduleMap[name],
-      addToMySymbols,
-      addToAllSymbols,
-      findSymbols: (name) => allSymbols[name],
-    };
-
-    this.readToplevelList(parserContext);
-
-    return {
-      module: new Module(moduleName, Object.values(mySymbols)),
-      errors,
-    };
+    return { modules, errors };
   }
 
-  private readToplevel(c: ToplevelParserContext) {
+  private readToplevel(c: ParserContext) {
     for (const reader of this.toplevelReaders) {
       const result = reader.read(c);
       if (result) {
         return result;
       }
     }
+    const t = c.current;
+    c.addError({
+      level: ERROR,
+      message: `Unexpected ${t}`,
+      pos: t!.pos ?? INTERNAL,
+    });
+    c.consume();
+    return INVALID;
   }
 
-  readToplevelList(c: ToplevelParserContext) {
-    let error = false;
-    while (c.current()) {
+  private readToplevelList(c: ParserContext) {
+    const symbols: { [name: string]: Symbol } = {};
+    while (c.current) {
       const val = this.readToplevel(c);
-      if (val === INVALID) {
-        error = true;
-        continue;
-      }
-      if (!val) {
-        if (!error) {
-          error = true;
-          const t = c.current();
-          c.addError({
-            level: ERROR,
-            message: `Unexpected ${t}`,
-            pos: t?.pos ?? INTERNAL,
-          });
+      if (val instanceof Symbol) {
+        if (symbols[val.name]) {
+          c.addError({ level: ERROR, message: `Symbol "${val.name}" already defined`, pos: val.pos });
+        } else {
+          symbols[val.name] = val;
         }
-        c.consume();
-        continue;
       }
-      error = false;
     }
+    return symbols;
+  }
+
+  findSymbol(c: ParserContext, symbolName: string): Symbol | undefined {
+    return c.modules[c.moduleName][symbolName];
   }
 }

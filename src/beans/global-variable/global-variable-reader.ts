@@ -2,12 +2,13 @@ import { combinePos, ERROR, fallbackPos, Invalid, INVALID } from '@/base';
 import { Expression } from '@/beans/expression/expression';
 import { ExpressionReader } from '@/beans/expression/expression-reader';
 import { GlobalVariable } from '@/beans/global-variable/global-variable';
-import { Identifier } from '@/beans/parser/identifier';
-import { Keyword } from '@/beans/parser/keyword';
-import { Operator } from '@/beans/parser/operator';
-import { ToplevelParserContext } from '@/beans/parser/parser';
-import { Separator } from '@/beans/parser/separator';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Symbol } from '@/beans/parser/symbol';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
+import { Identifier } from '@/beans/tokenizer/identifier';
+import { Keyword } from '@/beans/tokenizer/keyword';
+import { Operator } from '@/beans/tokenizer/operator';
+import { Separator } from '@/beans/tokenizer/separator';
 import { Bean } from '@/util/beans';
 import { TypeReader } from '../type/type-reader';
 
@@ -16,14 +17,14 @@ export class GlobalVariableReader extends Bean implements ToplevelReader {
     super();
   }
 
-  read(c: ToplevelParserContext): true | Invalid | undefined {
-    const t1 = c.current();
+  read(c: ParserContext): Symbol | Invalid | undefined {
+    const t1 = c.current;
     if (!Keyword.matches(t1, 'var')) {
       return;
     }
     c.consume();
 
-    const t2 = c.current();
+    const t2 = c.current;
     if (!Identifier.matches(t2)) {
       c.addError({
         level: ERROR,
@@ -34,7 +35,7 @@ export class GlobalVariableReader extends Bean implements ToplevelReader {
     }
     c.consume();
 
-    let t3 = c.current();
+    let t3 = c.current;
     if (!Operator.matches(t3, ':')) {
       c.addError({
         level: ERROR,
@@ -45,7 +46,7 @@ export class GlobalVariableReader extends Bean implements ToplevelReader {
     }
     c.consume();
 
-    const t4 = c.current();
+    const t4 = c.current;
     const type = t4 && this.typeReader.read(c);
     if (type === INVALID) {
       return INVALID;
@@ -59,12 +60,12 @@ export class GlobalVariableReader extends Bean implements ToplevelReader {
       return INVALID;
     }
 
-    t3 = c.current();
+    t3 = c.current;
     let initExpr: Expression | null = null;
     if (Operator.matches(t3, '=')) {
       c.consume();
 
-      const t4 = c.current();
+      const t4 = c.current;
       const _initExpr = t4 && this.expressionReader.read(c, null);
       if (_initExpr === INVALID) {
         return INVALID;
@@ -80,7 +81,7 @@ export class GlobalVariableReader extends Bean implements ToplevelReader {
       initExpr = _initExpr;
     }
 
-    const t5 = c.current();
+    const t5 = c.current;
     if (Separator.matches(t5, ';')) {
       c.consume();
     } else {
@@ -91,15 +92,6 @@ export class GlobalVariableReader extends Bean implements ToplevelReader {
       });
     }
 
-    if (!c.addToMySymbols(new GlobalVariable(t2.name, type, initExpr, combinePos(t1.pos, (t5 ?? t2).pos)))) {
-      c.addError({
-        level: ERROR,
-        message: `Symbol '${t2.name}' already defined`,
-        pos: t2.pos,
-      });
-      return INVALID;
-    }
-
-    return true;
+    return new GlobalVariable(c.moduleName, t2.name, type, initExpr, combinePos(t1.pos, (t5 ?? t2).pos));
   }
 }

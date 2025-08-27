@@ -1,5 +1,5 @@
-import { TokenizerContext } from '@/beans/parser/parser';
-import { Token } from '@/beans/parser/token';
+import { Token } from '@/beans/tokenizer/token';
+import { TokenizerContext } from '@/beans/tokenizer/tokenizer-context';
 import { declareBeanInterface } from '@/util/beans';
 
 export interface TokenReader {

@@ -2,14 +2,14 @@ import { Bean } from '@/util/beans';
 
 import { combinePos, ERROR, fallbackPos, INVALID, Invalid } from '@/base';
 import { ExpressionReader } from '@/beans/expression/expression-reader';
-import { Keyword } from '@/beans/parser/keyword';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { ReturnStatement } from '@/beans/statement/return-statement';
 import { StatementContext } from '@/beans/statement/statement-context';
+import { Keyword } from '@/beans/tokenizer/keyword';
 import { isVoidType } from '@/beans/type/simple-type';
 import { Type } from '@/beans/type/type';
 import { TypeReader } from '@/beans/type/type-reader';
-import { Separator } from '../parser/separator';
+import { Separator } from '../tokenizer/separator';
 import { StatementItemReader } from './statement-item-reader';
 export class ReturnStatementReader extends Bean implements StatementItemReader {
   priority = 100;
@@ -19,13 +19,13 @@ export class ReturnStatementReader extends Bean implements StatementItemReader {
   }
 
   read(c: ParserContext, context: StatementContext, expectedReturnType: Type): ReturnStatement | Invalid | undefined {
-    const t1 = c.current();
+    const t1 = c.current;
     if (!Keyword.matches(t1, 'return')) {
       return;
     }
     c.consume();
 
-    const t2 = c.current();
+    const t2 = c.current;
     if (Separator.matches(t2, ';')) {
       c.consume();
       if (!isVoidType(expectedReturnType)) {
@@ -54,7 +54,7 @@ export class ReturnStatementReader extends Bean implements StatementItemReader {
       return INVALID;
     }
 
-    const t3 = c.current();
+    const t3 = c.current;
     if (Separator.matches(t3, ';')) {
       c.consume();
     } else {

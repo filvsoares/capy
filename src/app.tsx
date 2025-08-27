@@ -51,9 +51,14 @@ function hello(p: string): string {
 `;
 
 const io = new Module('io', [
-  new LibraryMethod('print', new CallableType([new Argument('s', STRING, INTERNAL)], VOID, INTERNAL), ([s], runner) => {
-    runner.print(s);
-  }),
+  new LibraryMethod(
+    'io',
+    'print',
+    new CallableType([new Argument('s', STRING, INTERNAL)], VOID, INTERNAL),
+    ([s], runner) => {
+      runner.print(s);
+    }
+  ),
 ]);
 
 export default function App() {
@@ -72,7 +77,7 @@ export default function App() {
     if (r.errors.length === 0) {
       const runner = new Runner();
       try {
-        runner.run([r.runnable!, io], 'main');
+        runner.run(r.modules!, 'main');
         setTerminalContent(runner.stdout);
       } catch (err: any) {
         setTerminalContent(`Runtime error: ${err.stack}`);

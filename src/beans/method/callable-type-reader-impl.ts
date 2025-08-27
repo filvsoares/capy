@@ -1,14 +1,14 @@
 import { CallableType } from '@/beans/method/callable-type';
 import { CallableTypeReader } from '@/beans/method/callable-type-reader';
-import { Bracket } from '@/beans/parser/bracket';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Bracket } from '@/beans/tokenizer/bracket';
 import { VOID } from '@/beans/type/simple-type';
 import { Type } from '@/beans/type/type';
 import { TypeItemReader } from '@/beans/type/type-item-reader';
 import { TypeReader } from '@/beans/type/type-reader';
 import { Bean } from '@/util/beans';
 import { combinePos, ERROR, INVALID, Invalid } from '../../base';
-import { Operator } from '../parser/operator';
+import { Operator } from '../tokenizer/operator';
 import { ArgumentReader } from './argument-reader';
 
 export class CallableTypeReaderImpl extends Bean implements TypeItemReader, CallableTypeReader {
@@ -17,7 +17,7 @@ export class CallableTypeReaderImpl extends Bean implements TypeItemReader, Call
   }
 
   read(c: ParserContext): CallableType | Invalid | undefined {
-    const t1 = c.current();
+    const t1 = c.current;
     if (!Bracket.matches(t1, '(')) {
       return;
     }
@@ -25,22 +25,10 @@ export class CallableTypeReaderImpl extends Bean implements TypeItemReader, Call
 
     let returnType: Type = VOID;
 
-    const tokenList = t1.tokenList;
-    let currentToken = tokenList[0];
-    let pos = 0;
-    const c1: ParserContext = {
-      addError: (e) => {
-        c.addError(e);
-      },
-      current: () => currentToken,
-      consume: () => {
-        currentToken = tokenList[++pos];
-      },
-      findSymbols: () => undefined,
-    };
+    const c1 = c.derive(t1.tokenList);
     const args = this.argumentReader.readList(c1);
 
-    const t2 = c.current();
+    const t2 = c.current;
     if (Operator.matches(t2, ':')) {
       c.consume();
 

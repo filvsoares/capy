@@ -1,4 +1,4 @@
-import { ERROR, INVALID, Invalid } from '@/base';
+import { Invalid } from '@/base';
 import { Expression } from '@/beans/expression/expression';
 import { ExpressionContext } from '@/beans/expression/expression-reader';
 import { Reference } from '@/beans/expression/reference';
@@ -10,11 +10,16 @@ import { Method } from '@/beans/method/method';
 import { MethodReference } from '@/beans/method/method-reference';
 import { MethodStack } from '@/beans/method/method-stack';
 import { ReadVariable } from '@/beans/method/read-variable';
-import { Identifier } from '@/beans/parser/identifier';
-import { ParserContext } from '@/beans/parser/parser';
+import { Parser } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Identifier } from '@/beans/tokenizer/identifier';
 import { Bean } from '@/util/beans';
 
 export class VariableReferenceProcessor extends Bean implements ReferenceProcessor {
+  constructor(private parser: Parser) {
+    super();
+  }
+
   processReference(
     c: ParserContext,
     ref: Identifier,
@@ -30,22 +35,13 @@ export class VariableReferenceProcessor extends Bean implements ReferenceProcess
         return new LocalVariableReference(index, dep.name, dep.type, ref.pos);
       }
     }
-    const symbols = c.findSymbols(ref.name);
-    if (symbols) {
-      if (symbols.length > 1) {
-        c.addError({
-          level: ERROR,
-          message: `Dependency ${ref.name} is ambiguous`,
-          pos: ref.pos,
-        });
-        return INVALID;
-      }
-      const { module, symbol } = symbols[0];
+    const symbol = this.parser.findSymbol(c, ref.name);
+    if (symbol) {
       if (symbol instanceof Method) {
-        return new MethodReference(module, symbol.name, symbol.type, ref.pos);
+        return new MethodReference(symbol.module, symbol.name, symbol.type, ref.pos);
       }
       if (symbol instanceof GlobalVariable) {
-        return new GlobalVariableReference(module, symbol.name, symbol.type, ref.pos);
+        return new GlobalVariableReference(symbol.module, symbol.name, symbol.type, ref.pos);
       }
       throw new Error(`Unexpected symbol type ${symbol.constructor.name}`);
     }

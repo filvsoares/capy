@@ -1,11 +1,11 @@
 import { Argument } from '@/beans/method/argument';
-import { Identifier } from '@/beans/parser/identifier';
-import { ParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Identifier } from '@/beans/tokenizer/identifier';
 import { TypeReader } from '@/beans/type/type-reader';
 import { Bean } from '@/util/beans';
 import { combinePos, ERROR, fallbackPos, INTERNAL, INVALID, Invalid } from '../../base';
-import { Operator } from '../parser/operator';
-import { Separator } from '../parser/separator';
+import { Operator } from '../tokenizer/operator';
+import { Separator } from '../tokenizer/separator';
 import { ArgumentReader } from './argument-reader';
 
 export class ArgumentReaderImpl extends Bean implements ArgumentReader {
@@ -14,13 +14,13 @@ export class ArgumentReaderImpl extends Bean implements ArgumentReader {
   }
 
   read(c: ParserContext): Argument | Invalid | undefined {
-    const t1 = c.current();
+    const t1 = c.current;
     if (!Identifier.matches(t1)) {
       return;
     }
     c.consume();
 
-    const t2 = c.current();
+    const t2 = c.current;
     if (!Operator.matches(t2, ':')) {
       c.addError({
         level: ERROR,
@@ -31,7 +31,7 @@ export class ArgumentReaderImpl extends Bean implements ArgumentReader {
     }
     c.consume();
 
-    const t3 = c.current();
+    const t3 = c.current;
     const type = this.typeReader.read(c);
     if (!type) {
       c.addError({
@@ -51,11 +51,11 @@ export class ArgumentReaderImpl extends Bean implements ArgumentReader {
     const outList: Argument[] = [];
     let error = false;
 
-    if (!c.current()) {
+    if (!c.current) {
       return outList;
     }
 
-    while (c.current()) {
+    while (c.current) {
       const arg = this.read(c);
       if (!arg) {
         if (!error) {
@@ -74,7 +74,7 @@ export class ArgumentReaderImpl extends Bean implements ArgumentReader {
       }
       outList.push(arg);
 
-      const t2 = c.current();
+      const t2 = c.current;
       if (!t2) {
         break;
       }
@@ -90,7 +90,7 @@ export class ArgumentReaderImpl extends Bean implements ArgumentReader {
       }
       c.consume();
 
-      const t3 = c.current();
+      const t3 = c.current;
       if (!t3) {
         c.addError({
           level: ERROR,

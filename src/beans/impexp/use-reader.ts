@@ -1,20 +1,20 @@
 import { ERROR, fallbackPos, INVALID, Invalid } from '@/base';
-import { Keyword } from '@/beans/parser/keyword';
-import { ToplevelParserContext } from '@/beans/parser/parser';
-import { String } from '@/beans/parser/string';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
+import { Keyword } from '@/beans/tokenizer/keyword';
+import { String } from '@/beans/tokenizer/string';
 import { Bean } from '@/util/beans';
-import { Separator } from '../parser/separator';
+import { Separator } from '../tokenizer/separator';
 
 export class UseReader extends Bean implements ToplevelReader {
-  read(c: ToplevelParserContext): true | Invalid | undefined {
-    const t1 = c.current();
+  read(c: ParserContext): true | Invalid | undefined {
+    const t1 = c.current;
     if (!Keyword.matches(t1, 'use')) {
       return;
     }
     c.consume();
 
-    const t2 = c.current();
+    const t2 = c.current;
     if (!String.matches(t2)) {
       c.addError({
         level: ERROR,
@@ -25,7 +25,7 @@ export class UseReader extends Bean implements ToplevelReader {
     }
     c.consume();
 
-    const t3 = c.current();
+    const t3 = c.current;
     if (Separator.matches(t3, ';')) {
       c.consume();
     } else {

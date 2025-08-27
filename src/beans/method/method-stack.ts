@@ -1,5 +1,5 @@
 import { LocalVariable } from '@/beans/method/local-variable';
-import { Identifier } from '@/beans/parser/identifier';
+import { Identifier } from '@/beans/tokenizer/identifier';
 
 export class MethodStack {
   parent: MethodStack | null;

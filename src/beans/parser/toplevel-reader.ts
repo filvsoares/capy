@@ -1,9 +1,10 @@
 import { Invalid } from '@/base';
-import { ToplevelParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Symbol } from '@/beans/parser/symbol';
 import { declareBeanInterface } from '@/util/beans';
 
 export interface ToplevelReader {
-  read(c: ToplevelParserContext): true | Invalid | undefined;
+  read(c: ParserContext): Symbol | true | Invalid | undefined;
 }
 
 export const toplevelReader = declareBeanInterface<ToplevelReader>('ToplevelReader');

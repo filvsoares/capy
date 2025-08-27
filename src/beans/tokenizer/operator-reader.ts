@@ -1,4 +1,4 @@
-import { TokenizerContext } from '@/beans/parser/parser';
+import { TokenizerContext } from '@/beans/tokenizer/tokenizer-context';
 import { Bean } from '@/util/beans';
 import { Operator } from './operator';
 import { TokenReader } from './token-reader';
@@ -33,19 +33,19 @@ function isOperator(s: string) {
 
 export class OperatorReader extends Bean implements TokenReader {
   read(c: TokenizerContext): Operator | undefined {
-    if (!isOperator(c.current())) {
+    if (!isOperator(c.current)) {
       return;
     }
-    let value = c.current();
-    const lin1 = c.lin();
-    const col1 = c.col();
-    let lin2 = c.lin();
-    let col2 = c.col() + 1;
+    let value = c.current;
+    const lin1 = c.lin;
+    const col1 = c.col;
+    let lin2 = c.lin;
+    let col2 = c.col + 1;
     c.consume();
-    while (c.current() && isOperator(value + c.current())) {
-      value += c.current();
-      lin2 = c.lin();
-      col2 = c.col() + 1;
+    while (c.current && isOperator(value + c.current)) {
+      value += c.current;
+      lin2 = c.lin;
+      col2 = c.col + 1;
     }
     return new Operator(value, { lin1, col1, lin2, col2 });
   }

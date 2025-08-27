@@ -7,8 +7,8 @@ export class GlobalVariable extends Symbol {
   type: Type;
   initExpr: Expression | null;
 
-  constructor(name: string, type: Type, initExpr: Expression | null, pos: Pos) {
-    super(name, pos);
+  constructor(module: string, name: string, type: Type, initExpr: Expression | null, pos: Pos) {
+    super(module, name, pos);
     this.type = type;
     this.initExpr = initExpr;
   }

@@ -3,12 +3,13 @@ import { ArgumentVariable } from '@/beans/method/argument-variable';
 import { CallableTypeReader } from '@/beans/method/callable-type-reader';
 import { CapyMethod } from '@/beans/method/capy-method';
 import { MethodStack } from '@/beans/method/method-stack';
-import { Bracket } from '@/beans/parser/bracket';
-import { Identifier } from '@/beans/parser/identifier';
-import { Keyword } from '@/beans/parser/keyword';
-import { ParserContext, ToplevelParserContext } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
+import { Symbol } from '@/beans/parser/symbol';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
 import { StatementReader } from '@/beans/statement/statement-reader';
+import { Bracket } from '@/beans/tokenizer/bracket';
+import { Identifier } from '@/beans/tokenizer/identifier';
+import { Keyword } from '@/beans/tokenizer/keyword';
 import { Bean } from '@/util/beans';
 
 export class MethodReader extends Bean implements ToplevelReader {
@@ -16,14 +17,14 @@ export class MethodReader extends Bean implements ToplevelReader {
     super();
   }
 
-  read(c: ToplevelParserContext): true | Invalid | undefined {
-    const t1 = c.current();
+  read(c: ParserContext): Symbol | Invalid | undefined {
+    const t1 = c.current;
     if (!Keyword.matches(t1, 'function')) {
       return;
     }
     c.consume();
 
-    const t2 = c.current();
+    const t2 = c.current;
     if (!Identifier.matches(t2)) {
       c.addError({
         level: ERROR,
@@ -34,7 +35,7 @@ export class MethodReader extends Bean implements ToplevelReader {
     }
     c.consume();
 
-    const t3 = c.current();
+    const t3 = c.current;
     const type = t3 && this.callableTypeReader.read(c);
     if (type === INVALID) {
       return INVALID;
@@ -48,7 +49,7 @@ export class MethodReader extends Bean implements ToplevelReader {
       return INVALID;
     }
 
-    const t4 = c.current();
+    const t4 = c.current;
     if (!Bracket.matches(t4, '{')) {
       c.addError({
         level: ERROR,
@@ -59,21 +60,7 @@ export class MethodReader extends Bean implements ToplevelReader {
     }
     c.consume();
 
-    const tokenList = t4.tokenList;
-    let currentToken = tokenList[0];
-    let pos = 0;
-
-    const c1: ParserContext = {
-      addError: (e) => {
-        c.addError(e);
-      },
-      current: () => currentToken,
-      consume: () => {
-        currentToken = tokenList[++pos];
-      },
-      findSymbols: () => undefined,
-    };
-
+    const c1 = c.derive(t4.tokenList);
     const stack = new MethodStack();
 
     for (let i = 0; i < type.argList.length; i++) {
@@ -82,14 +69,6 @@ export class MethodReader extends Bean implements ToplevelReader {
     }
     const statementList = this.statementReader.readList(c1, stack, type.returnType);
 
-    const dst = new CapyMethod(t2.name, type, stack.items, statementList, t2.pos);
-    if (!c.addToMySymbols(dst)) {
-      c.addError({
-        level: ERROR,
-        message: `Symbol "${dst.name}" already defined`,
-        pos: t2.pos,
-      });
-    }
-    return true;
+    return new CapyMethod(c.moduleName, t2.name, type, stack.items, statementList, t2.pos);
   }
 }

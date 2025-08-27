@@ -5,15 +5,15 @@ import { LocalVariable } from '@/beans/method/local-variable';
 import { LocalVariableReference } from '@/beans/method/local-variable-reference';
 import { MethodStack } from '@/beans/method/method-stack';
 import { Assignment } from '@/beans/operation/assignment';
-import { Identifier } from '@/beans/parser/identifier';
-import { Keyword } from '@/beans/parser/keyword';
-import { Operator } from '@/beans/parser/operator';
-import { ParserContext } from '@/beans/parser/parser';
-import { Separator } from '@/beans/parser/separator';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { ExpressionStatement } from '@/beans/statement/expression-statement';
 import { Statement } from '@/beans/statement/statement';
 import { StatementContext } from '@/beans/statement/statement-context';
 import { StatementItemReader } from '@/beans/statement/statement-item-reader';
+import { Identifier } from '@/beans/tokenizer/identifier';
+import { Keyword } from '@/beans/tokenizer/keyword';
+import { Operator } from '@/beans/tokenizer/operator';
+import { Separator } from '@/beans/tokenizer/separator';
 import { Type } from '@/beans/type/type';
 import { TypeReader } from '@/beans/type/type-reader';
 import { Bean } from '@/util/beans';
@@ -27,13 +27,13 @@ export class VariableStatementReader extends Bean implements StatementItemReader
     if (!(context instanceof MethodStack)) {
       return;
     }
-    const t1 = c.current();
+    const t1 = c.current;
     if (!Keyword.matches(t1, 'var')) {
       return;
     }
     c.consume();
 
-    const t2 = c.current();
+    const t2 = c.current;
     if (!Identifier.matches(t2)) {
       c.addError({
         level: ERROR,
@@ -44,7 +44,7 @@ export class VariableStatementReader extends Bean implements StatementItemReader
     }
     c.consume();
 
-    let t3 = c.current();
+    let t3 = c.current;
     if (!Operator.matches(t3, ':')) {
       c.addError({
         level: ERROR,
@@ -55,7 +55,7 @@ export class VariableStatementReader extends Bean implements StatementItemReader
     }
     c.consume();
 
-    const t4 = c.current();
+    const t4 = c.current;
     const type = t4 && this.typeReader.read(c);
     if (type === INVALID) {
       return INVALID;
@@ -69,12 +69,12 @@ export class VariableStatementReader extends Bean implements StatementItemReader
       return INVALID;
     }
 
-    t3 = c.current();
+    t3 = c.current;
     let initExpr: Expression | null = null;
     if (Operator.matches(t3, '=')) {
       c.consume();
 
-      const t4 = c.current();
+      const t4 = c.current;
       const _initExpr = t4 && this.expressionReader.read(c, null);
       if (_initExpr === INVALID) {
         return INVALID;
@@ -90,7 +90,7 @@ export class VariableStatementReader extends Bean implements StatementItemReader
       initExpr = _initExpr;
     }
 
-    const t5 = c.current();
+    const t5 = c.current;
     if (Separator.matches(t5, ';')) {
       c.consume();
     } else {
