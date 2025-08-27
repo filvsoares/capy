@@ -22,24 +22,18 @@ import { Play } from 'feather-icons-react';
 import { useState } from 'react';
 import AceEditor from 'react-ace';
 import classes from './app.module.css';
-import { INTERNAL } from './base';
 import { compiler, CompileResult } from './beans/compiler/compiler';
-import { STRING, VOID } from './beans/type/simple-type';
 import { Runner } from './runner';
 import { Tile } from './ui/tile';
 import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 import { getBeans } from './util/beans';
 
-import { Argument } from '@/beans/method/argument';
-import { CallableType } from '@/beans/method/callable-type';
-import { LibraryMethod } from '@/beans/method/library-method';
-import { Module } from '@/beans/parser/module';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
 
-const initialCode = `use "io";
+const initialCode = `native function print(s: string);
 
 function start() {
     print(hello("John"));
@@ -49,17 +43,6 @@ function hello(p: string): string {
     return "Hello, " + p + "!";
 }
 `;
-
-const io = new Module('io', [
-  new LibraryMethod(
-    'io',
-    'print',
-    new CallableType([new Argument('s', STRING, INTERNAL)], VOID, INTERNAL),
-    ([s], runner) => {
-      runner.print(s);
-    }
-  ),
-]);
 
 export default function App() {
   const [content, setContent] = useState(initialCode);
@@ -72,7 +55,7 @@ export default function App() {
 
   const onRunClick = async () => {
     const _compiler = (await getBeans(compiler))[0];
-    const r = _compiler.compile(content, [io], { debugTree: true });
+    const r = _compiler.compile(content, { debugTree: true });
     setCompileResult(r);
     if (r.errors.length === 0) {
       const runner = new Runner();

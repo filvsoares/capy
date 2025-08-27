@@ -25,10 +25,10 @@ import { GlobalVariable } from '@/beans/global-variable/global-variable';
 import { ArgumentVariable } from '@/beans/method/argument-variable';
 import { CapyMethod } from '@/beans/method/capy-method';
 import { GlobalVariableReference } from '@/beans/method/global-variable-reference';
-import { LibraryMethod } from '@/beans/method/library-method';
 import { LocalVariableReference } from '@/beans/method/local-variable-reference';
 import { Method } from '@/beans/method/method';
 import { MethodReference } from '@/beans/method/method-reference';
+import { NativeMethod } from '@/beans/method/native-method';
 import { ReadVariable } from '@/beans/method/read-variable';
 import { Assignment } from '@/beans/operation/assignment';
 import { MethodCall } from '@/beans/operation/method-call';
@@ -46,6 +46,11 @@ class MyVariable {
   }
 }
 
+const nativeMethods: { [name: string]: (runner: Runner, ...args: any[]) => any } = {
+  main__print(runner: Runner, s: string) {
+    runner.print(s);
+  },
+};
 export class Runner {
   modules: { [moduleName: string]: { [symbolName: string]: Symbol } } = {};
   variables: { [module: string]: { [name: string]: MyVariable } } = {};
@@ -95,8 +100,8 @@ export class Runner {
         argList.push(this.runExpression(arg, deps));
       }
       const method = this.runExpression(obj.operand, deps);
-      if (method instanceof LibraryMethod) {
-        return method.callback(argList, this);
+      if (method instanceof NativeMethod) {
+        return nativeMethods[`${method.module}__${method.name}`](this, ...argList);
       }
       if (method instanceof CapyMethod) {
         return this.runMethod(method, argList);

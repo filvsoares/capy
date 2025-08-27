@@ -1,4 +1,3 @@
-import { Module } from '@/beans/parser/module';
 import { Symbol } from '@/beans/parser/symbol';
 import { declareBeanInterface } from '@/util/beans';
 import { ParseError } from '../../base';
@@ -12,7 +11,7 @@ export type CompileResult = {
 export type CompileOpts = { debugTree?: boolean };
 
 export interface Compiler {
-  compile(s: string, libs: Module[], opts: CompileOpts): CompileResult;
+  compile(s: string, opts: CompileOpts): CompileResult;
 }
 
 export const compiler = declareBeanInterface<Compiler>('Compiler');

@@ -1,4 +1,3 @@
-import { Module } from '@/beans/parser/module';
 import { Tokenizer } from '@/beans/tokenizer/tokenizer';
 import { Bean } from '@/util/beans';
 import { ERROR, INTERNAL, ParseError } from '../../base';
@@ -10,7 +9,7 @@ export class CompilerImpl extends Bean implements Compiler {
     super();
   }
 
-  compile(s: string, libs: Module[], { debugTree }: CompileOpts): CompileResult {
+  compile(s: string, { debugTree }: CompileOpts): CompileResult {
     const errors: ParseError[] = [];
     const out: string[] = [];
 

@@ -12,7 +12,7 @@ function isWordMiddle(c: string) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c === '_';
 }
 
-export const KEYWORDS = new Set(['use', 'string', 'number', 'boolean', 'return', 'function', 'var', 'const']);
+export const KEYWORDS = new Set(['use', 'string', 'number', 'boolean', 'return', 'function', 'var', 'const', 'native']);
 
 export class WordReader extends Bean implements TokenReader {
   read(c: TokenizerContext): Keyword | Identifier | undefined {

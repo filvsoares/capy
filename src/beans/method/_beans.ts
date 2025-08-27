@@ -28,7 +28,7 @@ export function declareBeans() {
   declareBean({
     name: 'MethodReader',
     provides: [toplevelReader],
-    dependencies: [single(statementReader), single(callableTypeReader)],
+    dependencies: [single(statementReader), single(callableTypeReader), single(parser)],
     loadModule: () => import('./method-reader'),
     factory: (m, deps) => new m.MethodReader(...deps),
   });

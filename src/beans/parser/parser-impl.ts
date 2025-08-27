@@ -19,12 +19,18 @@
  */
 
 import { ERROR, INTERNAL, INVALID, ParseError } from '@/base';
-import { ParserContext } from '@/beans/parser/parser-context';
+import { ExtraKey, ParserContext } from '@/beans/parser/parser-context';
 import { Symbol } from '@/beans/parser/symbol';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
 import { Tokenizer } from '@/beans/tokenizer/tokenizer';
 import { Bean } from '@/util/beans';
 import { Parser, ParserResult } from './parser';
+
+class ParserExtra {
+  constructor(public symbols: { [name: string]: Symbol }) {}
+}
+
+const parserExtraKey = new ExtraKey<ParserExtra>();
 
 export class ParserImpl extends Bean implements Parser {
   constructor(private tokenizer: Tokenizer, private toplevelReaders: ToplevelReader[]) {
@@ -35,12 +41,22 @@ export class ParserImpl extends Bean implements Parser {
     const modules: { [moduleName: string]: { [symbolName: string]: Symbol } } = {};
 
     const errors: ParseError[] = [];
+    const tasks: (() => void)[] = [];
 
     for (const moduleName in srcModules) {
       const { tokenList, errors: tokenizerErrors } = this.tokenizer.process(srcModules[moduleName]);
       errors.push(...tokenizerErrors);
-      const c = new ParserContext(modules, moduleName, tokenList, errors);
-      modules[moduleName] = this.readToplevelList(c);
+      const c = new ParserContext(modules, moduleName, tokenList, errors, tasks);
+      const symbols = this.readToplevelList(c);
+      c.putExtra(parserExtraKey, new ParserExtra(symbols));
+      modules[moduleName] = symbols;
+    }
+
+    while (tasks.length > 0) {
+      const _tasks = tasks.splice(0, tasks.length);
+      for (const task of _tasks) {
+        task();
+      }
     }
 
     return { modules, errors };
@@ -79,6 +95,14 @@ export class ParserImpl extends Bean implements Parser {
   }
 
   findSymbol(c: ParserContext, symbolName: string): Symbol | undefined {
-    return c.modules[c.moduleName][symbolName];
+    return c.modules[c.moduleName]?.[symbolName];
+  }
+
+  replaceSymbol(c: ParserContext, newSymbol: Symbol) {
+    const parserExtra = c.getExtra(parserExtraKey);
+    if (!parserExtra) {
+      throw new Error('replaceSymbol() must be used within a task');
+    }
+    parserExtra.symbols[newSymbol.name] = newSymbol;
   }
 }

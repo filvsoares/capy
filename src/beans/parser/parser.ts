@@ -11,6 +11,7 @@ export type ParserResult = {
 export interface Parser {
   parse(modules: { [name: string]: string }): ParserResult;
   findSymbol(c: ParserContext, symbolName: string): Symbol | undefined;
+  replaceSymbol(c: ParserContext, newSymbol: Symbol): void;
 }
 
 export const parser = declareBeanInterface<Parser>('Parser');
