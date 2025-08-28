@@ -1,3 +1,4 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./compiler-impl-DjXtdoRM.js","./method-extra-DbSJTGU1.js","./extra-DGWX4UcI.js","./expression-reader-impl-DRYvN5gY.js","./bracket-CL1IELux.js","./token-YsknnliN.js","./identifier-CmniarI-.js","./number-DJFp4t40.js","./separator-DCoNiD5Y.js","./string-CeTwIwXK.js","./global-variable-reader-BhV_yylH.js","./keyword-8UUIU2rW.js","./operator-BG3tGXnj.js","./use-reader-B0VbXjfc.js","./argument-reader-impl-ChOE995_.js","./callable-type-reader-impl-l1W_rhiM.js","./callable-type-DoqtKxk0.js","./method-call-processor-CrOVp8Km.js","./method-reader-BKPM4Qbb.js","./method-stack-BoNwLixn.js","./local-variable-identifier-resolver-Bc3492ys.js","./local-variable-statement-handler-DcO0_K00.js","./addition-processor-CQUcr5RQ.js","./assignment-processor-D5mZt4eD.js","./parser-impl-8pALioOG.js","./expression-statement-reader-DOACk14p.js","./return-statement-reader-D22uFg-S.js","./tokenizer-impl-CuevY9Ts.js","./bracket-reader-DNwVim4v.js","./number-reader-BGYnWVmm.js","./operator-reader-BbafDDng.js","./separator-reader-p2j7WR2g.js","./string-reader-BUJOovHv.js","./word-reader-CygMOXO0.js","./simple-type-reader-B0fILDYG.js"])))=>i.map(i=>d[i]);
 (function polyfill() {
   const relList = document.createElement("link").relList;
   if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -7004,625 +7005,71 @@ var m = reactDomExports;
   createRoot = m.createRoot;
   m.hydrateRoot;
 }
-const container = "_container_1fxt0_1";
-const editor = "_editor_1fxt0_10";
-const result = "_result_1fxt0_11";
-const code = "_code_1fxt0_16";
-const compileOutput = "_compileOutput_1fxt0_28";
-const terminal = "_terminal_1fxt0_33";
-const terminalContent = "_terminalContent_1fxt0_38";
-const classes$3 = {
-  container,
-  editor,
-  result,
-  code,
-  compileOutput,
-  terminal,
-  terminalContent
+function _extends() {
+  return _extends = Object.assign ? Object.assign.bind() : function(n2) {
+    for (var e = 1; e < arguments.length; e++) {
+      var t2 = arguments[e];
+      for (var r2 in t2) ({}).hasOwnProperty.call(t2, r2) && (n2[r2] = t2[r2]);
+    }
+    return n2;
+  }, _extends.apply(null, arguments);
+}
+function _objectWithoutProperties(e, t2) {
+  if (null == e) return {};
+  var o, r2, i = _objectWithoutPropertiesLoose(e, t2);
+  if (Object.getOwnPropertySymbols) {
+    var n2 = Object.getOwnPropertySymbols(e);
+    for (r2 = 0; r2 < n2.length; r2++) o = n2[r2], -1 === t2.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]);
+  }
+  return i;
+}
+function _objectWithoutPropertiesLoose(r2, e) {
+  if (null == r2) return {};
+  var t2 = {};
+  for (var n2 in r2) if ({}.hasOwnProperty.call(r2, n2)) {
+    if (-1 !== e.indexOf(n2)) continue;
+    t2[n2] = r2[n2];
+  }
+  return t2;
+}
+var _excluded$1y = ["size", "className", "fill"];
+var Play = function Play2(_ref) {
+  var _ref$size = _ref.size, size = _ref$size === void 0 ? 24 : _ref$size, _ref$className = _ref.className, className = _ref$className === void 0 ? "" : _ref$className, _ref$fill = _ref.fill, fill = _ref$fill === void 0 ? "none" : _ref$fill, otherProps = _objectWithoutProperties(_ref, _excluded$1y);
+  return /* @__PURE__ */ React$3.createElement("svg", _extends({
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill,
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    className: "feather feather-play ".concat(className)
+  }, otherProps), /* @__PURE__ */ React$3.createElement("g", null, /* @__PURE__ */ React$3.createElement("polygon", {
+    points: "5 3 19 12 5 21 5 3"
+  })));
 };
-function combinePos(a, b) {
-  if (a === INTERNAL || b === INTERNAL) {
-    return INTERNAL;
-  }
-  let lin1, col1, lin2, col2;
-  if (a.lin1 < b.lin1) {
-    lin1 = a.lin1;
-    col1 = a.col1;
-  } else if (b.lin1 < a.lin1) {
-    lin1 = b.lin1;
-    col1 = b.col1;
-  } else {
-    lin1 = a.lin1;
-    col1 = Math.min(a.col1, b.col1);
-  }
-  if (a.lin2 > b.lin2) {
-    lin2 = a.lin2;
-    col2 = a.col2;
-  } else if (b.lin2 > a.lin2) {
-    lin2 = b.lin2;
-    col2 = b.col2;
-  } else {
-    lin2 = a.lin2;
-    col2 = Math.max(a.col2, b.col2);
-  }
-  return { lin1, col1, lin2, col2 };
-}
-function fallbackPos(t2, tBefore) {
-  return {
-    lin1: (t2 == null ? void 0 : t2.lin1) ?? tBefore.lin2,
-    col1: (t2 == null ? void 0 : t2.col1) ?? tBefore.col2,
-    lin2: (t2 == null ? void 0 : t2.lin2) ?? tBefore.lin2,
-    col2: (t2 == null ? void 0 : t2.col2) ?? tBefore.col2
-  };
-}
-const INTERNAL = Object.freeze({
-  lin1: 0,
-  col1: 0,
-  lin2: 0,
-  col2: 0
-});
-class Base {
-  constructor(pos) {
-    this.pos = pos;
-  }
-  static toString(token) {
-    return (token == null ? void 0 : token.toString()) ?? "nothing";
-  }
-  debugPrint(out, prefix) {
-    if (this.pos === INTERNAL) {
-      out.push(`!!${this.constructor.name}
-`);
-    } else {
-      out.push(`!!${this.constructor.name} # ${this.pos.lin1}:${this.pos.col1}-${this.pos.lin2}:${this.pos.col2}
-`);
-    }
-  }
-}
-const ERROR = 2;
-class L3Base extends Base {
-  isL3() {
-    return true;
-  }
-}
-class L3Type extends L3Base {
-}
-class L3SimpleType extends L3Type {
-  constructor(primitive, pos) {
-    super(pos);
-    this.primitive = primitive;
-  }
-  toString() {
-    return `${this.primitive}`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  primitive: ${this.primitive}
-`);
-  }
-}
-const STRING = new L3SimpleType("string", INTERNAL);
-const NUMBER = new L3SimpleType("number", INTERNAL);
-new L3SimpleType("boolean", INTERNAL);
-const VOID = new L3SimpleType("void", INTERNAL);
-function isStringType(type) {
-  return type instanceof L3SimpleType && type.primitive === "string";
-}
-function isVoidType(type) {
-  return type instanceof L3SimpleType && type.primitive === "void";
-}
-class L3Argument extends L3Type {
-  constructor(name, type, pos) {
-    super(pos);
-    this.name = name;
-    this.type = type;
-  }
-  toString() {
-    return "argument";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-    out.push(`${prefix}  type: `);
-    this.type.debugPrint(out, `${prefix}  `);
-  }
-}
-class L3CallableType extends L3Type {
-  constructor(argList, returnType, pos) {
-    super(pos);
-    this.argList = argList;
-    this.returnType = returnType;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  argList:
-`);
-    this.argList.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-    out.push(`${prefix}  returnType: `);
-    this.returnType.debugPrint(out, `${prefix}  `);
-  }
-  toString() {
-    return `callable`;
-  }
-}
-class L3Expression extends L3Base {
-  constructor(type, pos) {
-    super(pos);
-    this.type = type;
-  }
-}
-class L3String extends L3Expression {
-  constructor(value, pos) {
-    super(STRING, pos);
-    this.value = value;
-  }
-  toString() {
-    return `string`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  value: ${this.value}
-`);
-  }
-}
-class L3Number extends L3Expression {
-  constructor(value, pos) {
-    super(NUMBER, pos);
-    this.value = value;
-  }
-  toString() {
-    return `number`;
-  }
-}
-class L3MethodReference extends L3Expression {
-  constructor(module, name, type, pos) {
-    super(type, pos);
-    this.module = module;
-    this.name = name;
-  }
-  toString() {
-    return `identifier "${this.name}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  module: ${this.module}
-`);
-    out.push(`${prefix}  name: ${this.name}
-`);
-  }
-}
-class L3VariableReference extends L3Expression {
-}
-class L3ModuleVariableReference extends L3VariableReference {
-  constructor(module, name, type, pos) {
-    super(type, pos);
-    this.module = module;
-    this.name = name;
-  }
-  toString() {
-    return `identifier "${this.name}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  module: ${this.module}
-`);
-    out.push(`${prefix}  name: ${this.name}
-`);
-  }
-}
-class L3LocalVariableReference extends L3VariableReference {
-  constructor(index, name, type, pos) {
-    super(type, pos);
-    this.index = index;
-    this.name = name;
-  }
-  toString() {
-    return `identifier "${this.name}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-    out.push(`${prefix}  index: ${this.index}
-`);
-  }
-}
-class L3Symbol extends L3Base {
-  constructor(name, type, pos) {
-    super(pos);
-    this.name = name;
-    this.type = type;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-    out.push(`${prefix}  type: `);
-    this.type.debugPrint(out, `${prefix}  `);
-  }
-}
-class L3Variable extends L3Symbol {
-  constructor(name, type, initExpr, pos) {
-    super(name, type, pos);
-    this.initExpr = initExpr;
-  }
-  toString() {
-    return "variable";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  initExpr: `);
-    this.initExpr ? this.initExpr.debugPrint(out, `${prefix}  `) : out.push(" (none)\n");
-  }
-}
-class L3Statement extends L3Base {
-  constructor(pos) {
-    super(pos);
-  }
-}
-class L3ExpressionStatement extends L3Statement {
-  constructor(expr, pos) {
-    super(pos);
-    this.expr = expr;
-  }
-  toString() {
-    return "expression";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  expr: `);
-    this.expr.debugPrint(out, `${prefix}  `);
-  }
-}
-class L3ReturnStatement extends L3Statement {
-  constructor(expr, pos) {
-    super(pos);
-    this.expr = expr;
-  }
-  toString() {
-    return "return";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  expr: `);
-    this.expr ? this.expr.debugPrint(out, `${prefix}  `) : out.push("(void)\n");
-  }
-}
-class L3OperationStep extends L3Base {
-  constructor(pos) {
-    super(pos);
-  }
-}
-class L3Operation extends L3Expression {
-  constructor(operand, steps, type, pos) {
-    super(type, pos);
-    this.operand = operand;
-    this.steps = steps;
-  }
-  toString() {
-    return "operation";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  operand: `);
-    this.operand.debugPrint(out, `${prefix}  `);
-    out.push(`${prefix}  steps:
-`);
-    this.steps.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-class L3LocalVariable extends L3Base {
-  constructor(name, type, pos) {
-    super(pos);
-    this.name = name;
-    this.type = type;
-  }
-  toString() {
-    return "local var";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-    out.push(`${prefix}  type: `);
-    this.type.debugPrint(out, `${prefix}  `);
-  }
-}
-class L3ArgumentVariable extends L3LocalVariable {
-  constructor(index, name, type, pos) {
-    super(name, type, pos);
-    this.index = index;
-  }
-  toString() {
-    return "argument dependency";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  index: ${this.index}
-`);
-  }
-}
-class L3Method extends L3Symbol {
-}
-class L3UnresolvedMethod extends L3Method {
-  toString() {
-    return "unresolved method";
-  }
-}
-class L3CapyMethod extends L3Method {
-  constructor(name, type, deps, statementList, pos) {
-    super(name, type, pos);
-    this.stack = deps;
-    this.statementList = statementList;
-  }
-  toString() {
-    return "method";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  stack:
-`);
-    this.stack.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-    out.push(`${prefix}  statementList: `);
-    this.statementList.debugPrint(out, `${prefix}  `);
-  }
-}
-class L3StatementList extends L3Base {
-  constructor(list, pos) {
-    super(pos);
-    this.list = list;
-  }
-  toString() {
-    return "statement list";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  list:
-`);
-    this.list.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-class L3LibraryMethod extends L3Method {
-  constructor(name, type, callback) {
-    super(name, type, INTERNAL);
-    this.callback = callback;
-  }
-  toString() {
-    return "method";
-  }
-}
-class L3ReadVariable extends L3OperationStep {
-  constructor() {
-    super(INTERNAL);
-  }
-  toString() {
-    return "read variable";
-  }
-}
-class L3MethodCall extends L3OperationStep {
-  constructor(argList, pos) {
-    super(pos);
-    this.argList = argList;
-  }
-  toString() {
-    return "method call";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  argList:
-`);
-    this.argList.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-class L3StringConcat extends L3OperationStep {
-  constructor(other, pos) {
-    super(pos);
-    this.other = other;
-  }
-  toString() {
-    return "string concat";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  other: `);
-    this.other.debugPrint(out, `${prefix}  `);
-  }
-}
-class L3Assignment extends L3OperationStep {
-  constructor(target, pos) {
-    super(pos);
-    this.target = target;
-  }
-  toString() {
-    return "assignment";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  target: `);
-    this.target.debugPrint(out, `${prefix}  `);
-  }
-}
-class L3Module extends L3Base {
-  constructor(name, symbols) {
-    super(INTERNAL);
-    this.symbols = [];
-    this.name = name;
-    this.symbols = symbols;
-  }
-  toString() {
-    return "runnable";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  symbols:
-`);
-    this.symbols.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val == null ? void 0 : val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-class Variable {
-  constructor(value) {
-    this.value = value;
-  }
-}
-class Runner {
-  constructor() {
-    this.modules = [];
-    this.resolvedModules = {};
-    this.variables = {};
-    this.stdout = "";
-  }
-  runExpression(obj, deps) {
-    if (obj instanceof L3String) {
-      return obj.value;
-    }
-    if (obj instanceof L3Number) {
-      return obj.value;
-    }
-    if (obj instanceof L3MethodReference) {
-      const symbol = this.resolveSymbol(obj.module, obj.name);
-      if (!(symbol instanceof L3Method)) {
-        throw new Error(`Expected method but found ${symbol.constructor.name}`);
-      }
-      return symbol;
-    }
-    if (obj instanceof L3ModuleVariableReference) {
-      const symbol = this.resolveSymbol(obj.module, obj.name);
-      if (!(symbol instanceof L3Variable)) {
-        throw new Error(`Expected variable but found ${symbol.constructor.name}`);
-      }
-      let val1 = this.variables[obj.module];
-      if (!val1) {
-        this.variables[obj.module] = val1 = {};
-      }
-      let val2 = val1[obj.name];
-      if (!val2) {
-        val1[obj.name] = val2 = new Variable("");
-        if (symbol.initExpr) {
-          val2.value = this.runExpression(symbol.initExpr, []);
-        }
-      }
-      return val2;
-    }
-    if (obj instanceof L3LocalVariableReference) {
-      return deps[obj.index];
-    }
-    if (obj instanceof L3Operation) {
-      return this.runOperation(obj, deps);
-    }
-    throw new Error(`Cannot read value from ${obj.constructor.name}`);
-  }
-  runOperation(op, deps) {
-    let current = this.runExpression(op.operand, deps);
-    for (const step of op.steps) {
-      if (step instanceof L3MethodCall) {
-        const argList = [];
-        for (const arg of step.argList) {
-          argList.push(this.runExpression(arg, deps));
-        }
-        if (current instanceof L3LibraryMethod) {
-          current = current.callback(argList, this);
-        } else if (current instanceof L3CapyMethod) {
-          current = this.runMethod(current, argList);
-        } else {
-          throw new Error(`Cannot run ${current.constructor.name}`);
-        }
-      } else if (step instanceof L3StringConcat) {
-        const other = this.runExpression(step.other, deps);
-        current += other;
-      } else if (step instanceof L3ReadVariable) {
-        if (!(current instanceof Variable)) {
-          throw new Error(`Current is not variable`);
-        }
-        current = current.value;
-      } else if (step instanceof L3Assignment) {
-        const target = this.runExpression(step.target, deps);
-        if (!(target instanceof Variable)) {
-          throw new Error("Assignment target is not variable");
-        }
-        target.value = current;
-      } else {
-        throw new Error(`Unknown step ${step.constructor.name}`);
-      }
-    }
-    return current;
-  }
-  runStatementList(statementList, stack) {
-    for (const item of statementList.list) {
-      if (item instanceof L3ExpressionStatement) {
-        this.runExpression(item.expr, stack);
-      } else if (item instanceof L3ReturnStatement) {
-        return item.expr && this.runExpression(item.expr, stack);
-      } else if (item instanceof L3StatementList) {
-        const returned = this.runStatementList(item, stack);
-        if (returned !== void 0) {
-          return returned;
-        }
-      } else {
-        throw new Error(`I still don't understand ${item.constructor.name}`);
-      }
-    }
-  }
-  runMethod(method, args) {
-    const stack = method.stack.map((item) => {
-      if (item instanceof L3ArgumentVariable) {
-        return new Variable(args[item.index]);
-      }
-      return new Variable("");
-    });
-    return this.runStatementList(method.statementList, stack);
-  }
-  resolveSymbol(moduleName, symbolName) {
-    let resolvedModule = this.resolvedModules[moduleName];
-    if (!resolvedModule) {
-      throw new Error(`Module "${moduleName}" not found`);
-    }
-    let symbols = resolvedModule.symbols;
-    if (!symbols) {
-      const module = this.modules[resolvedModule.index];
-      resolvedModule.symbols = symbols = {};
-      for (const symbol2 of module.symbols) {
-        symbols[symbol2.name] = symbol2;
-      }
-    }
-    const symbol = symbols[symbolName];
-    if (!symbol) {
-      throw new Error(`Symbol "${symbolName}" not found in module ${moduleName}`);
-    }
-    return symbol;
-  }
-  run(modules, mainModuleName) {
-    this.modules = modules;
-    for (let i = 0; i < modules.length; i++) {
-      this.resolvedModules[modules[i].name] = { index: i };
-    }
-    const startMethod = this.resolveSymbol(mainModuleName, "start");
-    if (!(startMethod instanceof L3CapyMethod)) {
-      throw new Error(`Symbol "start" is not a method`);
-    }
-    this.runMethod(startMethod, []);
-  }
-  print(s) {
-    this.stdout += s + "\n";
-  }
-}
+var _excluded$1q = ["size", "className", "fill"];
+var RefreshCcw = function RefreshCcw2(_ref) {
+  var _ref$size = _ref.size, size = _ref$size === void 0 ? 24 : _ref$size, _ref$className = _ref.className, className = _ref$className === void 0 ? "" : _ref$className, _ref$fill = _ref.fill, fill = _ref$fill === void 0 ? "none" : _ref$fill, otherProps = _objectWithoutProperties(_ref, _excluded$1q);
+  return /* @__PURE__ */ React$3.createElement("svg", _extends({
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill,
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    className: "feather feather-refresh-ccw ".concat(className)
+  }, otherProps), /* @__PURE__ */ React$3.createElement("g", null, /* @__PURE__ */ React$3.createElement("polyline", {
+    points: "1 4 1 10 7 10"
+  }), /* @__PURE__ */ React$3.createElement("polyline", {
+    points: "23 20 23 14 17 14"
+  }), /* @__PURE__ */ React$3.createElement("path", {
+    d: "M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+  })));
+};
 var lib = {};
 var ace$4 = {};
 var ace$3 = { exports: {} };
@@ -14070,9 +13517,9 @@ var ace$3 = { exports: {} };
         this.$keywordList = [];
         Object.keys(map).forEach(function(className) {
           var a = map[className];
-          var list = a.split(splitChar || "|");
-          for (var i = list.length; i--; ) {
-            var word = list[i];
+          var list2 = a.split(splitChar || "|");
+          for (var i = list2.length; i--; ) {
+            var word = list2[i];
             this.$keywordList.push(word);
             if (ignoreCase)
               word = word.toLowerCase();
@@ -15195,12 +14642,12 @@ var ace$3 = { exports: {} };
         LineWidgets2.prototype.getWidgetsAtRow = function(row) {
           var lineWidgets = this.session.lineWidgets;
           var w2 = lineWidgets && lineWidgets[row];
-          var list = [];
+          var list2 = [];
           while (w2) {
-            list.push(w2);
+            list2.push(w2);
             w2 = w2.$oldWidget;
           }
-          return list;
+          return list2;
         };
         LineWidgets2.prototype.onWidgetChanged = function(w2) {
           this.session._changedWidgets.push(w2);
@@ -15764,12 +15211,12 @@ var ace$3 = { exports: {} };
     var BackgroundTokenizer = (
       /** @class */
       function() {
-        function BackgroundTokenizer2(tokenizer, session) {
+        function BackgroundTokenizer2(tokenizer2, session) {
           this.running = false;
           this.lines = [];
           this.states = [];
           this.currentLine = 0;
-          this.tokenizer = tokenizer;
+          this.tokenizer = tokenizer2;
           var self2 = this;
           this.$worker = function() {
             if (!self2.running) {
@@ -15804,8 +15251,8 @@ var ace$3 = { exports: {} };
               self2.fireUpdateEvent(startLine, endLine);
           };
         }
-        BackgroundTokenizer2.prototype.setTokenizer = function(tokenizer) {
-          this.tokenizer = tokenizer;
+        BackgroundTokenizer2.prototype.setTokenizer = function(tokenizer2) {
+          this.tokenizer = tokenizer2;
           this.lines = [];
           this.states = [];
           this.start(0);
@@ -16576,9 +16023,9 @@ var ace$3 = { exports: {} };
           this.$bias = 1;
         }
         RangeList2.prototype.pointIndex = function(pos, excludeEdges, startIndex) {
-          var list = this.ranges;
-          for (var i = startIndex || 0; i < list.length; i++) {
-            var range = list[i];
+          var list2 = this.ranges;
+          for (var i = startIndex || 0; i < list2.length; i++) {
+            var range = list2[i];
             var cmpEnd = comparePoints(pos, range.end);
             if (cmpEnd > 0)
               continue;
@@ -16603,10 +16050,10 @@ var ace$3 = { exports: {} };
             endIndex++;
           return this.ranges.splice(startIndex, endIndex - startIndex, range);
         };
-        RangeList2.prototype.addList = function(list) {
+        RangeList2.prototype.addList = function(list2) {
           var removed = [];
-          for (var i = list.length; i--; ) {
-            removed.push.apply(removed, this.add(list[i]));
+          for (var i = list2.length; i--; ) {
+            removed.push.apply(removed, this.add(list2[i]));
           }
           return removed;
         };
@@ -16617,14 +16064,14 @@ var ace$3 = { exports: {} };
         };
         RangeList2.prototype.merge = function() {
           var removed = [];
-          var list = this.ranges;
-          list = list.sort(function(a, b) {
+          var list2 = this.ranges;
+          list2 = list2.sort(function(a, b) {
             return comparePoints(a.start, b.start);
           });
-          var next = list[0], range;
-          for (var i = 1; i < list.length; i++) {
+          var next = list2[0], range;
+          for (var i = 1; i < list2.length; i++) {
             range = next;
-            next = list[i];
+            next = list2[i];
             var cmp = comparePoints(range.end, next.start);
             if (cmp < 0)
               continue;
@@ -16634,12 +16081,12 @@ var ace$3 = { exports: {} };
               range.end.row = next.end.row;
               range.end.column = next.end.column;
             }
-            list.splice(i, 1);
+            list2.splice(i, 1);
             removed.push(next);
             next = range;
             i--;
           }
-          this.ranges = list;
+          this.ranges = list2;
           return removed;
         };
         RangeList2.prototype.contains = function(row, column) {
@@ -16654,8 +16101,8 @@ var ace$3 = { exports: {} };
             return this.ranges[i];
         };
         RangeList2.prototype.clipRows = function(startRow, endRow) {
-          var list = this.ranges;
-          if (list[0].start.row > endRow || list[list.length - 1].start.row < startRow)
+          var list2 = this.ranges;
+          if (list2[0].start.row > endRow || list2[list2.length - 1].start.row < startRow)
             return [];
           var startIndex = this.pointIndex({ row: startRow, column: 0 });
           if (startIndex < 0)
@@ -16665,7 +16112,7 @@ var ace$3 = { exports: {} };
             endIndex = -endIndex - 1;
           var clipped = [];
           for (var i = startIndex; i < endIndex; i++) {
-            clipped.push(list[i]);
+            clipped.push(list2[i]);
           }
           return clipped;
         };
@@ -18475,12 +17922,12 @@ var ace$3 = { exports: {} };
           this.$stopWorker();
           if (this.$useWorker)
             this.$startWorker();
-          var tokenizer = mode.getTokenizer();
-          if (tokenizer.on !== void 0) {
+          var tokenizer2 = mode.getTokenizer();
+          if (tokenizer2.on !== void 0) {
             var onReloadTokenizer = this.onReloadTokenizer.bind(this);
-            tokenizer.on("update", onReloadTokenizer);
+            tokenizer2.on("update", onReloadTokenizer);
           }
-          this.bgTokenizer.setTokenizer(tokenizer);
+          this.bgTokenizer.setTokenizer(tokenizer2);
           this.bgTokenizer.setDocument(this.getDocument());
           this.tokenRe = mode.tokenRe;
           this.nonTokenRe = mode.nonTokenRe;
@@ -28615,8 +28062,8 @@ var ace$3 = { exports: {} };
         } };
       if (config.get("loadWorkerFromBlob")) {
         var blob = $workerBlob(workerUrl);
-        var URL = window.URL || window.webkitURL;
-        var blobURL = URL.createObjectURL(blob);
+        var URL2 = window.URL || window.webkitURL;
+        var blobURL = URL2.createObjectURL(blob);
         return new Worker(blobURL);
       }
       return new Worker(workerUrl);
@@ -30345,11 +29792,11 @@ lodash_isequal.exports;
   var reIsNative2 = RegExp(
     "^" + funcToString2.call(hasOwnProperty2).replace(reRegExpChar2, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$"
   );
-  var Buffer = moduleExports ? root2.Buffer : void 0, Symbol2 = root2.Symbol, Uint8Array = root2.Uint8Array, propertyIsEnumerable = objectProto2.propertyIsEnumerable, splice2 = arrayProto2.splice, symToStringTag = Symbol2 ? Symbol2.toStringTag : void 0;
+  var Buffer = moduleExports ? root2.Buffer : void 0, Symbol3 = root2.Symbol, Uint8Array = root2.Uint8Array, propertyIsEnumerable = objectProto2.propertyIsEnumerable, splice2 = arrayProto2.splice, symToStringTag = Symbol3 ? Symbol3.toStringTag : void 0;
   var nativeGetSymbols = Object.getOwnPropertySymbols, nativeIsBuffer = Buffer ? Buffer.isBuffer : void 0, nativeKeys = overArg(Object.keys, Object);
   var DataView = getNative2(root2, "DataView"), Map2 = getNative2(root2, "Map"), Promise2 = getNative2(root2, "Promise"), Set2 = getNative2(root2, "Set"), WeakMap2 = getNative2(root2, "WeakMap"), nativeCreate2 = getNative2(Object, "create");
   var dataViewCtorString = toSource2(DataView), mapCtorString = toSource2(Map2), promiseCtorString = toSource2(Promise2), setCtorString = toSource2(Set2), weakMapCtorString = toSource2(WeakMap2);
-  var symbolProto2 = Symbol2 ? Symbol2.prototype : void 0, symbolValueOf = symbolProto2 ? symbolProto2.valueOf : void 0;
+  var symbolProto2 = Symbol3 ? Symbol3.prototype : void 0, symbolValueOf = symbolProto2 ? symbolProto2.valueOf : void 0;
   function Hash2(entries) {
     var index = -1, length = entries == null ? 0 : entries.length;
     this.clear();
@@ -30636,7 +30083,7 @@ lodash_isequal.exports;
     if (stacked && stack.get(other)) {
       return stacked == other;
     }
-    var index = -1, result2 = true, seen = bitmask & COMPARE_UNORDERED_FLAG ? new SetCache() : void 0;
+    var index = -1, result2 = true, seen2 = bitmask & COMPARE_UNORDERED_FLAG ? new SetCache() : void 0;
     stack.set(array, other);
     stack.set(other, array);
     while (++index < arrLength) {
@@ -30651,10 +30098,10 @@ lodash_isequal.exports;
         result2 = false;
         break;
       }
-      if (seen) {
+      if (seen2) {
         if (!arraySome(other, function(othValue2, othIndex) {
-          if (!cacheHas(seen, othIndex) && (arrValue === othValue2 || equalFunc(arrValue, othValue2, bitmask, customizer, stack))) {
-            return seen.push(othIndex);
+          if (!cacheHas(seen2, othIndex) && (arrValue === othValue2 || equalFunc(arrValue, othValue2, bitmask, customizer, stack))) {
+            return seen2.push(othIndex);
           }
         })) {
           result2 = false;
@@ -31599,9 +31046,9 @@ var objectToString = objectProto.toString;
 var reIsNative = RegExp(
   "^" + funcToString.call(hasOwnProperty).replace(reRegExpChar, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$"
 );
-var Symbol$1 = root.Symbol, splice = arrayProto.splice;
+var Symbol$2 = root.Symbol, splice = arrayProto.splice;
 var Map$1 = getNative(root, "Map"), nativeCreate = getNative(Object, "create");
-var symbolProto = Symbol$1 ? Symbol$1.prototype : void 0, symbolToString = symbolProto ? symbolProto.toString : void 0;
+var symbolProto = Symbol$2 ? Symbol$2.prototype : void 0, symbolToString = symbolProto ? symbolProto.toString : void 0;
 function Hash(entries) {
   var index = -1, length = entries ? entries.length : 0;
   this.clear();
@@ -33970,6 +33417,690 @@ lib.diff = diff_1.default;
 var split_1 = split;
 lib.split = split_1.default;
 var _default = lib.default = ace_1.default;
+const container = "_container_71z44_1";
+const code = "_code_71z44_10";
+const result = "_result_71z44_11";
+const editorContainer = "_editorContainer_71z44_20";
+const editor = "_editor_71z44_20";
+const compileOutput = "_compileOutput_71z44_30";
+const terminal = "_terminal_71z44_35";
+const terminalContent = "_terminalContent_71z44_40";
+const classes$3 = {
+  container,
+  code,
+  result,
+  editorContainer,
+  editor,
+  compileOutput,
+  terminal,
+  terminalContent
+};
+class Bean {
+}
+function declareBeanInterface(name) {
+  return { key: Symbol(name) };
+}
+function list(i) {
+  return {
+    load: (loader) => {
+      for (const bc2 of registry[i.key] ?? []) {
+        loader.load(bc2);
+      }
+    },
+    resolve: () => {
+      const result2 = (registry[i.key] ?? []).map((bc2) => internalGetBean(bc2)).sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+      return result2;
+    }
+  };
+}
+function single(i) {
+  return {
+    load: (loader) => {
+      for (const bc2 of registry[i.key] ?? []) {
+        loader.load(bc2);
+      }
+    },
+    resolve: () => {
+      const result2 = (registry[i.key] ?? []).map((bc2) => internalGetBean(bc2)).sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+      return result2[0];
+    }
+  };
+}
+async function loadAndResolve(spec) {
+  const loader = new BeanLoader();
+  spec.load(loader);
+  await loader.getPromise();
+  return spec.resolve();
+}
+const registry = {};
+class BeanLoader {
+  constructor() {
+    this.promises = [];
+    this.processedBCs = /* @__PURE__ */ new Set();
+  }
+  load(bc2) {
+    if (this.processedBCs.has(bc2.key)) {
+      return;
+    }
+    this.processedBCs.add(bc2.key);
+    if (!bc2.module) {
+      if (!bc2.loadModulePromise) {
+        console.log(`Loading "${bc2.key.description}"...`);
+        bc2.loadModulePromise = (async () => {
+          await Promise.resolve();
+          bc2.module = await bc2.loadModule();
+        })();
+      }
+      this.promises.push(bc2.loadModulePromise);
+    }
+    for (const dep of bc2.dependencies) {
+      dep.load(this);
+    }
+  }
+  getPromise() {
+    return Promise.all(this.promises);
+  }
+}
+function internalGetBean(bc2) {
+  if (bc2.bean) {
+    return bc2.bean;
+  }
+  const dst = bc2.bean = {};
+  const src = bc2.factory(
+    bc2.module,
+    bc2.dependencies.map((dep) => dep.resolve())
+  );
+  Object.setPrototypeOf(dst, Object.getPrototypeOf(src));
+  Object.defineProperties(dst, Object.getOwnPropertyDescriptors(src));
+  return bc2.bean;
+}
+async function getBeans(i) {
+  return await loadAndResolve(list(i));
+}
+function declareBean({
+  name,
+  provides,
+  dependencies,
+  loadModule,
+  factory
+}) {
+  const bc2 = {
+    key: Symbol(name),
+    dependencies,
+    loadModule,
+    factory
+  };
+  for (const provide of provides) {
+    let registryKey = registry[provide.key];
+    if (!registryKey) {
+      registry[provide.key] = registryKey = [];
+    }
+    registryKey.push(bc2);
+  }
+}
+const compiler = declareBeanInterface("Compiler");
+function combinePos(a, b) {
+  if (a === INTERNAL || b === INTERNAL) {
+    return INTERNAL;
+  }
+  let lin1, col1, lin2, col2;
+  if (a.lin1 < b.lin1) {
+    lin1 = a.lin1;
+    col1 = a.col1;
+  } else if (b.lin1 < a.lin1) {
+    lin1 = b.lin1;
+    col1 = b.col1;
+  } else {
+    lin1 = a.lin1;
+    col1 = Math.min(a.col1, b.col1);
+  }
+  if (a.lin2 > b.lin2) {
+    lin2 = a.lin2;
+    col2 = a.col2;
+  } else if (b.lin2 > a.lin2) {
+    lin2 = b.lin2;
+    col2 = b.col2;
+  } else {
+    lin2 = a.lin2;
+    col2 = Math.max(a.col2, b.col2);
+  }
+  return { lin1, col1, lin2, col2 };
+}
+function fallbackPos(t2, tBefore) {
+  return {
+    lin1: (t2 == null ? void 0 : t2.lin1) ?? tBefore.lin2,
+    col1: (t2 == null ? void 0 : t2.col1) ?? tBefore.col2,
+    lin2: (t2 == null ? void 0 : t2.lin2) ?? tBefore.lin2,
+    col2: (t2 == null ? void 0 : t2.col2) ?? tBefore.col2
+  };
+}
+const INTERNAL = Object.freeze({
+  lin1: 0,
+  col1: 0,
+  lin2: 0,
+  col2: 0
+});
+class Base {
+  constructor(pos) {
+    this.pos = pos;
+  }
+  static toString(token) {
+    return (token == null ? void 0 : token.toString()) ?? "nothing";
+  }
+  debugPrint(out, prefix) {
+    if (this.pos === INTERNAL) {
+      out.push(`!!${this.constructor.name}
+`);
+    } else {
+      out.push(`!!${this.constructor.name} # ${this.pos.lin1}:${this.pos.col1}-${this.pos.lin2}:${this.pos.col2}
+`);
+    }
+  }
+}
+const ERROR = 2;
+const INVALID = 1;
+class Expression extends Base {
+  constructor(type, pos) {
+    super(pos);
+    this.type = type;
+  }
+  get isReference() {
+    return false;
+  }
+}
+class Operation extends Expression {
+  constructor(operand, type, pos) {
+    super(type, pos);
+    this.operand = operand;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  operand: `);
+    this.operand.debugPrint(out, `${prefix}  `);
+  }
+}
+class Dereference extends Operation {
+  toString() {
+    return "dereference";
+  }
+}
+class Type extends Base {
+}
+class SimpleType extends Type {
+  constructor(primitive, pos) {
+    super(pos);
+    this.primitive = primitive;
+  }
+  toString() {
+    return `${this.primitive}`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  primitive: ${this.primitive}
+`);
+  }
+}
+const STRING = new SimpleType("string", INTERNAL);
+const NUMBER = new SimpleType("number", INTERNAL);
+new SimpleType("boolean", INTERNAL);
+const VOID = new SimpleType("void", INTERNAL);
+function isStringType(type) {
+  return type instanceof SimpleType && type.primitive === "string";
+}
+function isVoidType(type) {
+  return type instanceof SimpleType && type.primitive === "void";
+}
+class NumberLiteral extends Expression {
+  constructor(value, pos) {
+    super(NUMBER, pos);
+    this.value = value;
+  }
+  toString() {
+    return `number`;
+  }
+}
+class StringLiteral extends Expression {
+  constructor(value, pos) {
+    super(STRING, pos);
+    this.value = value;
+  }
+  toString() {
+    return `string`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  value: ${this.value}
+`);
+  }
+}
+class Toplevel extends Base {
+}
+let Symbol$1 = class Symbol2 extends Toplevel {
+  constructor(module, name, pos) {
+    super(pos);
+    this.module = module;
+    this.name = name;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  module: ${this.module}
+`);
+    out.push(`${prefix}  name: ${this.name}
+`);
+  }
+};
+class GlobalVariable extends Symbol$1 {
+  constructor(module, name, type, initExpr, pos) {
+    super(module, name, pos);
+    this.type = type;
+    this.initExpr = initExpr;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}
+`);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+    out.push(`${prefix}  initExpr: `);
+    this.initExpr ? this.initExpr.debugPrint(out, `${prefix}  `) : out.push("(none)\n");
+  }
+  toString() {
+    return `variable "${this.name}"`;
+  }
+}
+class GlobalVariableReference extends Expression {
+  constructor(module, name, type, pos) {
+    super(type, pos);
+    this.module = module;
+    this.name = name;
+  }
+  get isReference() {
+    return true;
+  }
+  toString() {
+    return `identifier "${this.name}"`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  module: ${this.module}
+`);
+    out.push(`${prefix}  name: ${this.name}
+`);
+  }
+}
+class LocalVariable extends Base {
+  constructor(name, type, pos) {
+    super(pos);
+    this.name = name;
+    this.type = type;
+  }
+  toString() {
+    return "local var";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}
+`);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+class ArgumentVariable extends LocalVariable {
+  constructor(index, name, type, pos) {
+    super(name, type, pos);
+    this.index = index;
+  }
+  toString() {
+    return "argument dependency";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  index: ${this.index}
+`);
+  }
+}
+class Method extends Symbol$1 {
+  constructor(module, name, type, pos) {
+    super(module, name, pos);
+    this.type = type;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  type: `);
+    this.type.debugPrint(out, `${prefix}  `);
+  }
+}
+class CapyMethod extends Method {
+  constructor(module, name, type, deps, statementList, pos) {
+    super(module, name, type, pos);
+    this.stack = deps;
+    this.statementList = statementList;
+  }
+  toString() {
+    return "method";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  stack:
+`);
+    this.stack.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
+    out.push(`${prefix}  statementList: `);
+    this.statementList.debugPrint(out, `${prefix}  `);
+  }
+}
+class LocalVariableReference extends Expression {
+  constructor(index, name, type, pos) {
+    super(type, pos);
+    this.index = index;
+    this.name = name;
+  }
+  get isReference() {
+    return true;
+  }
+  toString() {
+    return `local variable "${this.name}"`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  name: ${this.name}
+`);
+    out.push(`${prefix}  index: ${this.index}
+`);
+  }
+}
+class MethodCall extends Operation {
+  constructor(operand, argList, type, pos) {
+    super(operand, type, pos);
+    this.argList = argList;
+  }
+  toString() {
+    return "method call";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  argList:
+`);
+    this.argList.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
+  }
+}
+class MethodLiteral extends Expression {
+  constructor(module, name, type, pos) {
+    super(type, pos);
+    this.module = module;
+    this.name = name;
+  }
+  toString() {
+    return `method literal "${this.name}"`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  module: ${this.module}
+`);
+    out.push(`${prefix}  name: ${this.name}
+`);
+  }
+}
+class NativeMethod extends Method {
+  constructor(module, name, type, callback, pos) {
+    super(module, name, type, pos);
+    this.callback = callback;
+  }
+  toString() {
+    return "native method";
+  }
+}
+class Assignment extends Operation {
+  constructor(operand, target, type, pos) {
+    super(operand, type, pos);
+    this.target = target;
+  }
+  toString() {
+    return "assignment";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  target: `);
+    this.target.debugPrint(out, `${prefix}  `);
+  }
+}
+class StringConcat extends Operation {
+  constructor(operand, other, type, pos) {
+    super(operand, type, pos);
+    this.other = other;
+  }
+  toString() {
+    return "string concat";
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  other: `);
+    this.other.debugPrint(out, `${prefix}  `);
+  }
+}
+class Statement extends Base {
+  constructor(pos) {
+    super(pos);
+  }
+}
+class ExpressionStatement extends Statement {
+  constructor(expr, pos) {
+    super(pos);
+    this.expr = expr;
+  }
+  toString() {
+    return `expression statement`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  expr: `);
+    this.expr.debugPrint(out, `${prefix}  `);
+  }
+}
+class ReturnStatement extends Statement {
+  constructor(expr, pos) {
+    super(pos);
+    this.expr = expr;
+  }
+  toString() {
+    return `return statement`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  expr: `);
+    this.expr ? this.expr.debugPrint(out, `${prefix}  `) : out.push(` (void)
+`);
+  }
+}
+class StatementList extends Statement {
+  constructor(list2, pos) {
+    super(pos);
+    this.list = list2;
+  }
+  toString() {
+    return `statement list`;
+  }
+  debugPrint(out, prefix) {
+    super.debugPrint(out, prefix);
+    out.push(`${prefix}  list:
+`);
+    this.list.forEach((val) => {
+      out.push(`${prefix}    - `);
+      val.debugPrint(out, `${prefix}      `);
+    });
+  }
+}
+class MyVariable {
+  constructor(value) {
+    this.value = value;
+  }
+}
+class Runner {
+  constructor() {
+    this.modules = {};
+    this.variables = {};
+    this.stdout = "";
+  }
+  runExpression(obj, deps) {
+    if (obj instanceof StringLiteral) {
+      return obj.value;
+    }
+    if (obj instanceof NumberLiteral) {
+      return obj.value;
+    }
+    if (obj instanceof MethodLiteral) {
+      const symbol = this.resolveSymbol(obj.module, obj.name);
+      if (!(symbol instanceof Method)) {
+        throw new Error(`Expected method but found ${symbol.constructor.name}`);
+      }
+      return symbol;
+    }
+    if (obj instanceof GlobalVariableReference) {
+      const symbol = this.resolveSymbol(obj.module, obj.name);
+      if (!(symbol instanceof GlobalVariable)) {
+        throw new Error(`Expected variable but found ${symbol.constructor.name}`);
+      }
+      let val1 = this.variables[obj.module];
+      if (!val1) {
+        this.variables[obj.module] = val1 = {};
+      }
+      let val2 = val1[obj.name];
+      if (!val2) {
+        val1[obj.name] = val2 = new MyVariable("");
+        if (symbol.initExpr) {
+          val2.value = this.runExpression(symbol.initExpr, []);
+        }
+      }
+      return val2;
+    }
+    if (obj instanceof LocalVariableReference) {
+      return deps[obj.index];
+    }
+    if (obj instanceof MethodCall) {
+      const argList = [];
+      for (const arg of obj.argList) {
+        argList.push(this.runExpression(arg, deps));
+      }
+      const method = this.runExpression(obj.operand, deps);
+      if (method instanceof NativeMethod) {
+        return method.callback(this, ...argList);
+      }
+      if (method instanceof CapyMethod) {
+        return this.runMethod(method, argList);
+      }
+      throw new Error(`Cannot run ${method.constructor.name}`);
+    }
+    if (obj instanceof StringConcat) {
+      const operand = this.runExpression(obj.operand, deps);
+      const other = this.runExpression(obj.other, deps);
+      return operand + other;
+    }
+    if (obj instanceof Dereference) {
+      const variable = this.runExpression(obj.operand, deps);
+      if (!(variable instanceof MyVariable)) {
+        throw new Error(`${variable.constructor.name} is not variable`);
+      }
+      return variable.value;
+    }
+    if (obj instanceof Assignment) {
+      const operand = this.runExpression(obj.operand, deps);
+      const target = this.runExpression(obj.target, deps);
+      if (!(target instanceof MyVariable)) {
+        throw new Error("Assignment target is not variable");
+      }
+      return target.value = operand;
+    }
+    throw new Error(`Cannot read value from ${obj.constructor.name}`);
+  }
+  runStatementList(statementList, stack) {
+    for (const item of statementList.list) {
+      if (item instanceof ExpressionStatement) {
+        this.runExpression(item.expr, stack);
+      } else if (item instanceof ReturnStatement) {
+        return item.expr && this.runExpression(item.expr, stack);
+      } else if (item instanceof StatementList) {
+        const returned = this.runStatementList(item, stack);
+        if (returned !== void 0) {
+          return returned;
+        }
+      } else {
+        throw new Error(`I still don't understand ${item.constructor.name}`);
+      }
+    }
+  }
+  runMethod(method, args) {
+    const stack = method.stack.map((item) => {
+      if (item instanceof ArgumentVariable) {
+        return new MyVariable(args[item.index]);
+      }
+      return new MyVariable("");
+    });
+    return this.runStatementList(method.statementList, stack);
+  }
+  resolveSymbol(moduleName, symbolName) {
+    const module = this.modules[moduleName];
+    if (!module) {
+      throw new Error(`Module "${moduleName}" not found`);
+    }
+    const symbol = module.symbols[symbolName];
+    if (!symbol) {
+      throw new Error(`Symbol "${symbolName}" not found in module ${moduleName}`);
+    }
+    return symbol;
+  }
+  run(modules, mainModuleName) {
+    this.modules = modules;
+    const startMethod = this.resolveSymbol(mainModuleName, "start");
+    if (!(startMethod instanceof CapyMethod)) {
+      throw new Error(`Symbol "start" is not a method`);
+    }
+    this.runMethod(startMethod, []);
+  }
+  print(s) {
+    this.stdout += s + "\n";
+  }
+}
+const tile = "_tile_c1qfn_1";
+const header = "_header_c1qfn_9";
+const content = "_content_c1qfn_15";
+const classes$2 = {
+  tile,
+  header,
+  content
+};
+function Tile({ children, title, className = "" }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `${classes$2.tile} ${className}`, children: [
+    title && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: classes$2.header, children: title }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: classes$2.content, children })
+  ] });
+}
+const toolButton = "_toolButton_1dqrl_1";
+const classes$1 = {
+  toolButton
+};
+function ToolButton({
+  text,
+  icon: FeatherIcon,
+  variant = "normal",
+  onClick
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: classes$1.toolButton, "data-variant": variant, onClick, children: [
+    FeatherIcon && /* @__PURE__ */ jsxRuntimeExports.jsx(FeatherIcon, { style: { marginLeft: -4 }, size: 20 }),
+    text
+  ] });
+}
+const toolbar = "_toolbar_u8g8q_1";
+const classes = {
+  toolbar
+};
+function Toolbar({ children }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: classes.toolbar, children });
+}
 var modeTypescript = { exports: {} };
 (function(module, exports) {
   ace.define("ace/mode/jsdoc_comment_highlight_rules", ["require", "exports", "module", "ace/lib/oop", "ace/mode/text_highlight_rules"], function(require2, exports2, module2) {
@@ -35729,2283 +35860,66 @@ var themeGithub_light_default = { exports: {} };
     });
   })();
 })(themeGithub_light_default);
-const tile = "_tile_c1qfn_1";
-const header = "_header_c1qfn_9";
-const content = "_content_c1qfn_15";
-const classes$2 = {
-  tile,
-  header,
-  content
-};
-function Tile({ children, title, className = "" }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `${classes$2.tile} ${className}`, children: [
-    title && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: classes$2.header, children: title }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: classes$2.content, children })
-  ] });
-}
-class L1Base extends Base {
-  /**
-   * Method to enforce TypeScript nominal typing.
-   */
-  isL1Base() {
-    return true;
-  }
-}
-const KEYWORDS = /* @__PURE__ */ new Set(["use", "string", "number", "boolean", "return", "function", "var", "const"]);
-class L1Keyword extends L1Base {
-  constructor(name, pos) {
-    super(pos);
-    this.name = name;
-  }
-  toString() {
-    return `keyword "${this.name}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-  }
-}
-class L1Identifier extends L1Base {
-  constructor(name, pos) {
-    super(pos);
-    this.name = name;
-  }
-  toString() {
-    return `identifier "${this.name}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-  }
-}
-class L1Separator extends L1Base {
-  constructor(value, pos) {
-    super(pos);
-    this.value = value;
-  }
-  toString() {
-    return `separator "${this.value}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  value: ${this.value}
-`);
-  }
-}
-class L1Operator extends L1Base {
-  constructor(value, pos) {
-    super(pos);
-    this.value = value;
-  }
-  toString() {
-    return `operator "${this.value}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  value: ${this.value}
-`);
-  }
-}
-class L1Bracket extends L1Base {
-  constructor(start, end, tokenList, pos) {
-    super(pos);
-    this.start = start;
-    this.end = end;
-    this.tokenList = tokenList;
-  }
-  toString() {
-    return `bracket "${this.start}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  start: ${this.start}
-`);
-    out.push(`${prefix}  tokenList:
-`);
-    this.tokenList.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-class L1Number extends L1Base {
-  constructor(value, pos) {
-    super(pos);
-    this.value = value;
-  }
-  toString() {
-    return `number "${this.value}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  value: ${this.value}
-`);
-  }
-}
-class L1String extends L1Base {
-  constructor(value, pos) {
-    super(pos);
-    this.value = value;
-  }
-  getName() {
-    return "L1String";
-  }
-  toString() {
-    return `string "${this.value}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  value: ${this.value}
-`);
-  }
-}
-function isWordStart(c) {
-  return c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c === "_";
-}
-function isWordMiddle(c) {
-  return c >= "a" && c <= "z" || c >= "A" && c <= "Z" || c >= "0" && c <= "9" || c === "_";
-}
-function isWhitespace(c) {
-  return c === " " || c === "	" || c === "\r" || c === "\n";
-}
-function isBracketStart(c) {
-  return c === "(" || c === "[" || c === "{";
-}
-function isBracketEnd(c) {
-  return c === ")" || c === "]" || c === "}";
-}
-function isNumberStart(c) {
-  return c >= "0" && c <= "9";
-}
-function isNumberMiddle(c) {
-  return c >= "0" && c <= "9" || c == ".";
-}
-function isSeparator$1(c) {
-  return c === ";" || c === ",";
-}
-const operatorMap = {
-  "=": { "=": true },
-  "+": true,
-  "-": true,
-  "*": true,
-  "/": true,
-  ":": true,
-  ".": true
-};
-function isOperator$1(s) {
-  let currentMapPos = operatorMap;
-  for (const c of s) {
-    if (currentMapPos === true) {
-      return false;
-    }
-    currentMapPos = currentMapPos[c];
-    if (!currentMapPos) {
-      return false;
-    }
-  }
-  return true;
-}
-class L1Parser {
-  constructor() {
-    this.s = "";
-    this.pos = 0;
-    this.lin = 0;
-    this.col = 0;
-    this.current = "";
-    this.errors = [];
-  }
-  consume() {
-    if (!this.current) {
-      return;
-    }
-    this.pos++;
-    if (this.pos >= this.s.length) {
-      this.current = "";
-      return;
-    }
-    if (this.current === "\n") {
-      this.col = 1;
-      this.lin++;
-    } else {
-      this.col++;
-    }
-    this.current = this.s[this.pos];
-  }
-  readWord() {
-    if (!isWordStart(this.current)) {
-      return;
-    }
-    let value = this.current;
-    const lin1 = this.lin;
-    const col1 = this.col;
-    let lin2 = this.lin;
-    let col2 = this.col + 1;
-    this.consume();
-    while (isWordMiddle(this.current)) {
-      value += this.current;
-      lin2 = this.lin;
-      col2 = this.col + 1;
-      this.consume();
-    }
-    return KEYWORDS.has(value) ? new L1Keyword(value, { lin1, col1, lin2, col2 }) : new L1Identifier(value, { lin1, col1, lin2, col2 });
-  }
-  readNumber() {
-    if (!isNumberStart(this.current)) {
-      return;
-    }
-    let value = this.current;
-    const lin1 = this.lin;
-    const col1 = this.col;
-    let lin2 = this.lin;
-    let col2 = this.col + 1;
-    this.consume();
-    while (isNumberMiddle(this.current)) {
-      value += this.current;
-      lin2 = this.lin;
-      col2 = this.col + 1;
-      this.consume();
-    }
-    return new L1Number(value, { lin1, col1, lin2, col2 });
-  }
-  readWhitespace() {
-    if (!isWhitespace(this.current)) {
-      return;
-    }
-    this.consume();
-    while (isWhitespace(this.current)) {
-      this.consume();
-    }
-    return true;
-  }
-  readOperator() {
-    if (!isOperator$1(this.current)) {
-      return;
-    }
-    let value = this.current;
-    const lin1 = this.lin;
-    const col1 = this.col;
-    let lin2 = this.lin;
-    let col2 = this.col + 1;
-    this.consume();
-    while (this.current && isOperator$1(value + this.current)) {
-      value += this.current;
-      lin2 = this.lin;
-      col2 = this.col + 1;
-    }
-    return new L1Operator(value, { lin1, col1, lin2, col2 });
-  }
-  readSeparator() {
-    if (!isSeparator$1(this.current)) {
-      return;
-    }
-    let value = this.current;
-    const lin1 = this.lin;
-    const col1 = this.col;
-    const lin2 = this.lin;
-    const col2 = this.col + 1;
-    this.consume();
-    return new L1Separator(value, { lin1, col1, lin2, col2 });
-  }
-  readBracket() {
-    if (!isBracketStart(this.current)) {
-      return;
-    }
-    const bracketStart = this.current;
-    const expectedBracketEnd = bracketStart === "(" ? ")" : bracketStart === "[" ? "]" : bracketStart === "{" ? "}" : "";
-    const lin1 = this.lin;
-    const col1 = this.col;
-    this.consume();
-    const list = [];
-    while (true) {
-      if (!this.current) {
-        this.errors.push({
-          level: ERROR,
-          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col },
-          message: `Expected "${expectedBracketEnd}"`
-        });
-        break;
-      }
-      if (isBracketEnd(this.current)) {
-        break;
-      }
-      const item = this.read();
-      if (!item) {
-        this.errors.push({
-          level: ERROR,
-          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
-          message: `Unexpected char "${this.current}"`
-        });
-        this.consume();
-      }
-      if (item instanceof L1Base) {
-        list.push(item);
-      }
-    }
-    const lin2 = this.lin;
-    const col2 = this.col + 1;
-    if (this.current) {
-      if (this.current !== expectedBracketEnd) {
-        this.errors.push({
-          level: ERROR,
-          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
-          message: `Expected "${expectedBracketEnd}" but found ${this.current}`
-        });
-      }
-      this.consume();
-    }
-    return new L1Bracket(bracketStart, expectedBracketEnd, list, { lin1, col1, lin2, col2 });
-  }
-  readString() {
-    if (this.current !== '"') {
-      return;
-    }
-    let value = "";
-    const lin1 = this.lin;
-    const col1 = this.col;
-    let lin2 = this.lin;
-    let col2 = this.col + 1;
-    this.consume();
-    while (true) {
-      if (!this.current) {
-        this.errors.push({
-          level: ERROR,
-          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col },
-          message: `Unterminated string`
-        });
-        break;
-      }
-      if (this.current === '"') {
-        this.consume();
-        break;
-      }
-      value += this.current;
-      lin2 = this.lin;
-      col2 = this.col + 1;
-      this.consume();
-    }
-    return new L1String(value, { lin1, col1, lin2, col2 });
-  }
-  read() {
-    return this.readWhitespace() || this.readWord() || this.readOperator() || this.readSeparator() || this.readBracket() || this.readNumber() || this.readString();
-  }
-  parse(s) {
-    this.s = s;
-    this.pos = 0;
-    this.current = s[0];
-    this.lin = 1;
-    this.col = 1;
-    const list = [];
-    while (this.current) {
-      const item = this.read();
-      if (!item) {
-        this.errors.push({
-          level: ERROR,
-          pos: { lin1: this.lin, col1: this.col, lin2: this.lin, col2: this.col + 1 },
-          message: `Unexpected char "${this.current}"`
-        });
-        this.consume();
-      }
-      if (item instanceof L1Base) {
-        list.push(item);
-      }
-    }
-    return { list, errors: this.errors };
-  }
-}
-function layer1Parse(s) {
-  return new L1Parser().parse(s);
-}
-class L2Base extends Base {
-  isL2() {
-    return true;
-  }
-}
-class L2Expression extends L2Base {
-  isL2Expression() {
-    return true;
-  }
-  constructor(pos) {
-    super(pos);
-  }
-}
-class L2OperationStep extends L2Base {
-  constructor(pos) {
-    super(pos);
-  }
-}
-class L2String extends L2Expression {
-  constructor(value, pos) {
-    super(pos);
-    this.value = value;
-  }
-  toString() {
-    return `string`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  value: ${this.value}
-`);
-  }
-}
-class L2Number extends L2Expression {
-  constructor(value, pos) {
-    super(pos);
-    this.value = value;
-  }
-  toString() {
-    return `number`;
-  }
-}
-class L2Identifier extends L2Expression {
-  constructor(value, pos) {
-    super(pos);
-    this.value = value;
-  }
-  toString() {
-    return `identifier "${this.value}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  value: ${this.value}
-`);
-  }
-}
-class L2MethodCall extends L2OperationStep {
-  constructor(argList, pos) {
-    super(pos);
-    this.argList = argList;
-  }
-  toString() {
-    return `call`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  argList:
-`);
-    this.argList.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-class L2ArraySubscripting extends L2OperationStep {
-  constructor(item, pos) {
-    super(pos);
-    this.item = item;
-  }
-  toString() {
-    return "array";
-  }
-}
-class L2MemberAccess extends L2OperationStep {
-  constructor(member, pos) {
-    super(pos);
-    this.member = member;
-  }
-  toString() {
-    return "member access";
-  }
-}
-class L2Operation extends L2Expression {
-  constructor(operand, steps, pos) {
-    super(pos);
-    this.operand = operand;
-    this.steps = steps;
-  }
-  toString() {
-    return `operation`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  operand: `);
-    this.operand.debugPrint(out, `${prefix}  `);
-    out.push(`${prefix}  steps:
-`);
-    this.steps.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-class L2UnaryMinus extends L2OperationStep {
-  constructor(pos) {
-    super(pos);
-  }
-  toString() {
-    return `operation`;
-  }
-}
-class L2UnaryPlus extends L2OperationStep {
-  constructor(pos) {
-    super(pos);
-  }
-  toString() {
-    return `operation`;
-  }
-}
-class L2Addition extends L2OperationStep {
-  constructor(operand, pos) {
-    super(pos);
-    this.operand = operand;
-  }
-  toString() {
-    return `operation`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  operand: `);
-    this.operand.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Subtraction extends L2OperationStep {
-  constructor(operand, pos) {
-    super(pos);
-    this.operand = operand;
-  }
-  toString() {
-    return `operation`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  operand: `);
-    this.operand.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Multiplication extends L2OperationStep {
-  constructor(operand, pos) {
-    super(pos);
-    this.operand = operand;
-  }
-  toString() {
-    return `operation`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  operand: `);
-    this.operand.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Division extends L2OperationStep {
-  constructor(operand, pos) {
-    super(pos);
-    this.operand = operand;
-  }
-  toString() {
-    return `operation`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  operand: `);
-    this.operand.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Remainder extends L2OperationStep {
-  constructor(operand, pos) {
-    super(pos);
-    this.operand = operand;
-  }
-  toString() {
-    return `operation`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  operand: `);
-    this.operand.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Assignment extends L2OperationStep {
-  constructor(operand, pos) {
-    super(pos);
-    this.operand = operand;
-  }
-  toString() {
-    return `operation`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  operand: `);
-    this.operand.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Use extends L2Base {
-  constructor(value, pos) {
-    super(pos);
-    this.value = value;
-  }
-  toString() {
-    return `use "${this.value}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  value: ${this.value}
-`);
-  }
-}
-class L2Argument extends L2Base {
-  constructor(name, type, pos) {
-    super(pos);
-    this.name = name;
-    this.type = type;
-  }
-  toString() {
-    return "argument";
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-    out.push(`${prefix}  type: `);
-    this.type.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Definition extends L2Base {
-  constructor(name, type, pos) {
-    super(pos);
-    this.name = name;
-    this.type = type;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-    out.push(`${prefix}  type: `);
-    this.type.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Method extends L2Definition {
-  constructor(name, type, statementList, pos) {
-    super(name, type, pos);
-    this.name = name;
-    this.type = type;
-    this.statementList = statementList;
-  }
-  toString() {
-    return `method "${this.name}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  statementList: `);
-    this.statementList.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2Variable extends L2Definition {
-  constructor(name, type, initExpr, pos) {
-    super(name, type, pos);
-    this.initExpr = initExpr;
-  }
-  toString() {
-    return `variable "${this.name}"`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  initExpr: `);
-    this.initExpr ? this.initExpr.debugPrint(out, `${prefix}  `) : out.push("(none)\n");
-  }
-}
-class L2Type extends L2Base {
-  constructor(pos) {
-    super(pos);
-  }
-}
-class L2SimpleType extends L2Type {
-  constructor(name, pos) {
-    super(pos);
-    this.name = name;
-  }
-  toString() {
-    return `type ${this.name}`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}
-`);
-  }
-}
-class L2CallableType extends L2Type {
-  constructor(argList, returnType, pos) {
-    super(pos);
-    this.argList = argList;
-    this.returnType = returnType;
-  }
-  toString() {
-    return `type`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  argList:
-`);
-    this.argList.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-    out.push(`${prefix}  returnType: `);
-    this.returnType ? this.returnType.debugPrint(out, `${prefix}  `) : out.push("(void)\n");
-  }
-}
-class L2Statement extends L2Base {
-  constructor(pos) {
-    super(pos);
-  }
-}
-class L2StatementList extends L2Statement {
-  constructor(list, pos) {
-    super(pos);
-    this.list = list;
-  }
-  toString() {
-    return `statement list`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  list:
-`);
-    this.list.forEach((val) => {
-      out.push(`${prefix}    - `);
-      val.debugPrint(out, `${prefix}      `);
-    });
-  }
-}
-class L2ExpressionStatement extends L2Statement {
-  constructor(expr, pos) {
-    super(pos);
-    this.expr = expr;
-  }
-  toString() {
-    return `expression statement`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  expr: `);
-    this.expr.debugPrint(out, `${prefix}  `);
-  }
-}
-class L2ReturnStatement extends L2Statement {
-  constructor(expr, pos) {
-    super(pos);
-    this.expr = expr;
-  }
-  toString() {
-    return `return statement`;
-  }
-  debugPrint(out, prefix) {
-    super.debugPrint(out, prefix);
-    out.push(`${prefix}  expr: `);
-    this.expr ? this.expr.debugPrint(out, `${prefix}  `) : out.push(` (void)
-`);
-  }
-}
-function isKeyword(token, value) {
-  return token instanceof L1Keyword && (value === void 0 || token.name === value);
-}
-function isIdentifier(token, value) {
-  return token instanceof L1Identifier && value === void 0;
-}
-function isString(token, value) {
-  return token instanceof L1String && value === void 0;
-}
-function isOperator(token, value) {
-  return token instanceof L1Operator && (value === void 0 || token.value === value);
-}
-function isSeparator(token, value) {
-  return token instanceof L1Separator && (value === void 0 || token.value === value);
-}
-function isBracket(token, value) {
-  return token instanceof L1Bracket && (value === void 0 || token.start === value);
-}
-function isOperand(token) {
-  return token instanceof L2Expression || token instanceof L1Identifier || token instanceof L1Number || token instanceof L1String || token instanceof L1Bracket && token.start === "(";
-}
-function isExpressionEnd(t2) {
-  return !t2 || !(isOperand(t2) || isOperator(t2));
-}
-const INVALID$1 = 1;
-class L2Parser {
-  constructor() {
-    this.pos = 0;
-    this.list = [];
-    this.errors = [];
-  }
-  consume() {
-    if (!this.current) {
-      return;
-    }
-    this.current = this.list[++this.pos];
-  }
-  readUse() {
-    const t1 = this.current;
-    if (!isKeyword(t1, "use")) {
-      return;
-    }
-    this.consume();
-    const t2 = this.current;
-    if (!isString(t2)) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected string`,
-        pos: fallbackPos(t2 == null ? void 0 : t2.pos, t1.pos)
-      });
-      return INVALID$1;
-    }
-    this.consume();
-    const t3 = this.current;
-    if (isSeparator(t3, ";")) {
-      this.consume();
-    } else {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected ";"`,
-        pos: fallbackPos(t3 == null ? void 0 : t3.pos, t2.pos)
-      });
-    }
-    return new L2Use(t2.value, combinePos(t1.pos, (t3 ?? t2).pos));
-  }
-  readFunction() {
-    const t1 = this.current;
-    if (!isKeyword(t1, "function")) {
-      return;
-    }
-    this.consume();
-    const t2 = this.current;
-    if (!isIdentifier(t2)) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected string`,
-        pos: fallbackPos(t2 == null ? void 0 : t2.pos, t1.pos)
-      });
-      return INVALID$1;
-    }
-    this.consume();
-    const t3 = this.current;
-    let type = t3 && this.readCallableType();
-    if (type === INVALID$1) {
-      return INVALID$1;
-    }
-    if (!type) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected type1`,
-        pos: fallbackPos(t3 == null ? void 0 : t3.pos, t2.pos)
-      });
-      return INVALID$1;
-    }
-    const t4 = this.current;
-    const statementList = t4 && this.readStatementList();
-    if (!statementList) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected "{" but found ${t4}`,
-        pos: fallbackPos(t4 == null ? void 0 : t4.pos, type.pos)
-      });
-      return INVALID$1;
-    }
-    if (statementList === INVALID$1) {
-      return INVALID$1;
-    }
-    return new L2Method(t2.name, type, statementList, combinePos(t1.pos, t4.pos));
-  }
-  readStatementList() {
-    const t1 = this.current;
-    if (!isBracket(t1, "{")) {
-      return;
-    }
-    this.consume();
-    const r2 = new L2Parser().parseStatementList(t1.tokenList);
-    this.errors.push(...r2.errors);
-    return new L2StatementList(r2.list, t1.pos);
-  }
-  readVariable() {
-    const t1 = this.current;
-    if (!isKeyword(t1, "var")) {
-      return;
-    }
-    this.consume();
-    const t2 = this.current;
-    if (!isIdentifier(t2)) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected string`,
-        pos: fallbackPos(t2 == null ? void 0 : t2.pos, t1.pos)
-      });
-      return INVALID$1;
-    }
-    this.consume();
-    let t3 = this.current;
-    if (!isOperator(t3, ":")) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected ":"`,
-        pos: fallbackPos(t3 == null ? void 0 : t3.pos, t2.pos)
-      });
-      return INVALID$1;
-    }
-    this.consume();
-    const t4 = this.current;
-    const type = t4 && this.readType();
-    if (type === INVALID$1) {
-      return INVALID$1;
-    }
-    if (!type) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected type`,
-        pos: fallbackPos(t4 == null ? void 0 : t4.pos, t3.pos)
-      });
-      return INVALID$1;
-    }
-    t3 = this.current;
-    let initExpr = null;
-    if (isOperator(t3, "=")) {
-      this.consume();
-      const t42 = this.current;
-      const _initExpr = t42 && this.readExpression();
-      if (_initExpr === INVALID$1) {
-        return INVALID$1;
-      }
-      if (!_initExpr) {
-        this.errors.push({
-          level: ERROR,
-          message: `Expected initializer`,
-          pos: fallbackPos(t42 == null ? void 0 : t42.pos, t3.pos)
-        });
-        return INVALID$1;
-      }
-      initExpr = _initExpr;
-    }
-    const t5 = this.current;
-    if (isSeparator(t5, ";")) {
-      this.consume();
-    } else {
-      this.errors.push({
-        level: ERROR,
-        message: type === initExpr ? `Expected ";"` : `Expected "=" or ";"`,
-        pos: fallbackPos(t5 == null ? void 0 : t5.pos, t3.pos)
-      });
-    }
-    return new L2Variable(t2.name, type, initExpr, combinePos(t1.pos, (t5 ?? t2).pos));
-  }
-  readCallableType() {
-    const t1 = this.current;
-    if (!isBracket(t1, "(")) {
-      return;
-    }
-    this.consume();
-    let returnType = null;
-    const r2 = new L2Parser().parseArgumentList(t1.tokenList);
-    this.errors.push(...r2.errors);
-    const t2 = this.current;
-    if (isOperator(t2, ":")) {
-      this.consume();
-      const _returnType = this.readType();
-      if (_returnType === INVALID$1) {
-        return INVALID$1;
-      }
-      if (!_returnType) {
-        this.errors.push({
-          level: ERROR,
-          message: `Expected type`,
-          pos: t2.pos
-        });
-        return INVALID$1;
-      }
-      returnType = _returnType;
-    }
-    return new L2CallableType(r2.list, returnType, combinePos(t1.pos, (returnType ?? t1).pos));
-  }
-  readSimpleType() {
-    const t1 = this.current;
-    if (isKeyword(t1) || isIdentifier(t1)) {
-      this.consume();
-      return new L2SimpleType(t1.name, t1.pos);
-    }
-  }
-  readType() {
-    return this.readCallableType() || this.readSimpleType();
-  }
-  readToplevel() {
-    return this.readUse() || this.readVariable() || this.readFunction();
-  }
-  unwrapOperand(operand) {
-    if (operand instanceof L2Expression) {
-      return operand;
-    }
-    if (operand instanceof L1Identifier) {
-      return new L2Identifier(operand.name, operand.pos);
-    }
-    if (operand instanceof L1Number) {
-      return new L2Number(operand.value, operand.pos);
-    }
-    if (operand instanceof L1String) {
-      return new L2String(operand.value, operand.pos);
-    }
-    if (operand instanceof L1Bracket && operand.start === "(") {
-      const r2 = new L2Parser().parseExpressionList(operand.tokenList, {
-        unexpectedTokenErrorMsg: (t2) => `Expected ")" but found ${t2}`
-      });
-      this.errors.push(...r2.errors);
-      if (r2.list.length === 0) {
-        this.errors.push({
-          level: ERROR,
-          message: `Expected expression`,
-          pos: operand.pos
-        });
-        return INVALID$1;
-      }
-      if (r2.list.length > 1) {
-        this.errors.push({
-          level: ERROR,
-          message: `Expected ")"`,
-          pos: r2.list[1].pos
-        });
-        return INVALID$1;
-      }
-      return r2.list[0];
-    }
-    this.errors.push({
-      level: ERROR,
-      message: `Expected expression but found ${operand}`,
-      pos: operand.pos
-    });
-    return INVALID$1;
-  }
-  createOperation(t1, step) {
-    if (t1 instanceof L2Operation) {
-      t1.steps.push(step);
-      t1.pos = step.pos;
-      return t1;
-    }
-    const operand = this.unwrapOperand(t1);
-    if (operand === INVALID$1) {
-      return INVALID$1;
-    }
-    return new L2Operation(operand, [step], step.pos);
-  }
-  processOperator1(list) {
-    const result2 = [];
-    let t1 = list[0];
-    let i = 1;
-    while (i < list.length) {
-      const t2 = list[i];
-      const t3 = list[i + 1];
-      if (isOperand(t1) && isBracket(t2, "(")) {
-        const r2 = new L2Parser().parseExpressionList(t2.tokenList, {
-          unexpectedTokenErrorMsg: (t4) => `Expected "," or ")" but found ${t4}`
-        });
-        this.errors.push(...r2.errors);
-        const operation = this.createOperation(t1, new L2MethodCall(r2.list, combinePos(t1.pos, t2.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i++;
-        continue;
-      }
-      if (isOperand(t1) && isBracket(t2, "[")) {
-        const r2 = new L2Parser().parseExpressionList(t2.tokenList, {
-          unexpectedTokenErrorMsg: (t4) => `Expected "]" but found ${t4}`
-        });
-        this.errors.push(...r2.errors);
-        if (r2.list.length === 0) {
-          this.errors.push({
-            level: ERROR,
-            message: `Expected expression`,
-            pos: t2.pos
-          });
-          return INVALID$1;
-        }
-        if (r2.list.length > 1) {
-          this.errors.push({
-            level: ERROR,
-            message: `Expected ")"`,
-            pos: r2.list[1].pos
-          });
-          return INVALID$1;
-        }
-        const operation = this.createOperation(t1, new L2ArraySubscripting(r2.list[0], combinePos(t1.pos, t2.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i++;
-        continue;
-      }
-      if (isOperand(t1) && isOperator(t2, ".") && isOperand(t3)) {
-        if (!(t3 instanceof L1Keyword)) {
-          this.errors.push({
-            level: ERROR,
-            message: `Expected identifier`,
-            pos: t3.pos
-          });
-          return INVALID$1;
-        }
-        const operation = this.createOperation(t1, new L2MemberAccess(t3.name, combinePos(t1.pos, t3.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i += 2;
-        continue;
-      }
-      result2.push(t1);
-      t1 = t2;
-      i++;
-    }
-    result2.push(t1);
-    return result2;
-  }
-  processOperator2(list) {
-    list = [...list].reverse();
-    const result2 = [];
-    let t1 = list[0];
-    let i = 1;
-    while (i < list.length) {
-      const t2 = list[i];
-      const t3 = list[i + 1];
-      if (isOperand(t1) && isOperator(t2, "-") && !isOperand(t3)) {
-        const operation = this.createOperation(t1, new L2UnaryMinus(combinePos(t1.pos, t2.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i++;
-        continue;
-      }
-      if (isOperand(t1) && isOperator(t2, "+") && !isOperand(t3)) {
-        const operation = this.createOperation(t1, new L2UnaryPlus(combinePos(t1.pos, t2.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i++;
-        continue;
-      }
-      result2.push(t1);
-      t1 = t2;
-      i++;
-    }
-    result2.push(t1);
-    result2.reverse();
-    return result2;
-  }
-  processOperator3(list) {
-    const result2 = [];
-    let t1 = list[0];
-    let i = 1;
-    while (i < list.length) {
-      const t2 = list[i];
-      const t3 = list[i + 1];
-      if (isOperand(t1) && isOperator(t2, "*") && isOperand(t3)) {
-        const operand = this.unwrapOperand(t3);
-        if (operand === INVALID$1) {
-          return INVALID$1;
-        }
-        const operation = this.createOperation(t1, new L2Multiplication(operand, combinePos(t1.pos, t3.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i += 2;
-        continue;
-      }
-      if (isOperand(t1) && isOperator(t2, "/") && isOperand(t3)) {
-        const operand = this.unwrapOperand(t3);
-        if (operand === INVALID$1) {
-          return INVALID$1;
-        }
-        const operation = this.createOperation(t1, new L2Division(operand, combinePos(t1.pos, t3.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i += 2;
-        continue;
-      }
-      if (isOperand(t1) && isOperator(t2, "%") && isOperand(t3)) {
-        const operand = this.unwrapOperand(t3);
-        if (operand === INVALID$1) {
-          return INVALID$1;
-        }
-        const operation = this.createOperation(t1, new L2Remainder(operand, combinePos(t1.pos, t3.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i += 2;
-        continue;
-      }
-      result2.push(t1);
-      t1 = t2;
-      i++;
-    }
-    result2.push(t1);
-    return result2;
-  }
-  processOperator4(list) {
-    const result2 = [];
-    let t1 = list[0];
-    let i = 1;
-    while (i < list.length) {
-      const t2 = list[i];
-      const t3 = list[i + 1];
-      if (isOperand(t1) && isOperator(t2, "+") && isOperand(t3)) {
-        const operand = this.unwrapOperand(t3);
-        if (operand === INVALID$1) {
-          return INVALID$1;
-        }
-        const operation = this.createOperation(t1, new L2Addition(operand, combinePos(t1.pos, t3.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i += 2;
-        continue;
-      }
-      if (isOperand(t1) && isOperator(t2, "-") && isOperand(t3)) {
-        const operand = this.unwrapOperand(t3);
-        if (operand === INVALID$1) {
-          return INVALID$1;
-        }
-        const operation = this.createOperation(t1, new L2Subtraction(operand, combinePos(t1.pos, t3.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i += 2;
-        continue;
-      }
-      result2.push(t1);
-      t1 = t2;
-      i++;
-    }
-    result2.push(t1);
-    return result2;
-  }
-  processOperator5(list) {
-    list = [...list].reverse();
-    const result2 = [];
-    let t1 = list[0];
-    let i = 1;
-    while (i < list.length) {
-      const t2 = list[i];
-      const t3 = list[i + 1];
-      if (isOperand(t1) && isOperator(t2, "=") && isOperand(t3)) {
-        const operand = this.unwrapOperand(t3);
-        if (operand === INVALID$1) {
-          return INVALID$1;
-        }
-        const operation = this.createOperation(t1, new L2Assignment(operand, combinePos(t1.pos, t3.pos)));
-        if (operation === INVALID$1) {
-          return INVALID$1;
-        }
-        t1 = operation;
-        i += 2;
-        continue;
-      }
-      result2.push(t1);
-      t1 = t2;
-      i++;
-    }
-    result2.push(t1);
-    result2.reverse();
-    return result2;
-  }
-  readExpression({ unexpectedTokenErrorMsg } = {}) {
-    let list = [];
-    while (true) {
-      const t2 = this.current;
-      if (isExpressionEnd(t2)) {
-        break;
-      }
-      list.push(t2);
-      this.consume();
-    }
-    if (list.length === 0) {
-      return;
-    }
-    const p1 = this.processOperator1(list);
-    if (p1 === INVALID$1) {
-      return INVALID$1;
-    }
-    const p2 = this.processOperator2(p1);
-    if (p2 === INVALID$1) {
-      return INVALID$1;
-    }
-    const p3 = this.processOperator3(p2);
-    if (p3 === INVALID$1) {
-      return INVALID$1;
-    }
-    const p4 = this.processOperator4(p3);
-    if (p4 === INVALID$1) {
-      return INVALID$1;
-    }
-    const p5 = this.processOperator5(p4);
-    if (p5 === INVALID$1) {
-      return INVALID$1;
-    }
-    if (p5.length > 1) {
-      console.log(p5);
-      this.errors.push({
-        level: ERROR,
-        message: (unexpectedTokenErrorMsg == null ? void 0 : unexpectedTokenErrorMsg(p5[1])) ?? `Unexpected ${p5[1]}`,
-        pos: p5[1].pos
-      });
-      return INVALID$1;
-    }
-    return this.unwrapOperand(p5[0]);
-  }
-  readExpressionStatement() {
-    const val = this.readExpression({
-      unexpectedTokenErrorMsg: (t22) => `Expected ";" but found ${t22}`
-    });
-    if (val === INVALID$1) {
-      return INVALID$1;
-    }
-    if (!val) {
-      return;
-    }
-    const t2 = this.current;
-    if (isSeparator(t2, ";")) {
-      this.consume();
-    } else {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected ";"`,
-        pos: fallbackPos(t2 == null ? void 0 : t2.pos, val.pos)
-      });
-    }
-    return new L2ExpressionStatement(val, combinePos(val.pos, (t2 ?? val).pos));
-  }
-  readReturnStatement() {
-    const t1 = this.current;
-    if (!isKeyword(t1, "return")) {
-      return;
-    }
-    this.consume();
-    const t2 = this.current;
-    if (isSeparator(t2, ";")) {
-      this.consume();
-      return new L2ReturnStatement(null, combinePos(t1.pos, t2.pos));
-    }
-    const val = this.readExpression({
-      unexpectedTokenErrorMsg: (t4) => `Expected expression but found ${t4}`
-    });
-    if (val === INVALID$1) {
-      return INVALID$1;
-    }
-    if (!val) {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected expression but found ${t2}`,
-        pos: fallbackPos(t2 == null ? void 0 : t2.pos, t1.pos)
-      });
-      return INVALID$1;
-    }
-    const t3 = this.current;
-    if (isSeparator(t3, ";")) {
-      this.consume();
-    } else {
-      this.errors.push({
-        level: ERROR,
-        message: `Expected ";"`,
-        pos: fallbackPos(t3 == null ? void 0 : t3.pos, val.pos)
-      });
-    }
-    return new L2ReturnStatement(val, combinePos(t1.pos, (t3 ?? val).pos));
-  }
-  readStatement() {
-    return this.readReturnStatement() || this.readExpressionStatement() || this.readVariable() || this.readStatementList();
-  }
-  parseStatementList(list) {
-    this.pos = 0;
-    this.list = list;
-    this.current = list[0];
-    const outList = [];
-    let error = false;
-    while (this.current) {
-      const val = this.readStatement();
-      if (val === INVALID$1) {
-        error = true;
-        continue;
-      }
-      if (!val) {
-        if (!error) {
-          error = true;
-          const t2 = this.current;
-          this.errors.push({
-            level: ERROR,
-            message: `Unexpected ${t2}`,
-            pos: t2.pos
-          });
-        }
-        this.consume();
-        continue;
-      }
-      error = false;
-      outList.push(val);
-    }
-    return { list: outList, errors: this.errors };
-  }
-  parseArgumentList(list) {
-    this.pos = 0;
-    this.list = list;
-    this.current = list[0];
-    const outList = [];
-    let error = false;
-    while (this.current) {
-      const t1 = this.current;
-      if (!isIdentifier(t1)) {
-        if (!error) {
-          error = true;
-          this.errors.push({
-            level: ERROR,
-            message: `Expected identifier but found ${t1}`,
-            pos: t1.pos
-          });
-        }
-        this.consume();
-        continue;
-      }
-      this.consume();
-      const t2 = this.current;
-      if (!isOperator(t2, ":")) {
-        error = true;
-        this.errors.push({
-          level: ERROR,
-          message: `Expected ":" but found ${t2 ?? '")"'}`,
-          pos: fallbackPos(t2 == null ? void 0 : t2.pos, t1.pos)
-        });
-        continue;
-      }
-      this.consume();
-      const t3 = this.current;
-      const type = this.readType();
-      if (!type) {
-        error = true;
-        this.errors.push({
-          level: ERROR,
-          message: `Expected type but found ${t3}`,
-          pos: fallbackPos(t3 == null ? void 0 : t3.pos, t2.pos)
-        });
-        continue;
-      }
-      if (type === INVALID$1) {
-        error = true;
-        continue;
-      }
-      error = false;
-      outList.push(new L2Argument(t1.name, type, combinePos(t1.pos, type.pos)));
-      const t4 = this.current;
-      if (!t4) {
-        break;
-      }
-      if (!isSeparator(t4, ",")) {
-        error = true;
-        this.errors.push({
-          level: ERROR,
-          message: `Expected "," but found ${t4}`,
-          pos: t4.pos
-        });
-        continue;
-      }
-      this.consume();
-      const t5 = this.current;
-      if (!t5) {
-        error = true;
-        this.errors.push({
-          level: ERROR,
-          message: `Expected argument after ","`,
-          pos: t4.pos
-        });
-      }
-    }
-    return { list: outList, errors: this.errors };
-  }
-  parseExpressionList(list, opts = {}) {
-    this.pos = 0;
-    this.list = list;
-    this.current = list[0];
-    const outList = [];
-    let error = false;
-    while (this.current) {
-      const val = this.readExpression(opts);
-      if (val === INVALID$1) {
-        error = true;
-        continue;
-      }
-      if (!val) {
-        if (!error) {
-          error = true;
-          const t3 = this.current;
-          this.errors.push({
-            level: ERROR,
-            message: `Unexpected ${t3}`,
-            pos: {
-              lin1: t3.pos.lin1,
-              col1: t3.pos.col1,
-              lin2: t3.pos.lin2,
-              col2: t3.pos.col2
-            }
-          });
-        }
-        this.consume();
-        continue;
-      }
-      outList.push(val);
-      error = false;
-      const t1 = this.current;
-      if (!t1) {
-        break;
-      }
-      if (!isSeparator(t1, ",")) {
-        this.errors.push({
-          level: ERROR,
-          message: `Expected ","`,
-          pos: {
-            lin1: t1.pos.lin1,
-            col1: t1.pos.col1,
-            lin2: t1.pos.lin2,
-            col2: t1.pos.col2
-          }
-        });
-        this.consume();
-        continue;
-      }
-      this.consume();
-      const t2 = this.current;
-      if (!t2) {
-        this.errors.push({
-          level: ERROR,
-          message: `Expected expression after ","`,
-          pos: {
-            lin1: t1.pos.lin2,
-            col1: t1.pos.col2,
-            lin2: t1.pos.lin2,
-            col2: t1.pos.col2
-          }
-        });
-      }
-    }
-    return { list: outList, errors: this.errors };
-  }
-  parse(list) {
-    this.pos = 0;
-    this.list = list;
-    this.current = list[0];
-    const outList = [];
-    let error = false;
-    while (this.current) {
-      const val = this.readToplevel();
-      if (val === INVALID$1) {
-        error = true;
-        continue;
-      }
-      if (!val) {
-        if (!error) {
-          error = true;
-          const t2 = this.current;
-          this.errors.push({
-            level: ERROR,
-            message: `Unexpected ${t2}`,
-            pos: {
-              lin1: t2.pos.lin1,
-              col1: t2.pos.col1,
-              lin2: t2.pos.lin2,
-              col2: t2.pos.col2
-            }
-          });
-        }
-        this.consume();
-        continue;
-      }
-      error = false;
-      outList.push(val);
-    }
-    return { list: outList, errors: this.errors };
-  }
-}
-function layer2Parse(list) {
-  return new L2Parser().parse(list);
-}
-const INVALID = Symbol();
-class MethodStack {
-  constructor(parent = null) {
-    this.parent = parent;
-    this.items = (parent == null ? void 0 : parent.items) ?? [];
-    this.itemsByName = {};
-  }
-  add(item) {
-    const existing = this.itemsByName[item.name];
-    if (existing !== void 0) {
-      return false;
-    }
-    const index = this.items.length;
-    this.items.push(item);
-    this.itemsByName[item.name] = index;
-    return index;
-  }
-  find(ref) {
-    let current = this;
-    while (current) {
-      const result2 = this.itemsByName[ref.value];
-      if (result2 !== void 0) {
-        return result2;
-      }
-      current = current.parent;
-    }
-  }
-  createChild() {
-    return new MethodStack(this);
-  }
-}
-class L3Parser {
-  constructor() {
-    this.errors = [];
-    this.mySymbols = {};
-    this.modules = {};
-    this.allSymbols = {};
-    this.deferredTasks = [];
-    this.moduleName = "";
-  }
-  addToMySymbols(symbol) {
-    if (this.mySymbols[symbol.name]) {
-      return false;
-    }
-    this.mySymbols[symbol.name] = symbol;
-    this.addToAllSymbols(this.moduleName, symbol);
-    return true;
-  }
-  replaceInMySymbols(symbol) {
-    if (!this.mySymbols[symbol.name]) {
-      return false;
-    }
-    this.mySymbols[symbol.name] = symbol;
-  }
-  addToAllSymbols(module, symbol) {
-    let list = this.allSymbols[symbol.name];
-    if (!list) {
-      this.allSymbols[symbol.name] = list = [];
-    }
-    list.push({ module, symbol });
-  }
-  parse(moduleName, list, modules) {
-    this.moduleName = moduleName;
-    for (const module of modules) {
-      this.modules[module.name] = module;
-    }
-    for (const item of list) {
-      if (item instanceof L2Use) {
-        this.processUse(item);
-        continue;
-      }
-      if (item instanceof L2Variable) {
-        this.processVariable(item);
-        continue;
-      }
-      if (item instanceof L2Method) {
-        this.processMethod(item);
-        continue;
-      }
-      this.errors.push({
-        level: ERROR,
-        message: `I still don't understand ${item.constructor.name}`,
-        pos: item.pos
-      });
-    }
-    for (const task of this.deferredTasks) {
-      task();
-    }
-    return {
-      runnable: new L3Module(moduleName, Object.values(this.mySymbols)),
-      errors: this.errors
-    };
-  }
-  processUse(use) {
-    const module = this.modules[use.value];
-    if (!module) {
-      this.errors.push({
-        level: ERROR,
-        message: `Module "${use.value}" not found`,
-        pos: use.pos
-      });
-    }
-    for (const symbol of module.symbols) {
-      this.addToAllSymbols(use.value, symbol);
-    }
-  }
-  processVariable(item) {
-    const type = this.processType(item.type);
-    if (type === INVALID) {
-      return;
-    }
-    const dst = new L3Variable(item.name, type, null, item.pos);
-    if (!this.addToMySymbols(dst)) {
-      this.errors.push({
-        level: ERROR,
-        message: `Symbol "${dst.name}" already defined`,
-        pos: item.pos
-      });
-    }
-    if (item.initExpr) {
-      this.deferredTasks.push(() => {
-        this.processVariableInitializer(dst, item.initExpr);
-      });
-    }
-  }
-  processMethod(method) {
-    const type = this.processCallableType(method.type);
-    if (type === INVALID) {
-      return;
-    }
-    const dst = new L3UnresolvedMethod(method.name, type, method.pos);
-    if (!this.addToMySymbols(dst)) {
-      this.errors.push({
-        level: ERROR,
-        message: `Symbol "${dst.name}" already defined`,
-        pos: method.pos
-      });
-    }
-    this.deferredTasks.push(() => {
-      this.resolveMethod(dst, method.statementList);
-    });
-  }
-  processVariableInitializer(variable, initExpr) {
-    const l3expr = this.processExpression(initExpr, null);
-    if (l3expr === INVALID) {
-      return;
-    }
-    variable.initExpr = l3expr;
-  }
-  resolveMethod(src, srcStatementList) {
-    const stack = new MethodStack();
-    for (let i = 0; i < src.type.argList.length; i++) {
-      const arg = src.type.argList[i];
-      stack.add(new L3ArgumentVariable(i, arg.name, arg.type, arg.pos));
-    }
-    const statementList = this.processStatementList(srcStatementList, stack, src.type.returnType);
-    const dst = new L3CapyMethod(src.name, src.type, stack.items, statementList, src.pos);
-    this.replaceInMySymbols(dst);
-  }
-  processExpressionStatement(src, stack) {
-    const expr = this.processExpression(src.expr, stack);
-    if (expr === INVALID) {
-      return INVALID;
-    }
-    return new L3ExpressionStatement(expr, src.pos);
-  }
-  processReturnStatement(src, stack, expectedType) {
-    const expr = src.expr && this.readVariable(this.processExpression(src.expr, stack));
-    if (expr === INVALID) {
-      return INVALID;
-    }
-    const isVoid = isVoidType(expectedType);
-    if (expr && isVoid) {
-      this.errors.push({
-        level: ERROR,
-        message: `Cannot return expression when method has void return type`,
-        pos: src.pos
-      });
-      return INVALID;
-    }
-    if (!expr && !isVoid) {
-      this.errors.push({
-        level: ERROR,
-        message: `Must return expression of type ${expectedType}`,
-        pos: src.pos
-      });
-      return INVALID;
-    }
-    if (expr && !isVoid && !this.isAssignable(expr.type, expectedType)) {
-      this.errors.push({
-        level: ERROR,
-        message: `Return expects ${expectedType} but ${expr.type} was provided`,
-        pos: expr.pos
-      });
-      return INVALID;
-    }
-    return new L3ReturnStatement(expr, src.pos);
-  }
-  processLocalVariable(src, stack) {
-    const type = this.processType(src.type);
-    if (type === INVALID) {
-      return INVALID;
-    }
-    let l3expr = null;
-    if (src.initExpr) {
-      const _l3expr = this.processExpression(src.initExpr, stack);
-      if (_l3expr === INVALID) {
-        return INVALID;
-      }
-      l3expr = _l3expr;
-      if (!this.isAssignable(_l3expr.type, type)) {
-        this.errors.push({
-          level: ERROR,
-          message: `Variable has type "${type}" but initializer has type "${_l3expr.type}"`,
-          pos: src.pos
-        });
-      }
-    }
-    const localVariable = new L3LocalVariable(src.name, type, src.pos);
-    const index = stack.add(localVariable);
-    if (index === false) {
-      this.errors.push({
-        level: ERROR,
-        message: `Identifier "${src.name}" already declared`,
-        pos: src.pos
-      });
-      return INVALID;
-    }
-    if (l3expr) {
-      return new L3ExpressionStatement(
-        new L3Operation(
-          l3expr,
-          [new L3Assignment(new L3LocalVariableReference(index, src.name, type, src.pos), src.pos)],
-          type,
-          src.pos
-        ),
-        src.pos
-      );
-    }
-  }
-  processStatementList(src, stack, expectedReturnType) {
-    const dst = new L3StatementList([], src.pos);
-    for (const item of src.list) {
-      if (item instanceof L2ExpressionStatement) {
-        const dstItem = this.processExpressionStatement(item, stack);
-        if (dstItem !== INVALID) {
-          dst.list.push(dstItem);
-        }
-        continue;
-      }
-      if (item instanceof L2ReturnStatement) {
-        const dstItem = this.processReturnStatement(item, stack, expectedReturnType);
-        if (dstItem !== INVALID) {
-          dst.list.push(dstItem);
-        }
-        continue;
-      }
-      if (item instanceof L2Variable) {
-        const dstItem = this.processLocalVariable(item, stack);
-        if (dstItem && dstItem !== INVALID) {
-          dst.list.push(dstItem);
-        }
-        continue;
-      }
-      if (item instanceof L2StatementList) {
-        const dstItem = this.processStatementList(item, stack.createChild(), expectedReturnType);
-        dst.list.push(dstItem);
-        continue;
-      }
-      this.errors.push({
-        level: ERROR,
-        message: `I still don't understand ${item.constructor.name}`,
-        pos: item.pos
-      });
-    }
-    return dst;
-  }
-  processExpression(src, stack) {
-    if (src instanceof L2String) {
-      return new L3String(src.value, src.pos);
-    }
-    if (src instanceof L2Number) {
-      return new L3Number(src.value, src.pos);
-    }
-    if (src instanceof L2Identifier) {
-      return this.processReference(src, stack);
-    }
-    if (src instanceof L2Operation) {
-      return this.processOperation(src, stack);
-    }
-    this.errors.push({
-      level: ERROR,
-      message: `I still don't understand ${src.constructor.name}`,
-      pos: src.pos
-    });
-    return INVALID;
-  }
-  readVariable(obj) {
-    if (obj === INVALID) {
-      return INVALID;
-    }
-    if (!(obj instanceof L3VariableReference)) {
-      return obj;
-    }
-    return new L3Operation(obj, [new L3ReadVariable()], obj.type, obj.pos);
-  }
-  processOperation(src, stack) {
-    const operand = this.processExpression(src.operand, stack);
-    if (operand === INVALID) {
-      return INVALID;
-    }
-    let type = operand.type;
-    let isVariable = operand instanceof L3VariableReference;
-    const steps = [];
-    for (const step of src.steps) {
-      if (step instanceof L2MethodCall) {
-        if (!(type instanceof L3CallableType)) {
-          this.errors.push({
-            level: ERROR,
-            message: `${type} is not callable`,
-            pos: step.pos
-          });
-          return INVALID;
-        }
-        if (type.argList.length !== step.argList.length) {
-          this.errors.push({
-            level: ERROR,
-            message: `Method expects ${type.argList.length} argument(s) but ${step.argList.length} was/were provided`,
-            pos: step.pos
-          });
-          return INVALID;
-        }
-        const argList = [];
-        for (let i = 0; i < step.argList.length; i++) {
-          const l3arg = this.readVariable(this.processExpression(step.argList[i], stack));
-          if (l3arg === INVALID) {
-            return INVALID;
-          }
-          if (!this.isAssignable(l3arg.type, type.argList[i].type)) {
-            this.errors.push({
-              level: ERROR,
-              message: `Argument ${i + 1} expects type ${type.argList[i].type} but ${l3arg.type} was provided`,
-              pos: l3arg.pos
-            });
-            return INVALID;
-          }
-          argList.push(l3arg);
-        }
-        if (isVariable) {
-          steps.push(new L3ReadVariable());
-          isVariable = false;
-        }
-        steps.push(new L3MethodCall(argList, step.pos));
-        type = type.returnType;
-      } else if (step instanceof L2Addition) {
-        const other = this.readVariable(this.processExpression(step.operand, stack));
-        if (other === INVALID) {
-          return INVALID;
-        }
-        if (isStringType(type) && isStringType(other.type)) {
-          if (isVariable) {
-            steps.push(new L3ReadVariable());
-            isVariable = false;
-          }
-          steps.push(new L3StringConcat(other, step.pos));
-          type = STRING;
-        } else {
-          this.errors.push({
-            level: ERROR,
-            message: `Cannot apply addition to ${type} and ${other.type}`,
-            pos: step.pos
-          });
-          return INVALID;
-        }
-      } else if (step instanceof L2Assignment) {
-        const target = this.processExpression(step.operand, stack);
-        if (target === INVALID) {
-          return INVALID;
-        }
-        if (!(target instanceof L3VariableReference)) {
-          this.errors.push({
-            level: ERROR,
-            message: `Cannot assign value to ${target}`,
-            pos: target.pos
-          });
-          return INVALID;
-        }
-        if (!this.isAssignable(type, target.type)) {
-          this.errors.push({
-            level: ERROR,
-            message: `Value of type ${type} cannot be assigned to variable of type ${target.type}`,
-            pos: target.pos
-          });
-          return INVALID;
-        }
-        if (isVariable) {
-          steps.push(new L3ReadVariable());
-          isVariable = false;
-        }
-        steps.push(new L3Assignment(target, step.pos));
-      } else {
-        this.errors.push({
-          level: ERROR,
-          message: `I still don't understand ${step.constructor.name}`,
-          pos: step.pos
-        });
-        return INVALID;
-      }
-    }
-    return new L3Operation(operand, steps, type, src.pos);
-  }
-  isAssignable(type, assignTo) {
-    if (type instanceof L3SimpleType && assignTo instanceof L3SimpleType) {
-      return type.primitive === assignTo.primitive;
-    }
-    if (type instanceof L3CallableType && assignTo instanceof L3CallableType) {
-      if (!this.isAssignable(type.returnType, assignTo.returnType)) {
-        return false;
-      }
-      if (type.argList.length !== assignTo.argList.length) {
-        return false;
-      }
-      for (let i = 0; i < type.argList.length; i++) {
-        if (!this.isAssignable(type.argList[i].type, assignTo.argList[i].type)) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-  processReference(ref, stack) {
-    if (stack) {
-      const index = stack.find(ref);
-      if (index !== void 0) {
-        const dep = stack.items[index];
-        return new L3LocalVariableReference(index, dep.name, dep.type, ref.pos);
-      }
-    }
-    const symbols = this.allSymbols[ref.value];
-    if (symbols) {
-      if (symbols.length > 1) {
-        this.errors.push({
-          level: ERROR,
-          message: `Dependency ${ref.value} is ambiguous`,
-          pos: ref.pos
-        });
-        return INVALID;
-      }
-      const { module, symbol } = symbols[0];
-      if (symbol instanceof L3Method) {
-        return new L3MethodReference(module, symbol.name, symbol.type, ref.pos);
-      }
-      if (symbol instanceof L3Variable) {
-        return new L3ModuleVariableReference(module, symbol.name, symbol.type, ref.pos);
-      }
-      throw new Error(`Unexpected symbol type ${symbol.constructor.name}`);
-    }
-    this.errors.push({
-      level: ERROR,
-      message: `Could not find reference ${ref.value}`,
-      pos: ref.pos
-    });
-    return INVALID;
-  }
-  processCallableType(src) {
-    const argList = [];
-    for (const srcArg of src.argList) {
-      const dstType = this.processType(srcArg.type);
-      if (dstType === INVALID) {
-        return INVALID;
-      }
-      argList.push(new L3Argument(srcArg.name, dstType, srcArg.pos));
-    }
-    const returnType = src.returnType ? this.processType(src.returnType) : VOID;
-    if (returnType === INVALID) {
-      return INVALID;
-    }
-    return new L3CallableType(argList, returnType, src.pos);
-  }
-  processType(src) {
-    if (src instanceof L2SimpleType) {
-      if (src.name === "string" || src.name === "number") {
-        return new L3SimpleType(src.name, src.pos);
-      }
-      this.errors.push({
-        level: ERROR,
-        message: `I still don't understand type "${src.name}"`,
-        pos: src.pos
-      });
-      return INVALID;
-    }
-    if (src instanceof L2CallableType) {
-      return this.processCallableType(src);
-    }
-    this.errors.push({
-      level: ERROR,
-      message: `I still don't understand "${src.constructor.name}"`,
-      pos: src.pos
-    });
-    return INVALID;
-  }
-}
-function layer3Parse(moduleName, list, modules) {
-  return new L3Parser().parse(moduleName, list, modules);
-}
-function compile(s, libs, { debugL1, debugL2, debugL3 }) {
-  const errors = [];
-  const out = [];
-  let p1;
-  let p2;
-  let p3;
-  try {
-    p1 = layer1Parse(s);
-    errors.push(...p1.errors);
-    p2 = layer2Parse(p1.list);
-    errors.push(...p2.errors);
-    p3 = layer3Parse("main", p2.list, libs);
-    errors.push(...p3.errors);
-  } catch (err) {
-    errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
-  }
-  if (errors.length === 0) {
-    out.push("# Compile successful!\n");
-  } else {
-    out.push("# Compile errors:\n");
-    errors.forEach(
-      (item) => out.push(
-        `- ${item.pos !== INTERNAL ? `[${item.pos.lin1}:${item.pos.col1}-${item.pos.lin2}:${item.pos.col2}] ` : ""}${item.message}
-`
-      )
-    );
-  }
-  if (debugL1 && p1) {
-    out.push("---\n");
-    out.push("Layer1Result:\n");
-    p1.list.forEach((val) => {
-      out.push("  - ");
-      val.debugPrint(out, "    ");
-    });
-  }
-  if (p2) {
-    out.push("---\n");
-    out.push("Layer2Result:\n");
-    p2.list.forEach((val) => {
-      out.push("  - ");
-      val.debugPrint(out, "    ");
-    });
-  }
-  if (p3) {
-    out.push("---\n");
-    out.push("Layer3Result: ");
-    p3.runnable.debugPrint(out, "");
-  }
-  return {
-    errors,
-    output: out.join(""),
-    runnable: p3 == null ? void 0 : p3.runnable
-  };
-}
-const toolbar = "_toolbar_u8g8q_1";
-const classes$1 = {
-  toolbar
-};
-function Toolbar({ children }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: classes$1.toolbar, children });
-}
-const toolButton = "_toolButton_fltp8_1";
-const classes = {
-  toolButton
-};
-function ToolButton({
-  text,
-  icon: FeatherIcon,
-  variant = "",
-  onClick
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: classes.toolButton, "data-variant": variant, onClick, children: [
-    FeatherIcon && /* @__PURE__ */ jsxRuntimeExports.jsx(FeatherIcon, { style: { marginLeft: -4 }, size: 20 }),
-    text
-  ] });
-}
-function _extends() {
-  return _extends = Object.assign ? Object.assign.bind() : function(n2) {
-    for (var e = 1; e < arguments.length; e++) {
-      var t2 = arguments[e];
-      for (var r2 in t2) ({}).hasOwnProperty.call(t2, r2) && (n2[r2] = t2[r2]);
-    }
-    return n2;
-  }, _extends.apply(null, arguments);
-}
-function _objectWithoutProperties(e, t2) {
-  if (null == e) return {};
-  var o, r2, i = _objectWithoutPropertiesLoose(e, t2);
-  if (Object.getOwnPropertySymbols) {
-    var n2 = Object.getOwnPropertySymbols(e);
-    for (r2 = 0; r2 < n2.length; r2++) o = n2[r2], -1 === t2.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]);
-  }
-  return i;
-}
-function _objectWithoutPropertiesLoose(r2, e) {
-  if (null == r2) return {};
-  var t2 = {};
-  for (var n2 in r2) if ({}.hasOwnProperty.call(r2, n2)) {
-    if (-1 !== e.indexOf(n2)) continue;
-    t2[n2] = r2[n2];
-  }
-  return t2;
-}
-var _excluded$1y = ["size", "className", "fill"];
-var Play = function Play2(_ref) {
-  var _ref$size = _ref.size, size = _ref$size === void 0 ? 24 : _ref$size, _ref$className = _ref.className, className = _ref$className === void 0 ? "" : _ref$className, _ref$fill = _ref.fill, fill = _ref$fill === void 0 ? "none" : _ref$fill, otherProps = _objectWithoutProperties(_ref, _excluded$1y);
-  return /* @__PURE__ */ React$3.createElement("svg", _extends({
-    width: size,
-    height: size,
-    viewBox: "0 0 24 24",
-    fill,
-    stroke: "currentColor",
-    strokeWidth: "2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    className: "feather feather-play ".concat(className)
-  }, otherProps), /* @__PURE__ */ React$3.createElement("g", null, /* @__PURE__ */ React$3.createElement("polygon", {
-    points: "5 3 19 12 5 21 5 3"
-  })));
-};
-const initialCode = `use "io";
+const initialCode = `native function print(s: string);
+
+var world: string = "World";
 
 function start() {
-    print(hello("John"));
+    print(hello(world));
 }
 
 function hello(p: string): string {
     return "Hello, " + p + "!";
 }
 `;
-const io = new L3Module("io", [
-  new L3LibraryMethod(
-    "print",
-    new L3CallableType([new L3Argument("s", STRING, INTERNAL)], VOID, INTERNAL),
-    ([s], runner) => {
-      runner.print(s);
-    }
-  )
-]);
 function App() {
-  const [content2, setContent] = reactExports.useState(initialCode);
+  const [content2, setContent] = reactExports.useState(() => localStorage.getItem("sourceCode") ?? initialCode);
   const [compileResult, setCompileResult] = reactExports.useState();
   const [terminalContent2, setTerminalContent] = reactExports.useState();
+  const saveTimeoutIdRef = reactExports.useRef();
   const onContentChange = (value) => {
     setContent(value);
+    clearTimeout(saveTimeoutIdRef.current);
+    saveTimeoutIdRef.current = setTimeout(() => {
+      console.log("Saved!");
+      localStorage.setItem("sourceCode", value);
+    }, 5e3);
   };
-  const onRunClick = () => {
-    const r2 = compile(content2, [io], { debugL2: true, debugL3: true });
+  const onResetClick = async () => {
+    setContent(initialCode);
+    localStorage.setItem("sourceCode", initialCode);
+  };
+  const onRunClick = async () => {
+    const _compiler = (await getBeans(compiler))[0];
+    const r2 = _compiler.compile(content2, { debugTree: true });
     setCompileResult(r2);
     if (r2.errors.length === 0) {
       const runner = new Runner();
       try {
-        runner.run([r2.runnable, io], "main");
+        runner.run(r2.modules, "main");
         setTerminalContent(runner.stdout);
       } catch (err) {
-        setTerminalContent(`Runtime error: ${err.message}`);
+        setTerminalContent(`Runtime error: ${err.stack}`);
       }
     }
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: classes$3.container, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Tile, { className: classes$3.editor, title: "Code editor", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      _default,
-      {
-        mode: "typescript",
-        theme: "github_light_default",
-        value: content2,
-        onChange: onContentChange,
-        width: "100%",
-        height: "100%",
-        fontSize: 16,
-        className: classes$3.code
-      }
-    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: classes$3.code, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Toolbar, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToolButton, { icon: RefreshCcw, text: "Reset", onClick: onResetClick }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Tile, { className: classes$3.editorContainer, title: "Code editor", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        _default,
+        {
+          mode: "typescript",
+          theme: "github_light_default",
+          value: content2,
+          onChange: onContentChange,
+          width: "100%",
+          height: "100%",
+          fontSize: 16,
+          className: classes$3.editor
+        }
+      ) })
+    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: classes$3.result, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Toolbar, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ToolButton, { variant: "run", icon: Play, text: "Run!", onClick: onRunClick }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Tile, { className: classes$3.compileOutput, title: "Compile output", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -38018,12 +35932,368 @@ function App() {
           width: "100%",
           height: "100%",
           fontSize: 16,
-          className: classes$3.code
+          className: classes$3.editor
         }
       ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Tile, { className: classes$3.terminal, title: "Terminal", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `${classes$3.terminalContent} ${classes$3.code}`, children: terminalContent2 }) })
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Tile, { className: classes$3.terminal, title: "Terminal", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `${classes$3.terminalContent} ${classes$3.editor}`, children: terminalContent2 }) })
     ] })
   ] });
 }
+const scriptRel = "modulepreload";
+const assetsURL = function(dep, importerUrl) {
+  return new URL(dep, importerUrl).href;
+};
+const seen = {};
+const __vitePreload = function preload(baseModule, deps, importerUrl) {
+  let promise = Promise.resolve();
+  if (deps && deps.length > 0) {
+    const links = document.getElementsByTagName("link");
+    const cspNonceMeta = document.querySelector(
+      "meta[property=csp-nonce]"
+    );
+    const cspNonce = (cspNonceMeta == null ? void 0 : cspNonceMeta.nonce) || (cspNonceMeta == null ? void 0 : cspNonceMeta.getAttribute("nonce"));
+    promise = Promise.allSettled(
+      deps.map((dep) => {
+        dep = assetsURL(dep, importerUrl);
+        if (dep in seen) return;
+        seen[dep] = true;
+        const isCss = dep.endsWith(".css");
+        const cssSelector = isCss ? '[rel="stylesheet"]' : "";
+        const isBaseRelative = !!importerUrl;
+        if (isBaseRelative) {
+          for (let i = links.length - 1; i >= 0; i--) {
+            const link2 = links[i];
+            if (link2.href === dep && (!isCss || link2.rel === "stylesheet")) {
+              return;
+            }
+          }
+        } else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) {
+          return;
+        }
+        const link = document.createElement("link");
+        link.rel = isCss ? "stylesheet" : scriptRel;
+        if (!isCss) {
+          link.as = "script";
+        }
+        link.crossOrigin = "";
+        link.href = dep;
+        if (cspNonce) {
+          link.setAttribute("nonce", cspNonce);
+        }
+        document.head.appendChild(link);
+        if (isCss) {
+          return new Promise((res, rej) => {
+            link.addEventListener("load", res);
+            link.addEventListener(
+              "error",
+              () => rej(new Error(`Unable to preload CSS for ${dep}`))
+            );
+          });
+        }
+      })
+    );
+  }
+  function handlePreloadError(err) {
+    const e = new Event("vite:preloadError", {
+      cancelable: true
+    });
+    e.payload = err;
+    window.dispatchEvent(e);
+    if (!e.defaultPrevented) {
+      throw err;
+    }
+  }
+  return promise.then((res) => {
+    for (const item of res || []) {
+      if (item.status !== "rejected") continue;
+      handlePreloadError(item.reason);
+    }
+    return baseModule().catch(handlePreloadError);
+  });
+};
+const parser = declareBeanInterface("Parser");
+function declareBeans$a() {
+  declareBean({
+    name: "CompilerImpl",
+    provides: [compiler],
+    dependencies: [single(parser)],
+    loadModule: () => __vitePreload(() => import("./compiler-impl-DjXtdoRM.js"), true ? __vite__mapDeps([0,1,2]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.CompilerImpl(...deps)
+  });
+}
+const expressionReader = declareBeanInterface("ExpressionReader");
+const identifierResolver = declareBeanInterface("IdentifierResolver");
+const operationProcessor = declareBeanInterface("OperationProcessor");
+function declareBeans$9() {
+  declareBean({
+    name: "ExpressionReaderImpl",
+    provides: [expressionReader],
+    dependencies: [list(identifierResolver), list(operationProcessor)],
+    loadModule: () => __vitePreload(() => import("./expression-reader-impl-DRYvN5gY.js"), true ? __vite__mapDeps([3,4,5,6,7,8,9]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.ExpressionReaderImpl(...deps)
+  });
+}
+const toplevelReader = declareBeanInterface("ToplevelReader");
+const typeReader = declareBeanInterface("TypeReader");
+function declareBeans$8() {
+  declareBean({
+    name: "GlobalVariableReader",
+    provides: [toplevelReader],
+    dependencies: [single(typeReader), single(expressionReader)],
+    loadModule: () => __vitePreload(() => import("./global-variable-reader-BhV_yylH.js"), true ? __vite__mapDeps([10,6,5,11,12,8]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.GlobalVariableReader(...deps)
+  });
+  declareBean({
+    name: "GlobalVariableIdentifierResolver",
+    provides: [identifierResolver],
+    dependencies: [single(parser)],
+    loadModule: () => __vitePreload(() => import("./global-variable-identifier-resolver-BeQzA3zq.js"), true ? [] : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.GlobalVariableIdentifierResolver(...deps)
+  });
+}
+function declareBeans$7() {
+  declareBean({
+    name: "UseReader",
+    provides: [toplevelReader],
+    dependencies: [single(parser)],
+    loadModule: () => __vitePreload(() => import("./use-reader-B0VbXjfc.js"), true ? __vite__mapDeps([13,11,5,9,2,8]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.UseReader(...deps)
+  });
+}
+const argumentReader = declareBeanInterface("ArgumentReader");
+const callableTypeReader = declareBeanInterface("CallableTypeReader");
+const statementItemReader = declareBeanInterface("StatementItemReader");
+const statementReader = declareBeanInterface("StatementReader");
+const typeItemReader = declareBeanInterface("TypeItemReader");
+function declareBeans$6() {
+  declareBean({
+    name: "ArgumentReaderImpl",
+    provides: [argumentReader],
+    dependencies: [single(typeReader)],
+    loadModule: () => __vitePreload(() => import("./argument-reader-impl-ChOE995_.js"), true ? __vite__mapDeps([14,6,5,12,8]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.ArgumentReaderImpl(...deps)
+  });
+  declareBean({
+    name: "CallableTypeReaderImpl",
+    provides: [typeItemReader, callableTypeReader],
+    dependencies: [single(typeReader), single(argumentReader)],
+    loadModule: () => __vitePreload(() => import("./callable-type-reader-impl-l1W_rhiM.js"), true ? __vite__mapDeps([15,16,4,5,12]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.CallableTypeReaderImpl(...deps)
+  });
+  declareBean({
+    name: "MethodCallProcessor",
+    provides: [operationProcessor],
+    dependencies: [single(expressionReader), single(typeReader)],
+    loadModule: () => __vitePreload(() => import("./method-call-processor-CrOVp8Km.js"), true ? __vite__mapDeps([17,16,4,5]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.MethodCallProcessor(...deps)
+  });
+  declareBean({
+    name: "MethodReader",
+    provides: [toplevelReader],
+    dependencies: [single(statementReader), single(callableTypeReader), single(parser)],
+    loadModule: () => __vitePreload(() => import("./method-reader-BKPM4Qbb.js"), true ? __vite__mapDeps([18,1,2,19,4,5,6,11,8]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.MethodReader(...deps)
+  });
+  declareBean({
+    name: "MethodReferenceProcessor",
+    provides: [identifierResolver],
+    dependencies: [single(parser)],
+    loadModule: () => __vitePreload(() => import("./method-identifier-resolver-CIgOXkES.js"), true ? [] : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.MethodIdentifierResolver(...deps)
+  });
+  declareBean({
+    name: "VariableReferenceProcessor",
+    provides: [identifierResolver],
+    dependencies: [single(parser)],
+    loadModule: () => __vitePreload(() => import("./local-variable-identifier-resolver-Bc3492ys.js"), true ? __vite__mapDeps([20,19]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.LocalVariableIdentifierResolver(...deps)
+  });
+  declareBean({
+    name: "LocalVariableStatementReader",
+    provides: [statementItemReader],
+    dependencies: [single(expressionReader), single(typeReader)],
+    loadModule: () => __vitePreload(() => import("./local-variable-statement-handler-DcO0_K00.js"), true ? __vite__mapDeps([21,19,6,5,11,12,8]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.LocalVariableStatementReader(...deps)
+  });
+}
+function declareBeans$5() {
+  declareBean({
+    name: "AdditionProcessor",
+    provides: [operationProcessor],
+    dependencies: [single(expressionReader)],
+    loadModule: () => __vitePreload(() => import("./addition-processor-CQUcr5RQ.js"), true ? __vite__mapDeps([22,12,5]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.AdditionProcessor(...deps)
+  });
+  declareBean({
+    name: "AssignmentProcessor",
+    provides: [operationProcessor],
+    dependencies: [single(expressionReader), single(typeReader)],
+    loadModule: () => __vitePreload(() => import("./assignment-processor-D5mZt4eD.js"), true ? __vite__mapDeps([23,12,5]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.AssignmentProcessor(...deps)
+  });
+}
+const tokenizer = declareBeanInterface("Tokenizer");
+function declareBeans$4() {
+  declareBean({
+    name: "ParserImpl",
+    provides: [parser],
+    dependencies: [single(tokenizer), list(toplevelReader)],
+    loadModule: () => __vitePreload(() => import("./parser-impl-8pALioOG.js"), true ? __vite__mapDeps([24,2]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.ParserImpl(...deps)
+  });
+}
+function declareBeans$3() {
+  declareBean({
+    name: "ExpressionStatementReader",
+    provides: [statementItemReader],
+    dependencies: [single(expressionReader)],
+    loadModule: () => __vitePreload(() => import("./expression-statement-reader-DOACk14p.js"), true ? __vite__mapDeps([25,8,5]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.ExpressionStatementReader(...deps)
+  });
+  declareBean({
+    name: "ReturnStatementReader",
+    provides: [statementItemReader],
+    dependencies: [single(expressionReader), single(typeReader)],
+    loadModule: () => __vitePreload(() => import("./return-statement-reader-D22uFg-S.js"), true ? __vite__mapDeps([26,11,5,8]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.ReturnStatementReader(...deps)
+  });
+  declareBean({
+    name: "StatementReaderImpl",
+    provides: [statementReader],
+    dependencies: [list(statementItemReader)],
+    loadModule: () => __vitePreload(() => import("./statement-reader-impl-FL-r7z4P.js"), true ? [] : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.StatementReaderImpl(...deps)
+  });
+}
+const tokenReader = declareBeanInterface("TokenReader");
+function declareBeans$2() {
+  declareBean({
+    name: "TokenizerImpl",
+    provides: [tokenizer],
+    dependencies: [list(tokenReader)],
+    loadModule: () => __vitePreload(() => import("./tokenizer-impl-CuevY9Ts.js"), true ? __vite__mapDeps([27,5]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.TokenizerImpl(...deps)
+  });
+  declareBean({
+    name: "BracketReader",
+    provides: [tokenReader],
+    dependencies: [single(tokenizer)],
+    loadModule: () => __vitePreload(() => import("./bracket-reader-DNwVim4v.js"), true ? __vite__mapDeps([28,4,5]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.BracketReader(...deps)
+  });
+  declareBean({
+    name: "NumberReader",
+    provides: [tokenReader],
+    dependencies: [],
+    loadModule: () => __vitePreload(() => import("./number-reader-BGYnWVmm.js"), true ? __vite__mapDeps([29,7,5]) : void 0, import.meta.url),
+    factory: (m2) => new m2.NumberReader()
+  });
+  declareBean({
+    name: "OperatorReader",
+    provides: [tokenReader],
+    dependencies: [],
+    loadModule: () => __vitePreload(() => import("./operator-reader-BbafDDng.js"), true ? __vite__mapDeps([30,12,5]) : void 0, import.meta.url),
+    factory: (m2) => new m2.OperatorReader()
+  });
+  declareBean({
+    name: "SeparatorReader",
+    provides: [tokenReader],
+    dependencies: [],
+    loadModule: () => __vitePreload(() => import("./separator-reader-p2j7WR2g.js"), true ? __vite__mapDeps([31,8,5]) : void 0, import.meta.url),
+    factory: (m2) => new m2.SeparatorReader()
+  });
+  declareBean({
+    name: "StringReader",
+    provides: [tokenReader],
+    dependencies: [],
+    loadModule: () => __vitePreload(() => import("./string-reader-BUJOovHv.js"), true ? __vite__mapDeps([32,9,5]) : void 0, import.meta.url),
+    factory: (m2) => new m2.StringReader()
+  });
+  declareBean({
+    name: "WhitespaceReader",
+    provides: [tokenReader],
+    dependencies: [],
+    loadModule: () => __vitePreload(() => import("./whitespace-reader-CxQt1t-v.js"), true ? [] : void 0, import.meta.url),
+    factory: (m2) => new m2.WhitespaceReader()
+  });
+  declareBean({
+    name: "WordReader",
+    provides: [tokenReader],
+    dependencies: [],
+    loadModule: () => __vitePreload(() => import("./word-reader-CygMOXO0.js"), true ? __vite__mapDeps([33,6,5,11]) : void 0, import.meta.url),
+    factory: (m2) => new m2.WordReader()
+  });
+}
+function declareBeans$1() {
+  declareBean({
+    name: "SimpleTypeReader",
+    provides: [typeItemReader],
+    dependencies: [],
+    loadModule: () => __vitePreload(() => import("./simple-type-reader-B0fILDYG.js"), true ? __vite__mapDeps([34,6,5,11]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.SimpleTypeReader(...deps)
+  });
+  declareBean({
+    name: "TypeReaderImpl",
+    provides: [typeReader],
+    dependencies: [list(typeItemReader)],
+    loadModule: () => __vitePreload(() => import("./type-reader-impl-B161al7o.js"), true ? [] : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.TypeReaderImpl(...deps)
+  });
+  declareBean({
+    name: "SimpleTypeReader",
+    provides: [typeItemReader],
+    dependencies: [],
+    loadModule: () => __vitePreload(() => import("./simple-type-reader-B0fILDYG.js"), true ? __vite__mapDeps([34,6,5,11]) : void 0, import.meta.url),
+    factory: (m2, deps) => new m2.SimpleTypeReader(...deps)
+  });
+}
+function declareBeans() {
+  declareBeans$7();
+  declareBeans$4();
+  declareBeans$3();
+  declareBeans$6();
+  declareBeans$1();
+  declareBeans$9();
+  declareBeans$5();
+  declareBeans$2();
+  declareBeans$a();
+  declareBeans$8();
+}
 const rootDiv = document.getElementById("root-div");
+declareBeans();
 createRoot(rootDiv).render(/* @__PURE__ */ jsxRuntimeExports.jsx(App, {}));
+export {
+  ArgumentVariable as A,
+  Bean as B,
+  CapyMethod as C,
+  Dereference as D,
+  ERROR as E,
+  GlobalVariable as G,
+  INTERNAL as I,
+  LocalVariableReference as L,
+  MethodCall as M,
+  NumberLiteral as N,
+  ReturnStatement as R,
+  StringLiteral as S,
+  Type as T,
+  VOID as V,
+  Expression as a,
+  INVALID as b,
+  combinePos as c,
+  GlobalVariableReference as d,
+  Base as e,
+  fallbackPos as f,
+  Method as g,
+  NativeMethod as h,
+  MethodLiteral as i,
+  LocalVariable as j,
+  ExpressionStatement as k,
+  Assignment as l,
+  isStringType as m,
+  StringConcat as n,
+  STRING as o,
+  Symbol$1 as p,
+  isVoidType as q,
+  StatementList as r,
+  SimpleType as s
+};
