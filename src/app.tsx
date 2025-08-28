@@ -18,8 +18,8 @@
  * @file App component.
  */
 
-import { Play } from 'feather-icons-react';
-import { useState } from 'react';
+import { Play, RefreshCcw } from 'feather-icons-react';
+import { useRef, useState } from 'react';
 import AceEditor from 'react-ace';
 import classes from './app.module.css';
 import { compiler, CompileResult } from './beans/compiler/compiler';
@@ -35,8 +35,10 @@ import 'ace-builds/src-noconflict/theme-github_light_default';
 
 const initialCode = `native function print(s: string);
 
+var world: string = "World";
+
 function start() {
-    print(hello("John"));
+    print(hello(world));
 }
 
 function hello(p: string): string {
@@ -45,12 +47,24 @@ function hello(p: string): string {
 `;
 
 export default function App() {
-  const [content, setContent] = useState(initialCode);
+  const [content, setContent] = useState(() => localStorage.getItem('sourceCode') ?? initialCode);
   const [compileResult, setCompileResult] = useState<CompileResult>();
   const [terminalContent, setTerminalContent] = useState<string>();
 
+  const saveTimeoutIdRef = useRef<number>();
+
   const onContentChange = (value: string) => {
     setContent(value);
+    clearTimeout(saveTimeoutIdRef.current);
+    saveTimeoutIdRef.current = setTimeout(() => {
+      console.log('Saved!');
+      localStorage.setItem('sourceCode', value);
+    }, 5000);
+  };
+
+  const onResetClick = async () => {
+    setContent(initialCode);
+    localStorage.setItem('sourceCode', initialCode);
   };
 
   const onRunClick = async () => {
@@ -70,18 +84,24 @@ export default function App() {
 
   return (
     <div className={classes.container}>
-      <Tile className={classes.editor} title='Code editor'>
-        <AceEditor
-          mode='typescript'
-          theme='github_light_default'
-          value={content}
-          onChange={onContentChange}
-          width='100%'
-          height='100%'
-          fontSize={16}
-          className={classes.code}
-        />
-      </Tile>
+      <div className={classes.code}>
+        <Toolbar>
+          <ToolButton icon={RefreshCcw} text='Reset' onClick={onResetClick} />
+        </Toolbar>
+        <Tile className={classes.editorContainer} title='Code editor'>
+          <AceEditor
+            mode='typescript'
+            theme='github_light_default'
+            value={content}
+            onChange={onContentChange}
+            width='100%'
+            height='100%'
+            fontSize={16}
+            className={classes.editor}
+          />
+        </Tile>
+      </div>
+
       <div className={classes.result}>
         <Toolbar>
           <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
@@ -95,11 +115,11 @@ export default function App() {
             width='100%'
             height='100%'
             fontSize={16}
-            className={classes.code}
+            className={classes.editor}
           />
         </Tile>
         <Tile className={classes.terminal} title='Terminal'>
-          <div className={`${classes.terminalContent} ${classes.code}`}>{terminalContent}</div>
+          <div className={`${classes.terminalContent} ${classes.editor}`}>{terminalContent}</div>
         </Tile>
       </div>
     </div>

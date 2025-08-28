@@ -10,10 +10,6 @@ export class NumberLiteral extends Expression {
     this.value = value;
   }
 
-  get isReference(): boolean {
-    return false;
-  }
-
   toString(): string {
     return `number`;
   }

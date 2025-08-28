@@ -18,22 +18,22 @@
  * @file Runner implementation.
  */
 
+import { Dereference } from '@/beans/expression/dereference';
 import { Expression } from '@/beans/expression/expression';
 import { NumberLiteral } from '@/beans/expression/number-literal';
 import { StringLiteral } from '@/beans/expression/string-literal';
 import { GlobalVariable } from '@/beans/global-variable/global-variable';
+import { GlobalVariableReference } from '@/beans/global-variable/global-variable-reference';
 import { ArgumentVariable } from '@/beans/method/argument-variable';
 import { CapyMethod } from '@/beans/method/capy-method';
-import { GlobalVariableReference } from '@/beans/method/global-variable-reference';
 import { LocalVariableReference } from '@/beans/method/local-variable-reference';
 import { Method } from '@/beans/method/method';
-import { MethodReference } from '@/beans/method/method-reference';
+import { MethodCall } from '@/beans/method/method-call';
+import { MethodLiteral } from '@/beans/method/method-literal';
 import { NativeMethod } from '@/beans/method/native-method';
-import { ReadVariable } from '@/beans/method/read-variable';
 import { Assignment } from '@/beans/operation/assignment';
-import { MethodCall } from '@/beans/operation/method-call';
 import { StringConcat } from '@/beans/operation/string-concat';
-import { Symbol } from '@/beans/parser/symbol';
+import { Module } from '@/beans/parser/module';
 import { ExpressionStatement } from '@/beans/statement/expression-statement';
 import { ReturnStatement } from '@/beans/statement/return-statement';
 import { StatementList } from '@/beans/statement/statement-list';
@@ -46,13 +46,8 @@ class MyVariable {
   }
 }
 
-const nativeMethods: { [name: string]: (runner: Runner, ...args: any[]) => any } = {
-  main__print(runner: Runner, s: string) {
-    runner.print(s);
-  },
-};
 export class Runner {
-  modules: { [moduleName: string]: { [symbolName: string]: Symbol } } = {};
+  modules: { [moduleName: string]: Module } = {};
   variables: { [module: string]: { [name: string]: MyVariable } } = {};
 
   stdout: string = '';
@@ -66,7 +61,7 @@ export class Runner {
     if (obj instanceof NumberLiteral) {
       return obj.value;
     }
-    if (obj instanceof MethodReference) {
+    if (obj instanceof MethodLiteral) {
       const symbol = this.resolveSymbol(obj.module, obj.name);
       if (!(symbol instanceof Method)) {
         throw new Error(`Expected method but found ${symbol.constructor.name}`);
@@ -101,7 +96,7 @@ export class Runner {
       }
       const method = this.runExpression(obj.operand, deps);
       if (method instanceof NativeMethod) {
-        return nativeMethods[`${method.module}__${method.name}`](this, ...argList);
+        return method.callback(this, ...argList);
       }
       if (method instanceof CapyMethod) {
         return this.runMethod(method, argList);
@@ -113,20 +108,20 @@ export class Runner {
       const other = this.runExpression(obj.other, deps);
       return operand + other;
     }
-    if (obj instanceof ReadVariable) {
+    if (obj instanceof Dereference) {
       const variable = this.runExpression(obj.operand, deps);
-      console.log(variable);
       if (!(variable instanceof MyVariable)) {
         throw new Error(`${variable.constructor.name} is not variable`);
       }
       return variable.value;
     }
     if (obj instanceof Assignment) {
+      const operand = this.runExpression(obj.operand, deps);
       const target = this.runExpression(obj.target, deps);
       if (!(target instanceof MyVariable)) {
         throw new Error('Assignment target is not variable');
       }
-      return obj;
+      return (target.value = operand);
     }
     throw new Error(`Cannot read value from ${obj.constructor.name}`);
   }
@@ -163,14 +158,14 @@ export class Runner {
     if (!module) {
       throw new Error(`Module "${moduleName}" not found`);
     }
-    const symbol = module[symbolName];
+    const symbol = module.symbols[symbolName];
     if (!symbol) {
       throw new Error(`Symbol "${symbolName}" not found in module ${moduleName}`);
     }
     return symbol;
   }
 
-  run(modules: { [moduleName: string]: { [symbolName: string]: Symbol } }, mainModuleName: string) {
+  run(modules: { [moduleName: string]: Module }, mainModuleName: string) {
     this.modules = modules;
     const startMethod = this.resolveSymbol(mainModuleName, 'start');
     if (!(startMethod instanceof CapyMethod)) {

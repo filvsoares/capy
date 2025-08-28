@@ -14,16 +14,15 @@ import { Identifier } from '@/beans/tokenizer/identifier';
 import { Keyword } from '@/beans/tokenizer/keyword';
 import { Operator } from '@/beans/tokenizer/operator';
 import { Separator } from '@/beans/tokenizer/separator';
-import { Type } from '@/beans/type/type';
 import { TypeReader } from '@/beans/type/type-reader';
 import { Bean } from '@/util/beans';
 
-export class VariableStatementReader extends Bean implements StatementItemReader {
+export class LocalVariableStatementReader extends Bean implements StatementItemReader {
   constructor(private expressionReader: ExpressionReader, private typeReader: TypeReader) {
     super();
   }
 
-  read(c: ParserContext, context: StatementContext, expectedReturnType: Type): Statement | Invalid | undefined {
+  read(c: ParserContext, context: StatementContext): Statement | Invalid | undefined {
     if (!(context instanceof MethodStack)) {
       return;
     }

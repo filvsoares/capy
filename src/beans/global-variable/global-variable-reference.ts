@@ -1,19 +1,19 @@
 import { Pos } from '@/base';
-import { Reference } from '@/beans/expression/reference';
+import { Expression } from '@/beans/expression/expression';
 import { Type } from '@/beans/type/type';
 
-export class MethodReference extends Reference {
+export class GlobalVariableReference extends Expression {
   module: string;
   name: string;
-
-  get isReference(): boolean {
-    return true;
-  }
 
   constructor(module: string, name: string, type: Type, pos: Pos) {
     super(type, pos);
     this.module = module;
     this.name = name;
+  }
+
+  get isReference(): boolean {
+    return true;
   }
 
   toString(): string {

@@ -3,7 +3,6 @@ import { ParserContext } from '@/beans/parser/parser-context';
 import { Statement } from '@/beans/statement/statement';
 import { StatementContext } from '@/beans/statement/statement-context';
 import { StatementReader } from '@/beans/statement/statement-reader';
-import { Type } from '@/beans/type/type';
 import { Bean } from '@/util/beans';
 import { StatementItemReader } from './statement-item-reader';
 import { StatementList } from './statement-list';
@@ -14,20 +13,20 @@ export class StatementReaderImpl extends Bean implements StatementReader {
     this.itemReaders = itemReaders;
   }
 
-  read(c: ParserContext, context: StatementContext, expectedReturnType: Type): Statement | Invalid | undefined {
+  read(c: ParserContext, context: StatementContext): Statement | Invalid | undefined {
     for (const itemReader of this.itemReaders) {
-      const result = itemReader.read(c, context, expectedReturnType);
+      const result = itemReader.read(c, context);
       if (result) {
         return result;
       }
     }
   }
 
-  readList(c: ParserContext, context: StatementContext, expectedReturnType: Type): StatementList {
+  readList(c: ParserContext, context: StatementContext): StatementList {
     const outList: Statement[] = [];
     let error = false;
     while (c.current) {
-      const val = this.read(c, context, expectedReturnType);
+      const val = this.read(c, context);
       if (val === INVALID) {
         error = true;
         continue;

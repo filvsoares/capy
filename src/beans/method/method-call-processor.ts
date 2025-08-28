@@ -1,6 +1,6 @@
 import { ExpressionContext, ExpressionReader } from '@/beans/expression/expression-reader';
 import { CallableType } from '@/beans/method/callable-type';
-import { MethodCall } from '@/beans/operation/method-call';
+import { MethodCall } from '@/beans/method/method-call';
 import { ParserContext } from '@/beans/parser/parser-context';
 import { Bracket } from '@/beans/tokenizer/bracket';
 import { TypeReader } from '@/beans/type/type-reader';
@@ -24,7 +24,7 @@ export class MethodCallProcessor extends Bean implements OperationProcessor {
     t3?: ProcessToken
   ): ProcessResult {
     if (this.expressionReader.isOperand(t1) && Bracket.matches(t2, '(')) {
-      const operand = this.expressionReader.unwrapOperand(c, t1, context);
+      const operand = this.expressionReader.resolveOperand(c, t1, context, true);
       if (operand === INVALID) {
         return INVALID;
       }

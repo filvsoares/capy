@@ -1,11 +1,11 @@
-import { Symbol } from '@/beans/parser/symbol';
+import { Module } from '@/beans/parser/module';
 import { declareBeanInterface } from '@/util/beans';
 import { ParseError } from '../../base';
 
 export type CompileResult = {
   output: string;
   errors: ParseError[];
-  modules?: { [moduleName: string]: { [symbolName: string]: Symbol } };
+  modules?: { [moduleName: string]: Module };
 };
 
 export type CompileOpts = { debugTree?: boolean };

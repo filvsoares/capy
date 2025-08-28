@@ -22,11 +22,11 @@ export class AdditionProcessor extends Bean implements OperationProcessor {
     t3?: ProcessToken
   ): ProcessResult {
     if (this.expressionReader.isOperand(t1) && Operator.matches(t2, '+') && this.expressionReader.isOperand(t3)) {
-      const o1 = this.expressionReader.unwrapOperand(c, t1, context);
+      const o1 = this.expressionReader.resolveOperand(c, t1, context, true);
       if (o1 === INVALID) {
         return INVALID;
       }
-      const o2 = this.expressionReader.unwrapOperand(c, t3, context);
+      const o2 = this.expressionReader.resolveOperand(c, t3, context, true);
       if (o2 === INVALID) {
         return INVALID;
       }

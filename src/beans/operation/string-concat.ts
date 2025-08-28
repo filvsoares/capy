@@ -11,10 +11,6 @@ export class StringConcat extends Operation {
     this.other = other;
   }
 
-  get isReference(): boolean {
-    return false;
-  }
-
   toString(): string {
     return 'string concat';
   }

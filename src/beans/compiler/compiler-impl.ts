@@ -1,22 +1,32 @@
-import { Tokenizer } from '@/beans/tokenizer/tokenizer';
+import { methodExtraKey } from '@/beans/method/method-extra';
+import { ModuleInput } from '@/beans/parser/module-input';
+import { Runner } from '@/runner';
 import { Bean } from '@/util/beans';
 import { ERROR, INTERNAL, ParseError } from '../../base';
 import { Parser, ParserResult } from '../parser/parser';
 import { CompileOpts, Compiler, CompileResult } from './compiler';
 
+const nativeMethods = {
+  print(runner: Runner, s: string) {
+    runner.print(s);
+  },
+};
+
 export class CompilerImpl extends Bean implements Compiler {
-  constructor(private tokenizer: Tokenizer, private parser: Parser) {
+  constructor(private parser: Parser) {
     super();
   }
 
-  compile(s: string, { debugTree }: CompileOpts): CompileResult {
+  compile(sourceCode: string, { debugTree }: CompileOpts): CompileResult {
     const errors: ParseError[] = [];
     const out: string[] = [];
 
     let p: ParserResult | undefined;
 
     try {
-      p = this.parser.parse({ main: s });
+      p = this.parser.parse({
+        main: new ModuleInput(sourceCode).withExtra(methodExtraKey, { nativeMethods }),
+      });
       errors.push(...p.errors);
     } catch (err: any) {
       errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
@@ -37,8 +47,13 @@ export class CompilerImpl extends Bean implements Compiler {
 
     if (debugTree && p) {
       out.push('---\n');
-      out.push('ParserResult: ');
-      Object.values(p.modules['main']).forEach((e) => e.debugPrint(out, ''));
+      out.push('ParserResult:\n');
+      Object.values(p.modules).forEach((m) =>
+        Object.values(m.symbols).forEach((e) => {
+          out.push('- ');
+          e.debugPrint(out, '  ');
+        })
+      );
     }
 
     return {

@@ -1,9 +1,9 @@
 import { ERROR, INVALID, Invalid } from '@/base';
+import { Dereference } from '@/beans/expression/dereference';
 import { Expression } from '@/beans/expression/expression';
 import { ExpressionContext, ExpressionReader, ReadExpressionOpts } from '@/beans/expression/expression-reader';
+import { IdentifierResolver } from '@/beans/expression/identifier-resolver';
 import { NumberLiteral } from '@/beans/expression/number-literal';
-import { Reference } from '@/beans/expression/reference';
-import { ReferenceProcessor } from '@/beans/expression/reference-processor';
 import { StringLiteral } from '@/beans/expression/string-literal';
 import { ParserContext } from '@/beans/parser/parser-context';
 import { Bracket } from '@/beans/tokenizer/bracket';
@@ -18,7 +18,7 @@ import { OperationProcessor } from './operation-processor';
 export class ExpressionReaderImpl extends Bean implements ExpressionReader {
   operationProcessors: OperationProcessor[][] = [];
 
-  constructor(private referenceProcessors: ReferenceProcessor[], operationProcessors: OperationProcessor[]) {
+  constructor(private identifierResolvers: IdentifierResolver[], operationProcessors: OperationProcessor[]) {
     super();
     for (const item of operationProcessors) {
       while (this.operationProcessors.length <= item.pass) {
@@ -32,35 +32,31 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
     return !t || Separator.matches(t);
   }
 
-  isOperand(token: Token | Expression | undefined): token is Token | Expression {
+  isOperand(obj: Token | Expression | undefined): obj is Token | Expression {
     return (
-      token instanceof Expression ||
-      token instanceof Identifier ||
-      token instanceof Number ||
-      token instanceof String ||
-      (token instanceof Bracket && token.start === '(')
+      obj instanceof Expression ||
+      obj instanceof Identifier ||
+      obj instanceof Number ||
+      obj instanceof String ||
+      (obj instanceof Bracket && obj.start === '(')
     );
   }
 
-  unwrapOperand(
-    c: ParserContext,
-    operand: Token | Expression,
-    context: ExpressionContext | null
-  ): Expression | Invalid {
-    if (operand instanceof Expression) {
-      return operand;
+  private internalResolveOperand(c: ParserContext, obj: Token | Expression, context: ExpressionContext | null) {
+    if (obj instanceof Expression) {
+      return obj;
     }
-    if (operand instanceof Identifier) {
-      return this.processReference(c, operand, context);
+    if (obj instanceof Identifier) {
+      return this.resolveIdentifier(c, obj, context);
     }
-    if (operand instanceof Number) {
-      return new NumberLiteral(operand.value, operand.pos);
+    if (obj instanceof Number) {
+      return new NumberLiteral(obj.value, obj.pos);
     }
-    if (operand instanceof String) {
-      return new StringLiteral(operand.value, operand.pos);
+    if (obj instanceof String) {
+      return new StringLiteral(obj.value, obj.pos);
     }
-    if (operand instanceof Bracket && operand.start === '(') {
-      const c1 = c.derive(operand.tokenList);
+    if (obj instanceof Bracket && obj.start === '(') {
+      const c1 = c.derive(obj.tokenList);
       const r = this.readList(c1, context, {
         unexpectedTokenErrorMsg: (t) => `Expected ")" but found ${t}`,
       });
@@ -68,7 +64,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
         c.addError({
           level: ERROR,
           message: `Expected expression`,
-          pos: operand.pos,
+          pos: obj.pos,
         });
         return INVALID;
       }
@@ -84,10 +80,26 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
     }
     c.addError({
       level: ERROR,
-      message: `Expected expression but found ${operand}`,
-      pos: operand.pos,
+      message: `Expected operand but found ${obj}`,
+      pos: obj.pos,
     });
     return INVALID;
+  }
+
+  resolveOperand(
+    c: ParserContext,
+    obj: Token | Expression,
+    context: ExpressionContext | null,
+    dereference: boolean
+  ): Expression | Invalid {
+    const operand = this.internalResolveOperand(c, obj, context);
+    if (operand === INVALID) {
+      return INVALID;
+    }
+    if (dereference && operand.isReference) {
+      return new Dereference(operand, operand.type, operand.pos);
+    }
+    return operand;
   }
 
   processOperationsLTR(
@@ -221,7 +233,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       return INVALID;
     }
 
-    return this.unwrapOperand(c, p5[0], context);
+    return this.resolveOperand(c, p5[0], context, true);
   }
 
   readList(c: ParserContext, context: ExpressionContext | null, opts?: ReadExpressionOpts): Expression[] {
@@ -292,34 +304,16 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
     return outList;
   }
 
-  processReference(c: ParserContext, ref: Identifier, context: ExpressionContext | null): Reference | Invalid {
-    for (const p of this.referenceProcessors) {
-      const result = p.processReference(c, ref, context);
+  resolveIdentifier(c: ParserContext, obj: Identifier, context: ExpressionContext | null): Expression | Invalid {
+    for (const p of this.identifierResolvers) {
+      const result = p.resolveIdentifier(c, obj, context);
       if (result) {
         return result;
       }
     }
     c.addError({
       level: ERROR,
-      message: `Could not find reference ${ref.name}`,
-      pos: ref.pos,
-    });
-    return INVALID;
-  }
-
-  readReference(c: ParserContext, obj: Expression | Invalid): Expression | Invalid {
-    if (obj === INVALID || !obj.isReference) {
-      return obj;
-    }
-    for (const p of this.referenceProcessors) {
-      const result = p.readReference(c, obj);
-      if (result) {
-        return result;
-      }
-    }
-    c.addError({
-      level: ERROR,
-      message: `Cannot read reference type ${obj.constructor.name}`,
+      message: `Could not resolve identifier "${obj.name}"`,
       pos: obj.pos,
     });
     return INVALID;

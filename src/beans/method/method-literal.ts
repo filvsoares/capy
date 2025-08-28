@@ -1,8 +1,8 @@
 import { Pos } from '@/base';
-import { VariableReference } from '@/beans/method/variable-reference';
+import { Expression } from '@/beans/expression/expression';
 import { Type } from '@/beans/type/type';
 
-export class GlobalVariableReference extends VariableReference {
+export class MethodLiteral extends Expression {
   module: string;
   name: string;
 
@@ -13,7 +13,7 @@ export class GlobalVariableReference extends VariableReference {
   }
 
   toString(): string {
-    return `identifier "${this.name}"`;
+    return `method literal "${this.name}"`;
   }
 
   debugPrint(out: string[], prefix: string): void {

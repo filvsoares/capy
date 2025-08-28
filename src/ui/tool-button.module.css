@@ -24,3 +24,20 @@
   padding: 2px 31px 0px 33px;
   background-color: #0b0;
 }
+
+
+.toolButton[data-variant='normal'] {
+  border: 1px solid #ccc;
+  background-color: #eee;
+  color: #000;
+}
+
+.toolButton[data-variant='normal']:hover {
+  border: 1px solid #ccc;
+  background-color: #ddd;
+}
+
+.toolButton[data-variant='normal']:active {
+  padding: 2px 31px 0px 33px;
+  background-color: #ccc;
+}

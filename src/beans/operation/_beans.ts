@@ -18,11 +18,4 @@ export function declareBeans() {
     loadModule: () => import('./assignment-processor'),
     factory: (m, deps) => new m.AssignmentProcessor(...deps),
   });
-  declareBean({
-    name: 'MethodCallProcessor',
-    provides: [operationProcessor],
-    dependencies: [single(expressionReader), single(typeReader)],
-    loadModule: () => import('./method-call-processor'),
-    factory: (m, deps) => new m.MethodCallProcessor(...deps),
-  });
 }

@@ -17,8 +17,13 @@ export interface ExpressionReader {
     opts?: ReadExpressionOpts
   ): Expression | Invalid | undefined;
   readList(c: ParserContext, context: ExpressionContext | null, opts?: ReadExpressionOpts): Expression[];
-  isOperand(token: Token | Expression | undefined): token is Token | Expression;
-  unwrapOperand(c: ParserContext, operand: Token | Expression, context: ExpressionContext | null): Expression | Invalid;
+  isOperand(obj: Token | Expression | undefined): obj is Token | Expression;
+  resolveOperand(
+    c: ParserContext,
+    obj: Token | Expression,
+    context: ExpressionContext | null,
+    dereference: boolean
+  ): Expression | Invalid;
 }
 
 export const expressionReader = declareBeanInterface<ExpressionReader>('ExpressionReader');

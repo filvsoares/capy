@@ -11,10 +11,6 @@ export class Assignment extends Operation {
     this.target = target;
   }
 
-  get isReference(): boolean {
-    return false;
-  }
-
   toString(): string {
     return 'assignment';
   }

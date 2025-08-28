@@ -1,5 +1,6 @@
 import { expressionReader } from '@/beans/expression/expression-reader';
-import { referenceProcessor } from '@/beans/expression/reference-processor';
+import { identifierResolver } from '@/beans/expression/identifier-resolver';
+import { operationProcessor } from '@/beans/expression/operation-processor';
 import { argumentReader } from '@/beans/method/argument-reader';
 import { callableTypeReader } from '@/beans/method/callable-type-reader';
 import { parser } from '@/beans/parser/parser';
@@ -26,6 +27,13 @@ export function declareBeans() {
     factory: (m, deps) => new m.CallableTypeReaderImpl(...deps),
   });
   declareBean({
+    name: 'MethodCallProcessor',
+    provides: [operationProcessor],
+    dependencies: [single(expressionReader), single(typeReader)],
+    loadModule: () => import('./method-call-processor'),
+    factory: (m, deps) => new m.MethodCallProcessor(...deps),
+  });
+  declareBean({
     name: 'MethodReader',
     provides: [toplevelReader],
     dependencies: [single(statementReader), single(callableTypeReader), single(parser)],
@@ -33,17 +41,24 @@ export function declareBeans() {
     factory: (m, deps) => new m.MethodReader(...deps),
   });
   declareBean({
-    name: 'VariableReferenceProcessor',
-    provides: [referenceProcessor],
+    name: 'MethodReferenceProcessor',
+    provides: [identifierResolver],
     dependencies: [single(parser)],
-    loadModule: () => import('./variable-reference-processor'),
-    factory: (m, deps) => new m.VariableReferenceProcessor(...deps),
+    loadModule: () => import('./method-identifier-resolver'),
+    factory: (m, deps) => new m.MethodIdentifierResolver(...deps),
   });
   declareBean({
-    name: 'VariableStatementReader',
+    name: 'VariableReferenceProcessor',
+    provides: [identifierResolver],
+    dependencies: [single(parser)],
+    loadModule: () => import('./local-variable-identifier-resolver'),
+    factory: (m, deps) => new m.LocalVariableIdentifierResolver(...deps),
+  });
+  declareBean({
+    name: 'LocalVariableStatementReader',
     provides: [statementItemReader],
     dependencies: [single(expressionReader), single(typeReader)],
-    loadModule: () => import('./variable-statement-handler'),
-    factory: (m, deps) => new m.VariableStatementReader(...deps),
+    loadModule: () => import('./local-variable-statement-handler'),
+    factory: (m, deps) => new m.LocalVariableStatementReader(...deps),
   });
 }

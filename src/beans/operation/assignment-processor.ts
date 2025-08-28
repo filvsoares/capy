@@ -1,6 +1,5 @@
 import { combinePos, ERROR, INVALID } from '@/base';
 import { ExpressionContext, ExpressionReader } from '@/beans/expression/expression-reader';
-import { VariableReference } from '@/beans/method/variable-reference';
 import { Assignment } from '@/beans/operation/assignment';
 import { ParserContext } from '@/beans/parser/parser-context';
 import { Operator } from '@/beans/tokenizer/operator';
@@ -23,15 +22,15 @@ export class AssignmentProcessor extends Bean implements OperationProcessor {
     t3?: ProcessToken
   ): ProcessResult {
     if (this.expressionReader.isOperand(t1) && Operator.matches(t2, '=') && this.expressionReader.isOperand(t3)) {
-      const operand = this.expressionReader.unwrapOperand(c, t1, context);
+      const operand = this.expressionReader.resolveOperand(c, t1, context, true);
       if (operand === INVALID) {
         return INVALID;
       }
-      const target = this.expressionReader.unwrapOperand(c, t3, context);
+      const target = this.expressionReader.resolveOperand(c, t3, context, false);
       if (target === INVALID) {
         return INVALID;
       }
-      if (!(target instanceof VariableReference)) {
+      if (!target.isReference) {
         c.addError({
           level: ERROR,
           message: `Cannot assign value to ${target}`,

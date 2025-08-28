@@ -1,8 +1,8 @@
 import { Pos } from '@/base';
-import { VariableReference } from '@/beans/method/variable-reference';
+import { Expression } from '@/beans/expression/expression';
 import { Type } from '@/beans/type/type';
 
-export class LocalVariableReference extends VariableReference {
+export class LocalVariableReference extends Expression {
   index: number;
   name: string;
 
@@ -12,8 +12,12 @@ export class LocalVariableReference extends VariableReference {
     this.name = name;
   }
 
+  get isReference(): boolean {
+    return true;
+  }
+
   toString(): string {
-    return `identifier "${this.name}"`;
+    return `local variable "${this.name}"`;
   }
 
   debugPrint(out: string[], prefix: string): void {

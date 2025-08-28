@@ -4,12 +4,12 @@ import classes from './tool-button.module.css';
 export function ToolButton({
   text,
   icon: FeatherIcon,
-  variant = '',
+  variant = 'normal',
   onClick,
 }: {
   text: string;
   icon?: Icon;
-  variant?: '' | 'run';
+  variant?: 'normal' | 'run';
   onClick?: () => void;
 }) {
   return (

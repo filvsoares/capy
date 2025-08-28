@@ -19,37 +19,46 @@
  */
 
 import { ERROR, INTERNAL, INVALID, ParseError } from '@/base';
-import { ExtraKey, ParserContext } from '@/beans/parser/parser-context';
+import { Module } from '@/beans/parser/module';
+import { ModuleInput } from '@/beans/parser/module-input';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { Symbol } from '@/beans/parser/symbol';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
 import { Tokenizer } from '@/beans/tokenizer/tokenizer';
 import { Bean } from '@/util/beans';
+import { declareExtraKey, ExtraHandler } from '@/util/extra';
 import { Parser, ParserResult } from './parser';
 
-class ParserExtra {
-  constructor(public symbols: { [name: string]: Symbol }) {}
-}
+type ParserExtra = {
+  modules: { [moduleName: string]: Module };
+};
 
-const parserExtraKey = new ExtraKey<ParserExtra>();
+const parserExtraKey = declareExtraKey<ParserExtra>();
 
 export class ParserImpl extends Bean implements Parser {
   constructor(private tokenizer: Tokenizer, private toplevelReaders: ToplevelReader[]) {
     super();
   }
 
-  parse(srcModules: { [moduleName: string]: string }): ParserResult {
-    const modules: { [moduleName: string]: { [symbolName: string]: Symbol } } = {};
+  parse(moduleInputs: { [moduleName: string]: ModuleInput }): ParserResult {
+    const modules: { [moduleName: string]: Module } = {};
 
     const errors: ParseError[] = [];
     const tasks: (() => void)[] = [];
 
-    for (const moduleName in srcModules) {
-      const { tokenList, errors: tokenizerErrors } = this.tokenizer.process(srcModules[moduleName]);
-      errors.push(...tokenizerErrors);
-      const c = new ParserContext(modules, moduleName, tokenList, errors, tasks);
+    const extra = new ExtraHandler();
+    extra.put(parserExtraKey, { modules });
+
+    for (const moduleName in moduleInputs) {
+      const moduleInput = moduleInputs[moduleName];
+
+      const r = this.tokenizer.process(moduleInput.sourceCode);
+      errors.push(...r.errors);
+
+      const c = new ParserContext(moduleName, moduleInput, r.tokenList, errors, tasks, extra);
+
       const symbols = this.readToplevelList(c);
-      c.putExtra(parserExtraKey, new ParserExtra(symbols));
-      modules[moduleName] = symbols;
+      modules[moduleName] = new Module(moduleName, symbols);
     }
 
     while (tasks.length > 0) {
@@ -95,14 +104,22 @@ export class ParserImpl extends Bean implements Parser {
   }
 
   findSymbol(c: ParserContext, symbolName: string): Symbol | undefined {
-    return c.modules[c.moduleName]?.[symbolName];
+    const module = c.extra.get(parserExtraKey)!.modules[c.moduleName];
+    if (!module) {
+      throw new Error('findSymbol() must be used within a task');
+    }
+    return module.symbols[symbolName];
   }
 
   replaceSymbol(c: ParserContext, newSymbol: Symbol) {
-    const parserExtra = c.getExtra(parserExtraKey);
-    if (!parserExtra) {
+    const module = c.extra.get(parserExtraKey)!.modules[c.moduleName];
+    if (!module) {
       throw new Error('replaceSymbol() must be used within a task');
     }
-    parserExtra.symbols[newSymbol.name] = newSymbol;
+    module.symbols[newSymbol.name] = newSymbol;
+  }
+
+  findModule(c: ParserContext, moduleName: string): Module | undefined {
+    return c.extra.get(parserExtraKey)?.modules[moduleName];
   }
 }

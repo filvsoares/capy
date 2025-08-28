@@ -11,10 +11,6 @@ export class MethodCall extends Operation {
     this.argList = argList;
   }
 
-  get isReference(): boolean {
-    return false;
-  }
-
   toString(): string {
     return 'method call';
   }

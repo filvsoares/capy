@@ -59,7 +59,7 @@ export class CallableTypeReaderImpl extends Bean implements TypeItemReader, Call
         return false;
       }
       for (let i = 0; i < type.argList.length; i++) {
-        if (!this.isAssignable(type.argList[i].type, assignTo.argList[i].type)) {
+        if (!this.typeReader.isAssignable(type.argList[i].type, assignTo.argList[i].type)) {
           return false;
         }
       }

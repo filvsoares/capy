@@ -1,12 +1,13 @@
+import { parser } from '@/beans/parser/parser';
 import { toplevelReader } from '@/beans/parser/toplevel-reader';
-import { declareBean } from '@/util/beans';
+import { declareBean, single } from '@/util/beans';
 
 export function declareBeans() {
   declareBean({
     name: 'UseReader',
     provides: [toplevelReader],
-    dependencies: [],
+    dependencies: [single(parser)],
     loadModule: () => import('./use-reader'),
-    factory: (m) => new m.UseReader(),
+    factory: (m, deps) => new m.UseReader(...deps),
   });
 }

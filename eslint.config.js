@@ -1,6 +1,7 @@
 import eslint from '@eslint/js';
 import boundaries from 'eslint-plugin-boundaries';
 import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
@@ -16,6 +17,7 @@ export default defineConfig([
     plugins: {
       boundaries,
       react,
+      'react-hooks': reactHooks,
     },
     languageOptions: {
       parserOptions: {
@@ -50,7 +52,7 @@ export default defineConfig([
             },
             {
               from: [bean('impexp')],
-              allow: ['bean'],
+              allow: [bean('type'), bean('parser'), bean('tokenizer')],
             },
             {
               from: [bean('method')],
@@ -58,7 +60,7 @@ export default defineConfig([
             },
             {
               from: [bean('operation')],
-              allow: ['bean'],
+              allow: [bean('expression'), bean('type'), bean('parser'), bean('tokenizer')],
             },
             {
               from: [bean('parser')],
@@ -79,6 +81,10 @@ export default defineConfig([
             {
               from: [bean('type')],
               allow: [bean('parser'), bean('tokenizer')],
+            },
+            {
+              from: [bean('variable')],
+              allow: [bean('expression'), bean('type'), bean('parser'), bean('tokenizer')],
             },
           ],
         },

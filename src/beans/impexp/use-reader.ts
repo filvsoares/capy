@@ -1,19 +1,25 @@
 import { ERROR, fallbackPos, INVALID, Invalid } from '@/base';
-import { ExtraKey, ParserContext } from '@/beans/parser/parser-context';
+import { Parser } from '@/beans/parser/parser';
+import { ParserContext } from '@/beans/parser/parser-context';
 import { Symbol } from '@/beans/parser/symbol';
 import { ToplevelReader } from '@/beans/parser/toplevel-reader';
 import { Keyword } from '@/beans/tokenizer/keyword';
 import { String } from '@/beans/tokenizer/string';
 import { Bean } from '@/util/beans';
+import { declareExtraKey } from '@/util/extra';
 import { Separator } from '../tokenizer/separator';
 
-class UseExtra {
-  symbols: { [symbolName: string]: { moduleName: string; value: Symbol }[] } = {};
-}
+type UseExtra = {
+  symbols: { [symbolName: string]: { moduleName: string; value: Symbol }[] };
+};
 
-const useExtraKey = new ExtraKey<UseExtra>();
+const useExtraKey = declareExtraKey<UseExtra>();
 
 export class UseReader extends Bean implements ToplevelReader {
+  constructor(private parser: Parser) {
+    super();
+  }
+
   read(c: ParserContext): true | Invalid | undefined {
     const t1 = c.current;
     if (!Keyword.matches(t1, 'use')) {
@@ -43,7 +49,7 @@ export class UseReader extends Bean implements ToplevelReader {
       });
     }
 
-    const module = c.modules[t2.value];
+    const module = this.parser.findModule(c, t2.value);
     if (!module) {
       c.addError({
         level: ERROR,
@@ -53,14 +59,14 @@ export class UseReader extends Bean implements ToplevelReader {
       return INVALID;
     }
 
-    const useExtra = c.getOrCreateExtra(useExtraKey, () => new UseExtra());
+    const useExtra = c.extra.getOrCreate<UseExtra>(useExtraKey, () => ({ symbols: {} }));
 
     for (const symbolName in module) {
       let list = useExtra.symbols[symbolName];
       if (!list) {
         useExtra.symbols[symbolName] = list = [];
       }
-      list.push({ moduleName: t2.value, value: module[symbolName] });
+      list.push({ moduleName: t2.value, value: module.symbols[symbolName] });
     }
 
     return true;

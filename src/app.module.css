@@ -7,22 +7,24 @@
   column-gap: 8px;
 }
 
-.editor,
+.code,
 .result {
   width: 1px;
   flex-grow: 1;
-}
-
-.code {
-  font-family: 'Inconsolata', monospace;
-  line-height: 1.5;
-}
-
-.result {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   row-gap: 8px;
+}
+
+.editorContainer {
+  height: 100%;
+  flex-grow: 1;
+}
+
+.editor {
+  font-family: 'Inconsolata', monospace;
+  line-height: 1.5;
 }
 
 .compileOutput {

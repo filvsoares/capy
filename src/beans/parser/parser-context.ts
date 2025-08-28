@@ -1,46 +1,41 @@
 import { ParseError } from '@/base';
-import { Symbol as _Symbol } from '@/beans/parser/symbol';
+import { ModuleInput } from '@/beans/parser/module-input';
 import { Token } from '@/beans/tokenizer/token';
-
-export class ExtraKey<T> {
-  type?: T;
-  key: symbol = Symbol();
-}
+import { ExtraHandler } from '@/util/extra';
 
 export class ParserContext {
   private pos = 0;
 
-  current: Token | undefined;
-  private extra: { [key: symbol]: any } = {};
+  private _current: Token | undefined;
+  get current() {
+    return this._current;
+  }
+
+  get extra() {
+    return this._extra;
+  }
+
+  get moduleName() {
+    return this._moduleName;
+  }
+
+  get moduleInput() {
+    return this._moduleInput;
+  }
 
   constructor(
-    public modules: { [moduleName: string]: { [symbolName: string]: _Symbol } },
-    public moduleName: string,
+    private _moduleName: string,
+    private _moduleInput: ModuleInput,
     private tokenList: Token[],
     private errors: ParseError[],
-    private tasks: (() => void)[]
+    private tasks: (() => void)[],
+    private _extra: ExtraHandler
   ) {
-    this.current = tokenList[0];
+    this._current = tokenList[0];
   }
 
   addTask(task: () => void) {
     this.tasks.push(task);
-  }
-
-  putExtra<T>(key: ExtraKey<T>, value: T) {
-    this.extra[key.key] = value;
-  }
-
-  getExtra<T>(key: ExtraKey<T>): T | undefined {
-    return this.extra[key.key];
-  }
-
-  getOrCreateExtra<T>(key: ExtraKey<T>, factory: () => T): T {
-    let val = this.extra[key.key];
-    if (val === undefined) {
-      this.extra[key.key] = val = factory();
-    }
-    return val;
   }
 
   addError(e: ParseError) {
@@ -48,10 +43,10 @@ export class ParserContext {
   }
 
   consume() {
-    this.current = this.tokenList[++this.pos];
+    this._current = this.tokenList[++this.pos];
   }
 
   derive(tokenList: Token[]) {
-    return new ParserContext(this.modules, this.moduleName, tokenList, this.errors, this.tasks);
+    return new ParserContext(this._moduleName, this._moduleInput, tokenList, this.errors, this.tasks, this.extra);
   }
 }

@@ -4,15 +4,13 @@ import { ExpressionContext } from '@/beans/expression/expression-reader';
 import { ParserContext } from '@/beans/parser/parser-context';
 import { Identifier } from '@/beans/tokenizer/identifier';
 import { declareBeanInterface } from '@/util/beans';
-import { Reference } from './reference';
 
-export interface ReferenceProcessor {
-  processReference(
+export interface IdentifierResolver {
+  resolveIdentifier(
     c: ParserContext,
-    ref: Identifier,
+    obj: Identifier,
     context: ExpressionContext | null
-  ): Reference | Invalid | undefined;
-  readReference(c: ParserContext, obj: Expression): Expression | Invalid | undefined;
+  ): Expression | Invalid | undefined;
 }
 
-export const referenceProcessor = declareBeanInterface<ReferenceProcessor>('ReferenceProcessor');
+export const identifierResolver = declareBeanInterface<IdentifierResolver>('IdentifierResolver');

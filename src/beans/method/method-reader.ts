@@ -2,6 +2,7 @@ import { ERROR, fallbackPos, INVALID, Invalid } from '@/base';
 import { ArgumentVariable } from '@/beans/method/argument-variable';
 import { CallableTypeReader } from '@/beans/method/callable-type-reader';
 import { CapyMethod } from '@/beans/method/capy-method';
+import { methodExtraKey } from '@/beans/method/method-extra';
 import { MethodStack } from '@/beans/method/method-stack';
 import { NativeMethod } from '@/beans/method/native-method';
 import { UnresolvedMethod } from '@/beans/method/unresolved-method';
@@ -98,18 +99,27 @@ export class MethodReader extends Bean implements ToplevelReader {
     c.consume();
 
     if (isNative) {
-      return new NativeMethod(c.moduleName, t2.name, type, t2.pos);
+      const callback = c.moduleInput.extra.get(methodExtraKey)?.nativeMethods[t2.name];
+      if (!callback) {
+        c.addError({
+          level: ERROR,
+          message: `Declared native function "${t2.name}" but native implementation was not found`,
+          pos: fallbackPos(t4?.pos, type.pos),
+        });
+        return INVALID;
+      }
+      return new NativeMethod(c.moduleName, t2.name, type, callback, t2.pos);
     }
 
     c.addTask(() => {
       const c1 = c.derive(tokenList!);
-      const stack = new MethodStack();
+      const stack = new MethodStack(null, type.returnType);
 
       for (let i = 0; i < type.argList.length; i++) {
         const arg = type.argList[i];
         stack.add(new ArgumentVariable(i, arg.name, arg.type, arg.pos));
       }
-      const statementList = this.statementReader.readList(c1, stack, type.returnType);
+      const statementList = this.statementReader.readList(c1, stack);
 
       this.parser.replaceSymbol(c, new CapyMethod(c.moduleName, t2.name, type, stack.items, statementList, t2.pos));
     });

@@ -7,7 +7,6 @@ import { ReturnStatement } from '@/beans/statement/return-statement';
 import { StatementContext } from '@/beans/statement/statement-context';
 import { Keyword } from '@/beans/tokenizer/keyword';
 import { isVoidType } from '@/beans/type/simple-type';
-import { Type } from '@/beans/type/type';
 import { TypeReader } from '@/beans/type/type-reader';
 import { Separator } from '../tokenizer/separator';
 import { StatementItemReader } from './statement-item-reader';
@@ -18,7 +17,7 @@ export class ReturnStatementReader extends Bean implements StatementItemReader {
     super();
   }
 
-  read(c: ParserContext, context: StatementContext, expectedReturnType: Type): ReturnStatement | Invalid | undefined {
+  read(c: ParserContext, context: StatementContext): ReturnStatement | Invalid | undefined {
     const t1 = c.current;
     if (!Keyword.matches(t1, 'return')) {
       return;
@@ -28,10 +27,10 @@ export class ReturnStatementReader extends Bean implements StatementItemReader {
     const t2 = c.current;
     if (Separator.matches(t2, ';')) {
       c.consume();
-      if (!isVoidType(expectedReturnType)) {
+      if (!isVoidType(context.returnType)) {
         c.addError({
           level: ERROR,
-          message: `Must return expression of type ${expectedReturnType}`,
+          message: `Must return expression of type ${context.returnType}`,
           pos: combinePos(t1.pos, t2.pos),
         });
         return INVALID;
@@ -65,7 +64,7 @@ export class ReturnStatementReader extends Bean implements StatementItemReader {
       });
     }
 
-    if (isVoidType(expectedReturnType)) {
+    if (isVoidType(context.returnType)) {
       c.addError({
         level: ERROR,
         message: `Cannot return expression when method has void return type`,
@@ -74,10 +73,10 @@ export class ReturnStatementReader extends Bean implements StatementItemReader {
       return INVALID;
     }
 
-    if (!this.typeReader.isAssignable(expr.type, expectedReturnType)) {
+    if (!this.typeReader.isAssignable(expr.type, context.returnType)) {
       c.addError({
         level: ERROR,
-        message: `Return expects ${expectedReturnType} but ${expr.type} was provided`,
+        message: `Return expects ${context.returnType} but ${expr.type} was provided`,
         pos: expr.pos,
       });
       return INVALID;

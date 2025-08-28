@@ -1,15 +1,19 @@
 import { LocalVariable } from '@/beans/method/local-variable';
+import { StatementContext } from '@/beans/statement/statement-context';
 import { Identifier } from '@/beans/tokenizer/identifier';
+import { Type } from '@/beans/type/type';
 
-export class MethodStack {
+export class MethodStack implements StatementContext {
   parent: MethodStack | null;
   items: LocalVariable[];
   itemsByName: { [name: string]: number };
+  returnType: Type;
 
-  constructor(parent: MethodStack | null = null) {
+  constructor(parent: MethodStack | null = null, returnType: Type) {
     this.parent = parent;
     this.items = parent?.items ?? [];
     this.itemsByName = {};
+    this.returnType = returnType;
   }
 
   add(item: LocalVariable): number | false {
@@ -35,6 +39,6 @@ export class MethodStack {
   }
 
   createChild() {
-    return new MethodStack(this);
+    return new MethodStack(this, this.returnType);
   }
 }
