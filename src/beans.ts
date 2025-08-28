@@ -1,13 +1,13 @@
-import { declareBeans as d10 } from './beans/compiler/_beans';
-import { declareBeans as d7 } from './beans/expression/_beans';
-import { declareBeans as d11 } from './beans/global-variable/_beans';
-import { declareBeans as d1 } from './beans/impexp/_beans';
-import { declareBeans as d4 } from './beans/method/_beans';
-import { declareBeans as d8 } from './beans/operation/_beans';
-import { declareBeans as d2 } from './beans/parser/_beans';
-import { declareBeans as d3 } from './beans/statement/_beans';
-import { declareBeans as d9 } from './beans/tokenizer/_beans';
-import { declareBeans as d5 } from './beans/type/_beans';
+import { declareBeans as d10 } from './modules/parser/compiler/_beans';
+import { declareBeans as d7 } from './modules/parser/expression/_beans';
+import { declareBeans as d11 } from './modules/parser/global-variable/_beans';
+import { declareBeans as d1 } from './modules/parser/impexp/_beans';
+import { declareBeans as d4 } from './modules/parser/method/_beans';
+import { declareBeans as d8 } from './modules/parser/operation/_beans';
+import { declareBeans as d2 } from './modules/parser/parser/_beans';
+import { declareBeans as d3 } from './modules/parser/statement/_beans';
+import { declareBeans as d9 } from './modules/parser/tokenizer/_beans';
+import { declareBeans as d5 } from './modules/parser/type/_beans';
 
 export function declareBeans() {
   d1();

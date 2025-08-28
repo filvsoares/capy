@@ -18,25 +18,25 @@
  * @file Runner implementation.
  */
 
-import { Dereference } from '@/beans/expression/dereference';
-import { Expression } from '@/beans/expression/expression';
-import { NumberLiteral } from '@/beans/expression/number-literal';
-import { StringLiteral } from '@/beans/expression/string-literal';
-import { GlobalVariable } from '@/beans/global-variable/global-variable';
-import { GlobalVariableReference } from '@/beans/global-variable/global-variable-reference';
-import { ArgumentVariable } from '@/beans/method/argument-variable';
-import { CapyMethod } from '@/beans/method/capy-method';
-import { LocalVariableReference } from '@/beans/method/local-variable-reference';
-import { Method } from '@/beans/method/method';
-import { MethodCall } from '@/beans/method/method-call';
-import { MethodLiteral } from '@/beans/method/method-literal';
-import { NativeMethod } from '@/beans/method/native-method';
-import { Assignment } from '@/beans/operation/assignment';
-import { StringConcat } from '@/beans/operation/string-concat';
-import { Module } from '@/beans/parser/module';
-import { ExpressionStatement } from '@/beans/statement/expression-statement';
-import { ReturnStatement } from '@/beans/statement/return-statement';
-import { StatementList } from '@/beans/statement/statement-list';
+import { Dereference } from '@/modules/parser/expression/dereference';
+import { Expression } from '@/modules/parser/expression/expression';
+import { NumberLiteral } from '@/modules/parser/expression/number-literal';
+import { StringLiteral } from '@/modules/parser/expression/string-literal';
+import { GlobalVariable } from '@/modules/parser/global-variable/global-variable';
+import { GlobalVariableReference } from '@/modules/parser/global-variable/global-variable-reference';
+import { ArgumentVariable } from '@/modules/parser/method/argument-variable';
+import { CapyMethod } from '@/modules/parser/method/capy-method';
+import { LocalVariableReference } from '@/modules/parser/method/local-variable-reference';
+import { Method } from '@/modules/parser/method/method';
+import { MethodCall } from '@/modules/parser/method/method-call';
+import { MethodLiteral } from '@/modules/parser/method/method-literal';
+import { NativeMethod } from '@/modules/parser/method/native-method';
+import { Assignment } from '@/modules/parser/operation/assignment';
+import { StringConcat } from '@/modules/parser/operation/string-concat';
+import { Module } from '@/modules/parser/parser/module';
+import { ExpressionStatement } from '@/modules/parser/statement/expression-statement';
+import { ReturnStatement } from '@/modules/parser/statement/return-statement';
+import { StatementList } from '@/modules/parser/statement/statement-list';
 
 class MyVariable {
   value: any;

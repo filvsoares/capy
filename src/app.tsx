@@ -22,7 +22,7 @@ import { Play, RefreshCcw } from 'feather-icons-react';
 import { useRef, useState } from 'react';
 import AceEditor from 'react-ace';
 import classes from './app.module.css';
-import { compiler, CompileResult } from './beans/compiler/compiler';
+import { compiler, CompileResult } from './modules/parser/compiler/compiler';
 import { Runner } from './runner';
 import { Tile } from './ui/tile';
 import { ToolButton } from './ui/tool-button';

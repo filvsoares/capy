@@ -5,8 +5,11 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
-function bean(name) {
-  return ['bean', { name }];
+function rule(module, from, allow) {
+  return {
+    from: [['bean', { module, component: from }]],
+    allow: allow.map((e) => ['bean', { module, component: e }]),
+  };
 }
 
 export default defineConfig([
@@ -38,54 +41,16 @@ export default defineConfig([
         {
           default: 'disallow',
           rules: [
-            {
-              from: [bean('compiler')],
-              allow: ['bean'],
-            },
-            {
-              from: [bean('expression')],
-              allow: [bean('type'), bean('parser'), bean('tokenizer')],
-            },
-            {
-              from: [bean('global-variable')],
-              allow: [bean('expression'), bean('type'), bean('parser'), bean('tokenizer')],
-            },
-            {
-              from: [bean('impexp')],
-              allow: [bean('type'), bean('parser'), bean('tokenizer')],
-            },
-            {
-              from: [bean('method')],
-              allow: ['bean'],
-            },
-            {
-              from: [bean('operation')],
-              allow: [bean('expression'), bean('type'), bean('parser'), bean('tokenizer')],
-            },
-            {
-              from: [bean('parser')],
-              allow: [bean('tokenizer')],
-            },
-            {
-              from: [bean('runner')],
-              allow: ['bean'],
-            },
-            {
-              from: [bean('statement')],
-              allow: [bean('expression'), bean('type'), bean('parser'), bean('tokenizer')],
-            },
-            {
-              from: [bean('tokenizer')],
-              allow: [],
-            },
-            {
-              from: [bean('type')],
-              allow: [bean('parser'), bean('tokenizer')],
-            },
-            {
-              from: [bean('variable')],
-              allow: [bean('expression'), bean('type'), bean('parser'), bean('tokenizer')],
-            },
+            rule('parser', 'compiler', ['method', 'parser']),
+            rule('parser', 'expression', ['parser', 'tokenizer', 'type']),
+            rule('parser', 'global-variable', ['parser', 'tokenizer', 'type']),
+            rule('parser', 'impexp', ['parser', 'tokenizer', 'type']),
+            rule('parser', 'method', ['expression', 'operation', 'parser', 'tokenizer', 'type']),
+            rule('parser', 'operation', ['expression', 'parser', 'tokenizer', 'type']),
+            rule('parser', 'parser', ['tokenizer']),
+            rule('parser', 'statement', ['expression', 'parser', 'tokenizer']),
+            rule('parser', 'tokenizer', []),
+            rule('parser', 'type', ['parser', 'tokenizer']),
           ],
         },
       ],
@@ -99,8 +64,8 @@ export default defineConfig([
       'boundaries/elements': [
         {
           type: 'bean',
-          pattern: 'beans/*',
-          capture: ['name'],
+          pattern: 'modules/*/*',
+          capture: ['module', 'component'],
         },
       ],
     },
