@@ -41,7 +41,12 @@ export default defineConfig([
         {
           default: 'disallow',
           rules: [
-            rule('parser', 'compiler', ['method', 'parser']),
+            {
+              from: [['bean', { module: 'codegen' }]],
+              allow: [['bean', { module: 'parser' }]],
+            },
+            rule('codegen', 'global-variable', ['codegen']),
+            rule('codegen', 'method', ['codegen']),
             rule('parser', 'expression', ['parser', 'tokenizer', 'type']),
             rule('parser', 'global-variable', ['parser', 'tokenizer', 'type']),
             rule('parser', 'impexp', ['parser', 'tokenizer', 'type']),

@@ -22,13 +22,12 @@ import { Play, RefreshCcw } from 'feather-icons-react';
 import { useRef, useState } from 'react';
 import AceEditor from 'react-ace';
 import classes from './app.module.css';
-import { compiler, CompileResult } from './modules/parser/compiler/compiler';
-import { Runner } from './runner';
+import { compile, CompileResult } from './compiler';
 import { Tile } from './ui/tile';
 import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
-import { getBeans } from './util/beans';
 
+import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
@@ -68,18 +67,8 @@ export default function App() {
   };
 
   const onRunClick = async () => {
-    const _compiler = (await getBeans(compiler))[0];
-    const r = _compiler.compile(content, { debugTree: true });
+    const r = await compile(content, { debugTree: true });
     setCompileResult(r);
-    if (r.errors.length === 0) {
-      const runner = new Runner();
-      try {
-        runner.run(r.modules!, 'main');
-        setTerminalContent(runner.stdout);
-      } catch (err: any) {
-        setTerminalContent(`Runtime error: ${err.stack}`);
-      }
-    }
   };
 
   return (
@@ -106,11 +95,11 @@ export default function App() {
         <Toolbar>
           <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
         </Toolbar>
-        <Tile className={classes.compileOutput} title='Compile output'>
+        <Tile className={classes.parserOutput} title='Compile output'>
           <AceEditor
             mode='yaml'
             theme='github_light_default'
-            value={compileResult?.output ?? ''}
+            value={compileResult?.parserOutput ?? ''}
             readOnly={true}
             width='100%'
             height='100%'
@@ -118,8 +107,17 @@ export default function App() {
             className={classes.editor}
           />
         </Tile>
-        <Tile className={classes.terminal} title='Terminal'>
-          <div className={`${classes.terminalContent} ${classes.editor}`}>{terminalContent}</div>
+        <Tile className={classes.codegenOutput} title='Generated code'>
+          <AceEditor
+            mode='javascript'
+            theme='github_light_default'
+            value={compileResult?.codegenOutput ?? ''}
+            readOnly={true}
+            width='100%'
+            height='100%'
+            fontSize={16}
+            className={classes.editor}
+          />
         </Tile>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { ModuleInput } from '@/modules/parser/parser/module-input';
 import { Parser, ParserResult } from '@/modules/parser/parser/parser';
 import { Runner } from '@/runner';
 import { Bean } from '@/util/beans';
-import { CompileOpts, Compiler, CompileResult } from './compiler';
+import { CompileOpts, Compiler, CompileResult } from '../../../compiler';
 
 const nativeMethods = {
   print(runner: Runner, s: string) {
@@ -58,7 +58,7 @@ export class CompilerImpl extends Bean implements Compiler {
 
     return {
       errors,
-      output: out.join(''),
+      parserOutput: out.join(''),
       modules: p?.modules,
     };
   }
