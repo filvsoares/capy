@@ -1,8 +1,11 @@
 const beanDeclarations: () => Promise<{ declareBeans: () => void }>[] = () => [
   // codegen
   import('@/modules/codegen/codegen/_beans'),
+  import('@/modules/codegen/expression/_beans'),
   import('@/modules/codegen/global-variable/_beans'),
   import('@/modules/codegen/method/_beans'),
+  import('@/modules/codegen/operation/_beans'),
+  import('@/modules/codegen/statement/_beans'),
   // parser
   import('@/modules/parser/expression/_beans'),
   import('@/modules/parser/global-variable/_beans'),

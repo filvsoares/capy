@@ -1,24 +1,14 @@
 import { ERROR, INTERNAL, ParseError } from '@/base';
 import { declareAllBeans } from '@/beans';
 import { codegen } from '@/modules/codegen/codegen/codegen';
-import { methodExtraKey } from '@/modules/parser/method/method-extra';
-import { Module } from '@/modules/parser/parser/module';
 import { ModuleInput } from '@/modules/parser/parser/module-input';
 import { parser, ParserResult } from '@/modules/parser/parser/parser';
-import { Runner } from '@/runner';
 import { getBeans } from '@/util/beans';
-
-const nativeMethods = {
-  print(runner: Runner, s: string) {
-    runner.print(s);
-  },
-};
 
 export type CompileResult = {
   parserOutput: string;
   codegenOutput?: string;
   errors: ParseError[];
-  modules?: { [moduleName: string]: Module };
 };
 
 export async function compile(sourceCode: string, { debugTree }: { debugTree?: boolean }): Promise<CompileResult> {
@@ -32,9 +22,7 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
   let p: ParserResult | undefined;
 
   try {
-    p = _parser.parse({
-      main: new ModuleInput(sourceCode).withExtra(methodExtraKey, { nativeMethods }),
-    });
+    p = _parser.parse('main', [new ModuleInput('main', sourceCode)]);
     errors.push(...p.errors);
   } catch (err: any) {
     errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
@@ -43,7 +31,7 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
   let codegenOutput: string | undefined;
   if (errors.length === 0) {
     try {
-      codegenOutput = _codegen.generateCode(p!.modules);
+      codegenOutput = _codegen.generateCode(p!.application);
     } catch (err: any) {
       errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
     }
@@ -65,17 +53,14 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
   if (debugTree && p) {
     out.push('---\n');
     out.push('ParserResult:\n');
-    Object.values(p.modules).forEach((m) =>
-      Object.values(m.symbols).forEach((e) => {
-        out.push('- ');
-        e.debugPrint(out, '  ');
-      })
-    );
+    Object.values(p.application.symbols).forEach((s) => {
+      out.push('- ');
+      s.debugPrint(out, '  ');
+    });
   }
 
   return {
     errors,
-    modules: p?.modules,
     parserOutput: out.join(''),
     codegenOutput,
   };

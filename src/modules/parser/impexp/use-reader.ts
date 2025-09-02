@@ -66,7 +66,7 @@ export class UseReader extends Bean implements ToplevelReader {
       if (!list) {
         useExtra.symbols[symbolName] = list = [];
       }
-      list.push({ moduleName: t2.value, value: module.symbols[symbolName] });
+      list.push({ moduleName: t2.value, value: module[symbolName] });
     }
 
     return true;

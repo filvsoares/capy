@@ -3,7 +3,7 @@ import { Expression } from '@/modules/parser/expression/expression';
 import { ExpressionReader } from '@/modules/parser/expression/expression-reader';
 import { LocalVariable } from '@/modules/parser/method/local-variable';
 import { LocalVariableReference } from '@/modules/parser/method/local-variable-reference';
-import { MethodStack } from '@/modules/parser/method/method-stack';
+import { MethodContext } from '@/modules/parser/method/method-context';
 import { Assignment } from '@/modules/parser/operation/assignment';
 import { ParserContext } from '@/modules/parser/parser/parser-context';
 import { ExpressionStatement } from '@/modules/parser/statement/expression-statement';
@@ -23,7 +23,7 @@ export class LocalVariableStatementReader extends Bean implements StatementItemR
   }
 
   read(c: ParserContext, context: StatementContext): Statement | Invalid | undefined {
-    if (!(context instanceof MethodStack)) {
+    if (!(context instanceof MethodContext)) {
       return;
     }
     const t1 = c.current;

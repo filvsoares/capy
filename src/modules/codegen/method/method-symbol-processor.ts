@@ -1,7 +1,8 @@
 import { CgSymbol } from '@/modules/codegen/codegen/cg-symbol';
-import { CodegenContext } from '@/modules/codegen/codegen/codegen';
+import { CodegenContext } from '@/modules/codegen/codegen/codegen-context';
 import { SymbolProcessor } from '@/modules/codegen/codegen/symbol-processor';
-import { CgMethodStack } from '@/modules/codegen/method/cg-method-stack';
+import { CgLocalVariable } from '@/modules/codegen/method/cg-local-variable';
+import { StatementProcessor } from '@/modules/codegen/statement/statement-processor';
 import { ArgumentVariable } from '@/modules/parser/method/argument-variable';
 import { CapyMethod } from '@/modules/parser/method/capy-method';
 import { LocalVariable } from '@/modules/parser/method/local-variable';
@@ -9,11 +10,15 @@ import { NativeMethod } from '@/modules/parser/method/native-method';
 import { Bean } from '@/util/beans';
 
 export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
-  processNativeMethod(c: CodegenContext, obj: CgSymbol): boolean | undefined {
+  constructor(private statementProcessor: StatementProcessor) {
+    super();
+  }
+
+  processNativeMethod(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined {
     if (!(obj.symbol instanceof NativeMethod)) {
       return;
     }
-    c.write(`const ${obj.jsName} = nativeMethods['${obj.symbol.module}.${obj.symbol.name}'];\n`);
+    c.write(`${indent}const ${obj.jsName} = nativeMethods['${obj.symbol.module}.${obj.symbol.name}'];\n`);
     return true;
   }
 
@@ -26,31 +31,51 @@ export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
     return jsName;
   }
 
-  processCapyMethod(c: CodegenContext, obj: CgSymbol): boolean | undefined {
+  processCapyMethod(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined {
     if (!(obj.symbol instanceof CapyMethod)) {
       return;
     }
-    const jsNames: string[] = [];
+    const stack: CgLocalVariable[] = [];
     const usedJsNames = new Set<string>();
-    for (const item of obj.symbol.stack) {
-      jsNames.push(this.getLocalVariableJsName(item, usedJsNames));
+    let argCount = 0;
+    for (let i = 0; i < obj.symbol.stack.length; i++) {
+      const item = obj.symbol.stack[i];
+      if (item instanceof ArgumentVariable) {
+        if (argCount !== i) {
+          throw new Error('Argument in stack after regular local variable');
+        }
+        argCount++;
+      }
+      stack.push(new CgLocalVariable(item, this.getLocalVariableJsName(item, usedJsNames)));
     }
-    const stack = new CgMethodStack(obj.symbol.stack, jsNames);
 
-    c.write(
-      `function ${obj.jsName}(${obj.symbol.stack
-        .filter((arg) => arg instanceof ArgumentVariable)
-        .map((e, i) => jsNames[i])
-        .join(', ')}) {}\n`
-    );
+    const args = stack
+      .slice(0, argCount)
+      .map((v) => v.jsName)
+      .join(', ');
+
+    c.write(`${indent}const ${obj.jsName} = (${args}) => {\n`);
+
+    if (stack.length > argCount) {
+      c.write(
+        `${indent}  let ${stack
+          .slice(argCount)
+          .map((v) => v.jsName)
+          .join(', ')};\n`
+      );
+    }
+
+    this.statementProcessor.processStatementList(c, obj.symbol.statementList, `${indent}  `);
+
+    c.write(`${indent}}\n`);
     return true;
   }
 
-  processSymbol(c: CodegenContext, obj: CgSymbol): boolean | undefined {
-    if (this.processNativeMethod(c, obj)) {
+  processSymbol(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined {
+    if (this.processNativeMethod(c, obj, indent)) {
       return true;
     }
-    if (this.processCapyMethod(c, obj)) {
+    if (this.processCapyMethod(c, obj, indent)) {
       return true;
     }
   }

@@ -1,9 +1,9 @@
 import { CgSymbol } from '@/modules/codegen/codegen/cg-symbol';
-import { CodegenContext } from '@/modules/codegen/codegen/codegen';
+import { CodegenContext } from '@/modules/codegen/codegen/codegen-context';
 import { declareBeanInterface } from '@/util/beans';
 
 export interface SymbolProcessor {
-  processSymbol(c: CodegenContext, obj: CgSymbol): boolean | undefined;
+  processSymbol(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined;
 }
 
 export const symbolProcessor = declareBeanInterface<SymbolProcessor>('SymbolProcessor');

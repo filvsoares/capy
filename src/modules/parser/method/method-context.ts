@@ -3,13 +3,13 @@ import { StatementContext } from '@/modules/parser/statement/statement-context';
 import { Identifier } from '@/modules/parser/tokenizer/identifier';
 import { Type } from '@/modules/parser/type/type';
 
-export class MethodStack implements StatementContext {
-  parent: MethodStack | null;
+export class MethodContext implements StatementContext {
+  parent: MethodContext | null;
   items: LocalVariable[];
   itemsByName: { [name: string]: number };
   returnType: Type;
 
-  constructor(parent: MethodStack | null = null, returnType: Type) {
+  constructor(parent: MethodContext | null = null, returnType: Type) {
     this.parent = parent;
     this.items = parent?.items ?? [];
     this.itemsByName = {};
@@ -28,7 +28,7 @@ export class MethodStack implements StatementContext {
   }
 
   find(ref: Identifier): number | undefined {
-    let current: MethodStack | null = this;
+    let current: MethodContext | null = this;
     while (current) {
       const result = this.itemsByName[ref.name];
       if (result !== undefined) {
@@ -39,6 +39,6 @@ export class MethodStack implements StatementContext {
   }
 
   createChild() {
-    return new MethodStack(this, this.returnType);
+    return new MethodContext(this, this.returnType);
   }
 }

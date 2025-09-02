@@ -1,13 +1,13 @@
 import { Base, INTERNAL } from '@/base';
 import { Symbol } from '@/modules/parser/parser/symbol';
 
-export class Module extends Base {
-  constructor(public name: string, public symbols: { [symbolName: string]: Symbol }) {
+export class Application extends Base {
+  constructor(public mainModuleName: string, public symbols: Symbol[]) {
     super(INTERNAL);
   }
 
   toString(): string {
-    return 'module';
+    return 'application';
   }
 
   debugPrint(out: string[], prefix: string): void {

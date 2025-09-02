@@ -1,53 +1,62 @@
 import { CgSymbol } from '@/modules/codegen/codegen/cg-symbol';
-import { Codegen, CodegenContext } from '@/modules/codegen/codegen/codegen';
+import { Codegen } from '@/modules/codegen/codegen/codegen';
+import { CodegenContext } from '@/modules/codegen/codegen/codegen-context';
+import { CodegenExtraWriter } from '@/modules/codegen/codegen/codegen-extra-writer';
 import { SymbolProcessor } from '@/modules/codegen/codegen/symbol-processor';
-import { Module } from '@/modules/parser/parser/module';
+import { Application } from '@/modules/parser/parser/application';
 import { Symbol } from '@/modules/parser/parser/symbol';
 import { Bean } from '@/util/beans';
+import { declareExtraKey, ExtraHandler } from '@/util/extra';
+
+type CodegenExtra = {
+  application: Application;
+  modules: { [moduleName: string]: { [symbolName: string]: CgSymbol } };
+};
+
+const codegenExtraKey = declareExtraKey<CodegenExtra>();
 
 export class CodegenImpl extends Bean implements Codegen {
-  constructor(private symbolProcessors: SymbolProcessor[]) {
+  constructor(private symbolProcessors: SymbolProcessor[], private codegenExtraWriters: CodegenExtraWriter[]) {
     super();
   }
 
-  private getSymbolJsName(obj: Symbol, usedJsNames: Set<string>) {
+  private resolveSymbolJsName(obj: Symbol, usedJsNames: Set<string>) {
     let jsName;
     let i = 0;
     do {
-      jsName = `_${obj.module}_${obj.name}${i > 0 ? `_${i++}` : ''}_`;
+      jsName = `${obj.module}_${obj.name}${i > 0 ? `_${i++}` : '_'}`;
     } while (usedJsNames.has(jsName));
     return jsName;
   }
 
-  generateCode(modules: { [moduleName: string]: Module }): string {
+  generateCode(application: Application): string {
     const out: string[] = [];
 
-    const c: CodegenContext = {
-      write: (s) => {
-        out.push(s);
-      },
-    };
-
-    const cgModules: { [moduleName: string]: { [symbolName: string]: CgSymbol } } = {};
+    const modules: { [moduleName: string]: { [symbolName: string]: CgSymbol } } = {};
     const usedJsNames = new Set<string>();
-    for (const moduleName in modules) {
-      const srcModule = modules[moduleName];
-      const dstModule: { [symbolName: string]: CgSymbol } = (cgModules[moduleName] = {});
-      for (const symbolName in srcModule.symbols) {
-        const srcSymbol = srcModule.symbols[symbolName];
-        dstModule[symbolName] = new CgSymbol(srcSymbol, this.getSymbolJsName(srcSymbol, usedJsNames));
+    for (const symbol of application.symbols) {
+      let module = modules[symbol.module];
+      if (!module) {
+        modules[symbol.module] = module = {};
       }
+      module[symbol.name] = new CgSymbol(symbol, this.resolveSymbolJsName(symbol, usedJsNames));
     }
 
-    for (const moduleName in cgModules) {
-      const module = cgModules[moduleName];
-      out.push('// ------------\n', `// Module ${moduleName}\n`, '// ------------\n\n');
+    const extra = new ExtraHandler();
+    extra.put(codegenExtraKey, { application, modules });
+
+    const c = new CodegenContext(out, extra);
+
+    c.write('function app(nativeMethods) {\n');
+
+    for (const moduleName in modules) {
+      const module = modules[moduleName];
       for (const symbolName in module) {
         const symbol = module[symbolName];
         let ok = false;
-        out.push(`// ${symbolName}\n`);
+        c.write(`  // --- ${moduleName}.${symbolName}\n`);
         for (const processor of this.symbolProcessors) {
-          if (processor.processSymbol(c, symbol)) {
+          if (processor.processSymbol(c, symbol, '  ')) {
             ok = true;
           }
         }
@@ -57,6 +66,24 @@ export class CodegenImpl extends Bean implements Codegen {
       }
     }
 
+    for (const extraWriter of this.codegenExtraWriters) {
+      extraWriter.writeExtra(c, '  ');
+    }
+
+    c.write('}\n');
+
     return out.join('');
+  }
+
+  getMainModuleName(c: CodegenContext): string {
+    return c.extra.get(codegenExtraKey)!.application.mainModuleName;
+  }
+
+  getSymbolJsName(c: CodegenContext, moduleName: string, symbolName: string): string {
+    const symbol = c.extra.get(codegenExtraKey)!.modules[moduleName]?.[symbolName];
+    if (!symbol) {
+      throw new Error(`Symbol ${moduleName}/${symbolName} not found`);
+    }
+    return symbol.jsName;
   }
 }

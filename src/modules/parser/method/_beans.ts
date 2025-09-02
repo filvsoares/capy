@@ -4,6 +4,7 @@ import { operationProcessor } from '@/modules/parser/expression/operation-proces
 import { argumentReader } from '@/modules/parser/method/argument-reader';
 import { callableTypeReader } from '@/modules/parser/method/callable-type-reader';
 import { parser } from '@/modules/parser/parser/parser';
+import { parserCheck } from '@/modules/parser/parser/parser-check';
 import { toplevelReader } from '@/modules/parser/parser/toplevel-reader';
 import { statementItemReader } from '@/modules/parser/statement/statement-item-reader';
 import { statementReader } from '@/modules/parser/statement/statement-reader';
@@ -34,6 +35,13 @@ export function declareBeans() {
     factory: (m, deps) => new m.MethodCallProcessor(...deps),
   });
   declareBean({
+    name: 'MethodParserCheck',
+    provides: [parserCheck],
+    dependencies: [],
+    loadModule: () => import('./method-parser-check'),
+    factory: (m, deps) => new m.MethodParserCheck(...deps),
+  });
+  declareBean({
     name: 'MethodReader',
     provides: [toplevelReader],
     dependencies: [single(statementReader), single(callableTypeReader), single(parser)],
@@ -48,7 +56,14 @@ export function declareBeans() {
     factory: (m, deps) => new m.MethodIdentifierResolver(...deps),
   });
   declareBean({
-    name: 'VariableReferenceProcessor',
+    name: 'ReturnStatementReader',
+    provides: [statementItemReader],
+    dependencies: [single(expressionReader), single(typeReader)],
+    loadModule: () => import('./return-statement-reader'),
+    factory: (m, deps) => new m.ReturnStatementReader(...deps),
+  });
+  declareBean({
+    name: 'LocalVariableIdentifierResolver',
     provides: [identifierResolver],
     dependencies: [single(parser)],
     loadModule: () => import('./local-variable-identifier-resolver'),

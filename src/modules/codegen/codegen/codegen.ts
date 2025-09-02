@@ -1,12 +1,11 @@
-import { Module } from '@/modules/parser/parser/module';
+import { CodegenContext } from '@/modules/codegen/codegen/codegen-context';
+import { Application } from '@/modules/parser/parser/application';
 import { declareBeanInterface } from '@/util/beans';
 
-export interface CodegenContext {
-  write(...s: string[]): void;
-}
-
 export interface Codegen {
-  generateCode(modules: { [moduleName: string]: Module }): string;
+  generateCode(application: Application): string;
+  getMainModuleName(c: CodegenContext): string;
+  getSymbolJsName(c: CodegenContext, moduleName: string, symbolName: string): string;
 }
 
 export const codegen = declareBeanInterface<Codegen>('Codegen');

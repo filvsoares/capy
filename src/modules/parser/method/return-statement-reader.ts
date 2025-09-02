@@ -2,14 +2,15 @@ import { Bean } from '@/util/beans';
 
 import { combinePos, ERROR, fallbackPos, INVALID, Invalid } from '@/base';
 import { ExpressionReader } from '@/modules/parser/expression/expression-reader';
+import { MethodContext } from '@/modules/parser/method/method-context';
+import { ReturnStatement } from '@/modules/parser/method/return-statement';
 import { ParserContext } from '@/modules/parser/parser/parser-context';
-import { ReturnStatement } from '@/modules/parser/statement/return-statement';
 import { StatementContext } from '@/modules/parser/statement/statement-context';
 import { Keyword } from '@/modules/parser/tokenizer/keyword';
 import { isVoidType } from '@/modules/parser/type/simple-type';
 import { TypeReader } from '@/modules/parser/type/type-reader';
+import { StatementItemReader } from '../statement/statement-item-reader';
 import { Separator } from '../tokenizer/separator';
-import { StatementItemReader } from './statement-item-reader';
 export class ReturnStatementReader extends Bean implements StatementItemReader {
   priority = 100;
 
@@ -18,6 +19,10 @@ export class ReturnStatementReader extends Bean implements StatementItemReader {
   }
 
   read(c: ParserContext, context: StatementContext): ReturnStatement | Invalid | undefined {
+    if (!(context instanceof MethodContext)) {
+      return;
+    }
+
     const t1 = c.current;
     if (!Keyword.matches(t1, 'return')) {
       return;

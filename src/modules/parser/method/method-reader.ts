@@ -2,8 +2,8 @@ import { ERROR, fallbackPos, INVALID, Invalid } from '@/base';
 import { ArgumentVariable } from '@/modules/parser/method/argument-variable';
 import { CallableTypeReader } from '@/modules/parser/method/callable-type-reader';
 import { CapyMethod } from '@/modules/parser/method/capy-method';
+import { MethodContext } from '@/modules/parser/method/method-context';
 import { methodExtraKey } from '@/modules/parser/method/method-extra';
-import { MethodStack } from '@/modules/parser/method/method-stack';
 import { NativeMethod } from '@/modules/parser/method/native-method';
 import { UnresolvedMethod } from '@/modules/parser/method/unresolved-method';
 import { Parser } from '@/modules/parser/parser/parser';
@@ -113,7 +113,7 @@ export class MethodReader extends Bean implements ToplevelReader {
 
     c.addTask(() => {
       const c1 = c.derive(tokenList!);
-      const stack = new MethodStack(null, type.returnType);
+      const stack = new MethodContext(null, type.returnType);
 
       for (let i = 0; i < type.argList.length; i++) {
         const arg = type.argList[i];
