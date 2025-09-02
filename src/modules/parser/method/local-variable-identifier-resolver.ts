@@ -1,11 +1,10 @@
 import { Invalid } from '@/base';
 import { Expression } from '@/modules/parser/expression/expression';
-import { ExpressionContext } from '@/modules/parser/expression/expression-reader';
+import { ExpressionReaderContext } from '@/modules/parser/expression/expression-reader';
 import { IdentifierResolver } from '@/modules/parser/expression/identifier-resolver';
 import { LocalVariableReference } from '@/modules/parser/method/local-variable-reference';
-import { MethodContext } from '@/modules/parser/method/method-context';
+import { hasMethodData } from '@/modules/parser/method/method-data';
 import { Parser } from '@/modules/parser/parser/parser';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
 import { Identifier } from '@/modules/parser/tokenizer/identifier';
 import { Bean } from '@/util/beans';
 
@@ -16,17 +15,13 @@ export class LocalVariableIdentifierResolver extends Bean implements IdentifierR
     super();
   }
 
-  resolveIdentifier(
-    c: ParserContext,
-    obj: Identifier,
-    context: ExpressionContext | null
-  ): Expression | Invalid | undefined {
-    if (!(context instanceof MethodContext)) {
+  resolveIdentifier(c: ExpressionReaderContext, obj: Identifier): Expression | Invalid | undefined {
+    if (!hasMethodData(c)) {
       return;
     }
-    const index = context.find(obj);
+    const index = c.methodData.find(obj);
     if (index !== undefined) {
-      const dep = context.items[index];
+      const dep = c.methodData.items[index];
       return new LocalVariableReference(index, dep.name, dep.type, obj.pos);
     }
   }

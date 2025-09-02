@@ -1,24 +1,27 @@
 import { CgSymbol } from '@/modules/codegen/codegen/cg-symbol';
-import { CodegenContext } from '@/modules/codegen/codegen/codegen-context';
+import { CodegenData } from '@/modules/codegen/codegen/codegen-data';
+import { CodegenWriter } from '@/modules/codegen/codegen/codegen-writer';
 import { SymbolProcessor } from '@/modules/codegen/codegen/symbol-processor';
 import { CgLocalVariable } from '@/modules/codegen/method/cg-local-variable';
+import { methodData } from '@/modules/codegen/method/method-data';
 import { StatementProcessor } from '@/modules/codegen/statement/statement-processor';
 import { ArgumentVariable } from '@/modules/parser/method/argument-variable';
 import { CapyMethod } from '@/modules/parser/method/capy-method';
 import { LocalVariable } from '@/modules/parser/method/local-variable';
 import { NativeMethod } from '@/modules/parser/method/native-method';
 import { Bean } from '@/util/beans';
+import { Context } from '@/util/context';
 
 export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
   constructor(private statementProcessor: StatementProcessor) {
     super();
   }
 
-  processNativeMethod(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined {
+  processNativeMethod(c: Context<CodegenWriter & CodegenData>, obj: CgSymbol, indent: string): boolean | undefined {
     if (!(obj.symbol instanceof NativeMethod)) {
       return;
     }
-    c.write(`${indent}const ${obj.jsName} = nativeMethods['${obj.symbol.module}.${obj.symbol.name}'];\n`);
+    c.codegenWriter.write(`${indent}const ${obj.jsName} = nativeMethods['${obj.symbol.module}.${obj.symbol.name}'];\n`);
     return true;
   }
 
@@ -31,7 +34,7 @@ export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
     return jsName;
   }
 
-  processCapyMethod(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined {
+  processCapyMethod(c: Context<CodegenWriter & CodegenData>, obj: CgSymbol, indent: string): boolean | undefined {
     if (!(obj.symbol instanceof CapyMethod)) {
       return;
     }
@@ -54,10 +57,10 @@ export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
       .map((v) => v.jsName)
       .join(', ');
 
-    c.write(`${indent}const ${obj.jsName} = (${args}) => {\n`);
+    c.codegenWriter.write(`${indent}const ${obj.jsName} = (${args}) => {\n`);
 
     if (stack.length > argCount) {
-      c.write(
+      c.codegenWriter.write(
         `${indent}  let ${stack
           .slice(argCount)
           .map((v) => v.jsName)
@@ -65,13 +68,13 @@ export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
       );
     }
 
-    this.statementProcessor.processStatementList(c, obj.symbol.statementList, `${indent}  `);
+    this.statementProcessor.processStatementList(c.with(methodData(stack)), obj.symbol.statementList, `${indent}  `);
 
-    c.write(`${indent}}\n`);
+    c.codegenWriter.write(`${indent}}\n`);
     return true;
   }
 
-  processSymbol(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined {
+  processSymbol(c: Context<CodegenWriter & CodegenData>, obj: CgSymbol, indent: string): boolean | undefined {
     if (this.processNativeMethod(c, obj, indent)) {
       return true;
     }

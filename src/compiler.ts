@@ -8,6 +8,7 @@ import { getBeans } from '@/util/beans';
 export type CompileResult = {
   parserOutput: string;
   codegenOutput?: string;
+  terminalOutput?: string;
   errors: ParseError[];
 };
 
@@ -28,13 +29,36 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
     errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
   }
 
-  let codegenOutput: string | undefined;
+  let codegenOutput: string[] | undefined;
   if (errors.length === 0) {
     try {
       codegenOutput = _codegen.generateCode(p!.application);
     } catch (err: any) {
       errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
     }
+  }
+
+  let codegenPrettyOutput: string | undefined;
+  let terminalOutput: string | undefined;
+  if (codegenOutput) {
+    codegenPrettyOutput =
+      `function app(${codegenOutput.slice(0, -1).join(', ')}) {\n` +
+      `  ${codegenOutput[codegenOutput.length - 1].replaceAll('\n', '\n  ').trimEnd()}` +
+      `\n}\n`;
+
+    const app = new Function(...codegenOutput);
+    const terminalLines: string[] = [];
+    const nativeMethods = {
+      'main.print'(s: string) {
+        terminalLines.push(s);
+      },
+    };
+    try {
+      app(nativeMethods);
+    } catch (err: any) {
+      terminalLines.push(err.stack);
+    }
+    terminalOutput = terminalLines.join('\n');
   }
 
   if (errors.length === 0) {
@@ -62,6 +86,7 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
   return {
     errors,
     parserOutput: out.join(''),
-    codegenOutput,
+    codegenOutput: codegenPrettyOutput,
+    terminalOutput,
   };
 }

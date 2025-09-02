@@ -1,9 +1,11 @@
 import { ParseError } from '@/base';
 import { Application } from '@/modules/parser/parser/application';
+import { CurrentModule } from '@/modules/parser/parser/current-module';
 import { ModuleInput } from '@/modules/parser/parser/module-input';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
+import { ParserData } from '@/modules/parser/parser/parser-data';
 import { Symbol } from '@/modules/parser/parser/symbol';
 import { declareBeanInterface } from '@/util/beans';
+import { Context } from '@/util/context';
 
 export type ParserResult = {
   application: Application;
@@ -12,9 +14,8 @@ export type ParserResult = {
 
 export interface Parser {
   parse(mainModuleName: string, inputs: ModuleInput[]): ParserResult;
-  findSymbol(c: ParserContext, symbolName: string): Symbol | undefined;
-  replaceSymbol(c: ParserContext, newSymbol: Symbol): void;
-  findModule(c: ParserContext, moduleName: string): { [symbolName: string]: Symbol } | undefined;
+  findSymbol(c: Context<ParserData & CurrentModule>, symbolName: string): Symbol | undefined;
+  replaceSymbol(c: Context<ParserData & CurrentModule>, newSymbol: Symbol): void;
 }
 
 export const parser = declareBeanInterface<Parser>('Parser');

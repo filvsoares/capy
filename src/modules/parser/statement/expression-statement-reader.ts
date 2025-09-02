@@ -1,8 +1,7 @@
-import { combinePos, ERROR, fallbackPos, INVALID, Invalid } from '@/base';
+import { combinePos, fallbackPos, INVALID, Invalid } from '@/base';
 import { ExpressionReader } from '@/modules/parser/expression/expression-reader';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
 import { ExpressionStatement } from '@/modules/parser/statement/expression-statement';
-import { StatementContext } from '@/modules/parser/statement/statement-context';
+import { StatementReaderContext } from '@/modules/parser/statement/statement-reader';
 import { Bean } from '@/util/beans';
 import { Separator } from '../tokenizer/separator';
 import { StatementItemReader } from './statement-item-reader';
@@ -14,8 +13,8 @@ export class ExpressionStatementReader extends Bean implements StatementItemRead
     super();
   }
 
-  read(c: ParserContext, context: StatementContext): ExpressionStatement | Invalid | undefined {
-    const val = this.expressionReader.read(c, context, {
+  read(c: StatementReaderContext): ExpressionStatement | Invalid | undefined {
+    const val = this.expressionReader.read(c, {
       unexpectedTokenErrorMsg: (t) => `Expected ";" but found ${t}`,
     });
     if (val === INVALID) {
@@ -25,15 +24,11 @@ export class ExpressionStatementReader extends Bean implements StatementItemRead
       return;
     }
 
-    const t = c.current;
+    const t = c.tokenReader.current;
     if (Separator.matches(t, ';')) {
-      c.consume();
+      c.tokenReader.consume();
     } else {
-      c.addError({
-        level: ERROR,
-        message: `Expected ";"`,
-        pos: fallbackPos(t?.pos, val.pos),
-      });
+      c.parseErrors.addError(`Expected ";"`, fallbackPos(t?.pos, val.pos));
     }
 
     return new ExpressionStatement(val, combinePos(val.pos, (t ?? val).pos));

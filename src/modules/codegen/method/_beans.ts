@@ -1,4 +1,3 @@
-import { codegen } from '@/modules/codegen/codegen/codegen';
 import { codegenExtraWriter } from '@/modules/codegen/codegen/codegen-extra-writer';
 import { symbolProcessor } from '@/modules/codegen/codegen/symbol-processor';
 import { expressionItemProcessor } from '@/modules/codegen/expression/expression-item-processor';
@@ -25,14 +24,14 @@ export function declareBeans() {
   declareBean({
     name: 'MethodCallProcessor',
     provides: [codegenExtraWriter],
-    dependencies: [single(codegen)],
+    dependencies: [],
     loadModule: () => import('./method-extra-writer'),
     factory: (m, deps) => new m.MethodExtraWriter(...deps),
   });
   declareBean({
     name: 'MethodLiteralProcessor',
     provides: [expressionItemProcessor],
-    dependencies: [single(codegen)],
+    dependencies: [],
     loadModule: () => import('./method-literal-processor'),
     factory: (m, deps) => new m.MethodLiteralProcessor(...deps),
   });

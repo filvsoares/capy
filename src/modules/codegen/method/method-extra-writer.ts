@@ -1,14 +1,13 @@
-import { Codegen } from '@/modules/codegen/codegen/codegen';
-import { CodegenContext } from '@/modules/codegen/codegen/codegen-context';
+import { CodegenData } from '@/modules/codegen/codegen/codegen-data';
 import { CodegenExtraWriter } from '@/modules/codegen/codegen/codegen-extra-writer';
+import { CodegenWriter } from '@/modules/codegen/codegen/codegen-writer';
 import { Bean } from '@/util/beans';
+import { Context } from '@/util/context';
 
 export class MethodExtraWriter extends Bean implements CodegenExtraWriter {
-  constructor(private codegen: Codegen) {
-    super();
-  }
-
-  writeExtra(c: CodegenContext, indent: string): void {
-    c.write(`${indent}${this.codegen.getSymbolJsName(c, this.codegen.getMainModuleName(c), 'start')}();\n`);
+  writeExtra(c: Context<CodegenWriter & CodegenData>, indent: string): void {
+    c.codegenWriter.write(
+      `${indent}${c.codegenData.getSymbolJsName(c.codegenData.application.mainModuleName, 'start')}();\n`
+    );
   }
 }

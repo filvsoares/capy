@@ -1,44 +1,35 @@
 import { Argument } from '@/modules/parser/method/argument';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
 import { Identifier } from '@/modules/parser/tokenizer/identifier';
 import { TypeReader } from '@/modules/parser/type/type-reader';
 import { Bean } from '@/util/beans';
-import { combinePos, ERROR, fallbackPos, INTERNAL, INVALID, Invalid } from '../../../base';
+import { combinePos, fallbackPos, INTERNAL, INVALID, Invalid } from '../../../base';
 import { Operator } from '../tokenizer/operator';
 import { Separator } from '../tokenizer/separator';
-import { ArgumentReader } from './argument-reader';
+import { ArgumentReader, ArgumentReaderContext } from './argument-reader';
 
 export class ArgumentReaderImpl extends Bean implements ArgumentReader {
   constructor(private typeReader: TypeReader) {
     super();
   }
 
-  read(c: ParserContext): Argument | Invalid | undefined {
-    const t1 = c.current;
+  read(c: ArgumentReaderContext): Argument | Invalid | undefined {
+    const t1 = c.tokenReader.current;
     if (!Identifier.matches(t1)) {
       return;
     }
-    c.consume();
+    c.tokenReader.consume();
 
-    const t2 = c.current;
+    const t2 = c.tokenReader.current;
     if (!Operator.matches(t2, ':')) {
-      c.addError({
-        level: ERROR,
-        message: `Expected ":" but found ${t2 ?? '")"'}`,
-        pos: fallbackPos(t2?.pos, t1.pos),
-      });
+      c.parseErrors.addError(`Expected ":" but found ${t2 ?? '")"'}`, fallbackPos(t2?.pos, t1.pos));
       return INVALID;
     }
-    c.consume();
+    c.tokenReader.consume();
 
-    const t3 = c.current;
+    const t3 = c.tokenReader.current;
     const type = this.typeReader.read(c);
     if (!type) {
-      c.addError({
-        level: ERROR,
-        message: `Expected type but found ${t3}`,
-        pos: fallbackPos(t3?.pos, t2.pos),
-      });
+      c.parseErrors.addError(`Expected type but found ${t3}`, fallbackPos(t3?.pos, t2.pos));
       return INVALID;
     }
     if (type === INVALID) {
@@ -47,26 +38,22 @@ export class ArgumentReaderImpl extends Bean implements ArgumentReader {
     return new Argument(t1.name, type, combinePos(t1.pos, type.pos));
   }
 
-  readList(c: ParserContext): Argument[] {
+  readList(c: ArgumentReaderContext): Argument[] {
     const outList: Argument[] = [];
     let error = false;
 
-    if (!c.current) {
+    if (!c.tokenReader.current) {
       return outList;
     }
 
-    while (c.current) {
+    while (c.tokenReader.current) {
       const arg = this.read(c);
       if (!arg) {
         if (!error) {
           error = true;
-          c.addError({
-            level: ERROR,
-            message: `Expected identifier`,
-            pos: INTERNAL,
-          });
+          c.parseErrors.addError(`Expected identifier`, INTERNAL);
         }
-        c.consume();
+        c.tokenReader.consume();
         continue;
       }
       if (arg === INVALID) {
@@ -74,29 +61,21 @@ export class ArgumentReaderImpl extends Bean implements ArgumentReader {
       }
       outList.push(arg);
 
-      const t2 = c.current;
+      const t2 = c.tokenReader.current;
       if (!t2) {
         break;
       }
       if (!Separator.matches(t2, ',')) {
         error = true;
-        c.addError({
-          level: ERROR,
-          message: `Expected "," but found ${t2}`,
-          pos: t2.pos,
-        });
-        c.consume();
+        c.parseErrors.addError(`Expected "," but found ${t2}`, t2.pos);
+        c.tokenReader.consume();
         continue;
       }
-      c.consume();
+      c.tokenReader.consume();
 
-      const t3 = c.current;
+      const t3 = c.tokenReader.current;
       if (!t3) {
-        c.addError({
-          level: ERROR,
-          message: `Expected argument after ","`,
-          pos: t2.pos,
-        });
+        c.parseErrors.addError(`Expected argument after ","`, t2.pos);
         break;
       }
     }

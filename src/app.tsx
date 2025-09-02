@@ -48,7 +48,6 @@ function hello(p: string): string {
 export default function App() {
   const [content, setContent] = useState(() => localStorage.getItem('sourceCode') ?? initialCode);
   const [compileResult, setCompileResult] = useState<CompileResult>();
-  const [terminalContent, setTerminalContent] = useState<string>();
 
   const saveTimeoutIdRef = useRef<number>();
 
@@ -95,7 +94,7 @@ export default function App() {
         <Toolbar>
           <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
         </Toolbar>
-        <Tile className={classes.parserOutput} title='Compile output'>
+        <Tile className={classes.parserOutput} title='Abstract Syntax Tree'>
           <AceEditor
             mode='yaml'
             theme='github_light_default'
@@ -107,7 +106,7 @@ export default function App() {
             className={classes.editor}
           />
         </Tile>
-        <Tile className={classes.codegenOutput} title='Generated code'>
+        <Tile className={classes.codegenOutput} title='Generated Code'>
           <AceEditor
             mode='javascript'
             theme='github_light_default'
@@ -118,6 +117,9 @@ export default function App() {
             fontSize={16}
             className={classes.editor}
           />
+        </Tile>
+        <Tile className={classes.terminalOutput} title='Terminal'>
+          <div className={classes.terminal}>{compileResult?.terminalOutput}</div>
         </Tile>
       </div>
     </div>

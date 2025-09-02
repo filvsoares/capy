@@ -1,19 +1,13 @@
 import { CgSymbol } from '@/modules/codegen/codegen/cg-symbol';
 import { Codegen } from '@/modules/codegen/codegen/codegen';
-import { CodegenContext } from '@/modules/codegen/codegen/codegen-context';
+import { CodegenData, codegenData } from '@/modules/codegen/codegen/codegen-data';
 import { CodegenExtraWriter } from '@/modules/codegen/codegen/codegen-extra-writer';
+import { codegenWriter } from '@/modules/codegen/codegen/codegen-writer';
 import { SymbolProcessor } from '@/modules/codegen/codegen/symbol-processor';
 import { Application } from '@/modules/parser/parser/application';
 import { Symbol } from '@/modules/parser/parser/symbol';
 import { Bean } from '@/util/beans';
-import { declareExtraKey, ExtraHandler } from '@/util/extra';
-
-type CodegenExtra = {
-  application: Application;
-  modules: { [moduleName: string]: { [symbolName: string]: CgSymbol } };
-};
-
-const codegenExtraKey = declareExtraKey<CodegenExtra>();
+import { Context, createContext } from '@/util/context';
 
 export class CodegenImpl extends Bean implements Codegen {
   constructor(private symbolProcessors: SymbolProcessor[], private codegenExtraWriters: CodegenExtraWriter[]) {
@@ -29,7 +23,7 @@ export class CodegenImpl extends Bean implements Codegen {
     return jsName;
   }
 
-  generateCode(application: Application): string {
+  generateCode(application: Application): string[] {
     const out: string[] = [];
 
     const modules: { [moduleName: string]: { [symbolName: string]: CgSymbol } } = {};
@@ -42,21 +36,16 @@ export class CodegenImpl extends Bean implements Codegen {
       module[symbol.name] = new CgSymbol(symbol, this.resolveSymbolJsName(symbol, usedJsNames));
     }
 
-    const extra = new ExtraHandler();
-    extra.put(codegenExtraKey, { application, modules });
-
-    const c = new CodegenContext(out, extra);
-
-    c.write('function app(nativeMethods) {\n');
+    const c = createContext({}).with(codegenData(application, modules)).with(codegenWriter(out));
 
     for (const moduleName in modules) {
       const module = modules[moduleName];
       for (const symbolName in module) {
         const symbol = module[symbolName];
         let ok = false;
-        c.write(`  // --- ${moduleName}.${symbolName}\n`);
+        c.codegenWriter.write(`// --- ${moduleName}.${symbolName}\n`);
         for (const processor of this.symbolProcessors) {
-          if (processor.processSymbol(c, symbol, '  ')) {
+          if (processor.processSymbol(c, symbol, '')) {
             ok = true;
           }
         }
@@ -67,23 +56,13 @@ export class CodegenImpl extends Bean implements Codegen {
     }
 
     for (const extraWriter of this.codegenExtraWriters) {
-      extraWriter.writeExtra(c, '  ');
+      extraWriter.writeExtra(c, '');
     }
 
-    c.write('}\n');
-
-    return out.join('');
+    return ['nativeMethods', out.join('')];
   }
 
-  getMainModuleName(c: CodegenContext): string {
-    return c.extra.get(codegenExtraKey)!.application.mainModuleName;
-  }
-
-  getSymbolJsName(c: CodegenContext, moduleName: string, symbolName: string): string {
-    const symbol = c.extra.get(codegenExtraKey)!.modules[moduleName]?.[symbolName];
-    if (!symbol) {
-      throw new Error(`Symbol ${moduleName}/${symbolName} not found`);
-    }
-    return symbol.jsName;
+  getMainModuleName(c: Context<CodegenData>): string {
+    return c.codegenData.application.mainModuleName;
   }
 }

@@ -1,16 +1,16 @@
 import { Bean } from '@/util/beans';
 
-import { combinePos, ERROR, fallbackPos, INVALID, Invalid } from '@/base';
+import { combinePos, fallbackPos, INVALID, Invalid } from '@/base';
 import { ExpressionReader } from '@/modules/parser/expression/expression-reader';
-import { MethodContext } from '@/modules/parser/method/method-context';
+import { hasMethodData } from '@/modules/parser/method/method-data';
 import { ReturnStatement } from '@/modules/parser/method/return-statement';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
-import { StatementContext } from '@/modules/parser/statement/statement-context';
+import { StatementReaderContext } from '@/modules/parser/statement/statement-reader';
 import { Keyword } from '@/modules/parser/tokenizer/keyword';
 import { isVoidType } from '@/modules/parser/type/simple-type';
 import { TypeReader } from '@/modules/parser/type/type-reader';
 import { StatementItemReader } from '../statement/statement-item-reader';
 import { Separator } from '../tokenizer/separator';
+
 export class ReturnStatementReader extends Bean implements StatementItemReader {
   priority = 100;
 
@@ -18,72 +18,52 @@ export class ReturnStatementReader extends Bean implements StatementItemReader {
     super();
   }
 
-  read(c: ParserContext, context: StatementContext): ReturnStatement | Invalid | undefined {
-    if (!(context instanceof MethodContext)) {
+  read(c: StatementReaderContext): ReturnStatement | Invalid | undefined {
+    if (!hasMethodData(c)) {
       return;
     }
 
-    const t1 = c.current;
+    const t1 = c.tokenReader.current;
     if (!Keyword.matches(t1, 'return')) {
       return;
     }
-    c.consume();
+    c.tokenReader.consume();
 
-    const t2 = c.current;
+    const t2 = c.tokenReader.current;
     if (Separator.matches(t2, ';')) {
-      c.consume();
-      if (!isVoidType(context.returnType)) {
-        c.addError({
-          level: ERROR,
-          message: `Must return expression of type ${context.returnType}`,
-          pos: combinePos(t1.pos, t2.pos),
-        });
+      c.tokenReader.consume();
+      if (!isVoidType(c.methodData.returnType)) {
+        c.parseErrors.addError(`Must return expression of type ${c.methodData.returnType}`, combinePos(t1.pos, t2.pos));
         return INVALID;
       }
       return new ReturnStatement(null, combinePos(t1.pos, t2.pos));
     }
 
-    const expr = this.expressionReader.read(c, context, {
+    const expr = this.expressionReader.read(c, {
       unexpectedTokenErrorMsg: (t) => `Expected expression but found ${t}`,
     });
     if (expr === INVALID) {
       return INVALID;
     }
     if (!expr) {
-      c.addError({
-        level: ERROR,
-        message: `Expected expression but found ${t2}`,
-        pos: fallbackPos(t2?.pos, t1.pos),
-      });
+      c.parseErrors.addError(`Expected expression but found ${t2}`, fallbackPos(t2?.pos, t1.pos));
       return INVALID;
     }
 
-    const t3 = c.current;
+    const t3 = c.tokenReader.current;
     if (Separator.matches(t3, ';')) {
-      c.consume();
+      c.tokenReader.consume();
     } else {
-      c.addError({
-        level: ERROR,
-        message: `Expected ";"`,
-        pos: fallbackPos(t3?.pos, expr.pos),
-      });
+      c.parseErrors.addError(`Expected ";"`, fallbackPos(t3?.pos, expr.pos));
     }
 
-    if (isVoidType(context.returnType)) {
-      c.addError({
-        level: ERROR,
-        message: `Cannot return expression when method has void return type`,
-        pos: expr.pos,
-      });
+    if (isVoidType(c.methodData.returnType)) {
+      c.parseErrors.addError(`Cannot return expression when method has void return type`, expr.pos);
       return INVALID;
     }
 
-    if (!this.typeReader.isAssignable(expr.type, context.returnType)) {
-      c.addError({
-        level: ERROR,
-        message: `Return expects ${context.returnType} but ${expr.type} was provided`,
-        pos: expr.pos,
-      });
+    if (!this.typeReader.isAssignable(expr.type, c.methodData.returnType)) {
+      c.parseErrors.addError(`Return expects ${c.methodData.returnType} but ${expr.type} was provided`, expr.pos);
       return INVALID;
     }
     return new ReturnStatement(expr, combinePos(t1.pos, expr.pos));

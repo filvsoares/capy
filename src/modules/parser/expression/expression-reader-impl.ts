@@ -1,11 +1,15 @@
-import { ERROR, INVALID, Invalid } from '@/base';
+import { INVALID, Invalid } from '@/base';
 import { Dereference } from '@/modules/parser/expression/dereference';
 import { Expression } from '@/modules/parser/expression/expression';
-import { ExpressionContext, ExpressionReader, ReadExpressionOpts } from '@/modules/parser/expression/expression-reader';
+import {
+  ExpressionReader,
+  ExpressionReaderContext,
+  ReadExpressionOpts,
+} from '@/modules/parser/expression/expression-reader';
 import { IdentifierResolver } from '@/modules/parser/expression/identifier-resolver';
 import { NumberLiteral } from '@/modules/parser/expression/number-literal';
 import { StringLiteral } from '@/modules/parser/expression/string-literal';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
+import { tokenReader } from '@/modules/parser/parser/token-reader';
 import { Bracket } from '@/modules/parser/tokenizer/bracket';
 import { Identifier } from '@/modules/parser/tokenizer/identifier';
 import { Number } from '@/modules/parser/tokenizer/number';
@@ -42,12 +46,12 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
     );
   }
 
-  private internalResolveOperand(c: ParserContext, obj: Token | Expression, context: ExpressionContext | null) {
+  private internalResolveOperand(c: ExpressionReaderContext, obj: Token | Expression) {
     if (obj instanceof Expression) {
       return obj;
     }
     if (obj instanceof Identifier) {
-      return this.resolveIdentifier(c, obj, context);
+      return this.resolveIdentifier(c, obj);
     }
     if (obj instanceof Number) {
       return new NumberLiteral(obj.value, obj.pos);
@@ -56,43 +60,25 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       return new StringLiteral(obj.value, obj.pos);
     }
     if (obj instanceof Bracket && obj.start === '(') {
-      const c1 = c.derive(obj.tokenList);
-      const r = this.readList(c1, context, {
+      const r = this.readList(c.with(tokenReader(obj.tokenList)), {
         unexpectedTokenErrorMsg: (t) => `Expected ")" but found ${t}`,
       });
       if (r.length === 0) {
-        c.addError({
-          level: ERROR,
-          message: `Expected expression`,
-          pos: obj.pos,
-        });
+        c.parseErrors.addError(`Expected expression`, obj.pos);
         return INVALID;
       }
       if (r.length > 1) {
-        c.addError({
-          level: ERROR,
-          message: `Expected ")"`,
-          pos: r[1].pos,
-        });
+        c.parseErrors.addError(`Expected ")"`, r[1].pos);
         return INVALID;
       }
       return r[0];
     }
-    c.addError({
-      level: ERROR,
-      message: `Expected operand but found ${obj}`,
-      pos: obj.pos,
-    });
+    c.parseErrors.addError(`Expected operand but found ${obj}`, obj.pos);
     return INVALID;
   }
 
-  resolveOperand(
-    c: ParserContext,
-    obj: Token | Expression,
-    context: ExpressionContext | null,
-    dereference: boolean
-  ): Expression | Invalid {
-    const operand = this.internalResolveOperand(c, obj, context);
+  resolveOperand(c: ExpressionReaderContext, obj: Token | Expression, dereference: boolean): Expression | Invalid {
+    const operand = this.internalResolveOperand(c, obj);
     if (operand === INVALID) {
       return INVALID;
     }
@@ -103,10 +89,9 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
   }
 
   processOperationsLTR(
-    c: ParserContext,
+    c: ExpressionReaderContext,
     processors: OperationProcessor[] | undefined,
-    list: (Token | Expression)[],
-    context: ExpressionContext | null
+    list: (Token | Expression)[]
   ): (Token | Expression)[] | Invalid {
     if (!processors) {
       return list;
@@ -121,7 +106,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       const t3 = list[i + 1];
 
       for (const processor of processors) {
-        const r = processor.process(c, context, t1, t2, t3);
+        const r = processor.process(c, t1, t2, t3);
         if (!r) {
           continue;
         }
@@ -142,10 +127,9 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
   }
 
   processOperationsRTL(
-    c: ParserContext,
+    c: ExpressionReaderContext,
     processors: OperationProcessor[] | undefined,
-    list: (Token | Expression)[],
-    context: ExpressionContext | null
+    list: (Token | Expression)[]
   ): (Token | Expression)[] | Invalid {
     if (!processors) {
       return list;
@@ -162,7 +146,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       const t3 = list[i + 1];
 
       for (const processor of processors) {
-        const r = processor.process(c, context, t1, t2, t3);
+        const r = processor.process(c, t1, t2, t3);
         if (!r) {
           continue;
         }
@@ -184,63 +168,58 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
   }
 
   read(
-    c: ParserContext,
-    context: ExpressionContext | null,
+    c: ExpressionReaderContext,
     { unexpectedTokenErrorMsg }: ReadExpressionOpts = {}
   ): Expression | Invalid | undefined {
     const list: (Token | Expression)[] = [];
 
     while (true) {
-      const t = c.current;
+      const t = c.tokenReader.current;
       if (this.isExpressionEnd(t)) {
         break;
       }
       list.push(t!);
-      c.consume();
+      c.tokenReader.consume();
     }
 
     if (list.length === 0) {
       return;
     }
 
-    const p1 = this.processOperationsLTR(c, this.operationProcessors[0], list, context);
+    const p1 = this.processOperationsLTR(c, this.operationProcessors[0], list);
     if (p1 === INVALID) {
       return INVALID;
     }
-    const p2 = this.processOperationsRTL(c, this.operationProcessors[1], p1, context);
+    const p2 = this.processOperationsRTL(c, this.operationProcessors[1], p1);
     if (p2 === INVALID) {
       return INVALID;
     }
-    const p3 = this.processOperationsLTR(c, this.operationProcessors[2], p2, context);
+    const p3 = this.processOperationsLTR(c, this.operationProcessors[2], p2);
     if (p3 === INVALID) {
       return INVALID;
     }
-    const p4 = this.processOperationsLTR(c, this.operationProcessors[3], p3, context);
+    const p4 = this.processOperationsLTR(c, this.operationProcessors[3], p3);
     if (p4 === INVALID) {
       return INVALID;
     }
-    const p5 = this.processOperationsRTL(c, this.operationProcessors[4], p4, context);
+    const p5 = this.processOperationsRTL(c, this.operationProcessors[4], p4);
     if (p5 === INVALID) {
       return INVALID;
     }
 
     if (p5.length > 1) {
-      c.addError({
-        level: ERROR,
-        message: unexpectedTokenErrorMsg?.(p5[1]) ?? `Unexpected ${p5[1]}`,
-        pos: p5[1].pos,
-      });
+      c.parseErrors.addError(unexpectedTokenErrorMsg?.(p5[1]) ?? `Unexpected ${p5[1]}`, p5[1].pos);
       return INVALID;
     }
 
-    return this.resolveOperand(c, p5[0], context, true);
+    return this.resolveOperand(c, p5[0], true);
   }
 
-  readList(c: ParserContext, context: ExpressionContext | null, opts?: ReadExpressionOpts): Expression[] {
+  readList(c: ExpressionReaderContext, opts?: ReadExpressionOpts): Expression[] {
     const outList: Expression[] = [];
     let error = false;
-    while (c.current) {
-      const val = this.read(c, context, opts);
+    while (c.tokenReader.current) {
+      const val = this.read(c, opts);
       if (val === INVALID) {
         error = true;
         continue;
@@ -248,74 +227,58 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       if (!val) {
         if (!error) {
           error = true;
-          const t = c.current!;
-          c.addError({
-            level: ERROR,
-            message: `Unexpected ${t}`,
-            pos: {
-              lin1: t.pos.lin1,
-              col1: t.pos.col1,
-              lin2: t.pos.lin2,
-              col2: t.pos.col2,
-            },
+          const t = c.tokenReader.current!;
+          c.parseErrors.addError(`Unexpected ${t}`, {
+            lin1: t.pos.lin1,
+            col1: t.pos.col1,
+            lin2: t.pos.lin2,
+            col2: t.pos.col2,
           });
         }
-        c.consume();
+        c.tokenReader.consume();
         continue;
       }
 
       outList.push(val);
       error = false;
 
-      const t1 = c.current;
+      const t1 = c.tokenReader.current;
       if (!t1) {
         break;
       }
       if (!Separator.matches(t1, ',')) {
-        c.addError({
-          level: ERROR,
-          message: `Expected ","`,
-          pos: {
-            lin1: t1.pos.lin1,
-            col1: t1.pos.col1,
-            lin2: t1.pos.lin2,
-            col2: t1.pos.col2,
-          },
+        c.parseErrors.addError(`Expected ","`, {
+          lin1: t1.pos.lin1,
+          col1: t1.pos.col1,
+          lin2: t1.pos.lin2,
+          col2: t1.pos.col2,
         });
-        c.consume();
+        c.tokenReader.consume();
         continue;
       }
-      c.consume();
+      c.tokenReader.consume();
 
-      const t2 = c.current;
+      const t2 = c.tokenReader.current;
       if (!t2) {
-        c.addError({
-          level: ERROR,
-          message: `Expected expression after ","`,
-          pos: {
-            lin1: t1.pos.lin2,
-            col1: t1.pos.col2,
-            lin2: t1.pos.lin2,
-            col2: t1.pos.col2,
-          },
+        c.parseErrors.addError(`Expected expression after ","`, {
+          lin1: t1.pos.lin2,
+          col1: t1.pos.col2,
+          lin2: t1.pos.lin2,
+          col2: t1.pos.col2,
         });
       }
     }
     return outList;
   }
 
-  resolveIdentifier(c: ParserContext, obj: Identifier, context: ExpressionContext | null): Expression | Invalid {
+  resolveIdentifier(c: ExpressionReaderContext, obj: Identifier): Expression | Invalid {
     for (const p of this.identifierResolvers) {
-      const result = p.resolveIdentifier(c, obj, context);
+      const result = p.resolveIdentifier(c, obj);
       if (result) {
         return result;
       }
     }
-    c.addError({
-      level: ERROR,
-      message: `Could not resolve identifier "${obj.name}"`,
-      pos: obj.pos,
-    });
+    c.parseErrors.addError(`Could not resolve identifier "${obj.name}"`, obj.pos);
     return INVALID;
   }
 }

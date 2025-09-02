@@ -1,6 +1,5 @@
-import { CodegenContext } from '@/modules/codegen/codegen/codegen-context';
 import { ExpressionItemProcessor } from '@/modules/codegen/expression/expression-item-processor';
-import { ExpressionProcessor } from '@/modules/codegen/expression/expression-processor';
+import { ExpressionProcessor, ExpressionProcessorContext } from '@/modules/codegen/expression/expression-processor';
 import { Expression } from '@/modules/parser/expression/expression';
 import { StringConcat } from '@/modules/parser/operation/string-concat';
 import { Bean } from '@/util/beans';
@@ -10,7 +9,7 @@ export class StringConcatProcessor extends Bean implements ExpressionItemProcess
     super();
   }
 
-  processExpression(c: CodegenContext, obj: Expression): string[] | undefined {
+  processExpression(c: ExpressionProcessorContext, obj: Expression): string[] | undefined {
     if (!(obj instanceof StringConcat)) {
       return;
     }

@@ -1,22 +1,15 @@
-import { ERROR, INTERNAL, ParseError } from '@/base';
 import { Method } from '@/modules/parser/method/method';
 import { ParserCheck } from '@/modules/parser/parser/parser-check';
-import { Symbol } from '@/modules/parser/parser/symbol';
+import { ParserData } from '@/modules/parser/parser/parser-data';
 import { Bean } from '@/util/beans';
+import { Context } from '@/util/context';
+import { ParseErrors } from '@/util/parse-errors';
 
 export class MethodParserCheck extends Bean implements ParserCheck {
-  checkOutputs(
-    mainModuleName: string,
-    outputs: { [moduleName: string]: { [symbolName: string]: Symbol } },
-    errors: ParseError[]
-  ): void {
-    const startMethod = outputs[mainModuleName]?.['start'];
+  checkOutputs(c: Context<ParserData & ParseErrors>): void {
+    const startMethod = c.parserData.getOutput(c.parserData.mainModuleName)?.['start'];
     if (!(startMethod instanceof Method)) {
-      errors.push({
-        level: ERROR,
-        message: `Main module "${mainModuleName}" must contain a method named "start"`,
-        pos: INTERNAL,
-      });
+      c.parseErrors.addError(`Main module "${c.parserData.mainModuleName}" must contain a method named "start"`);
     }
   }
 }

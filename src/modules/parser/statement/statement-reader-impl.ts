@@ -1,8 +1,6 @@
-import { ERROR, INTERNAL, INVALID, Invalid } from '@/base';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
+import { INTERNAL, INVALID, Invalid } from '@/base';
 import { Statement } from '@/modules/parser/statement/statement';
-import { StatementContext } from '@/modules/parser/statement/statement-context';
-import { StatementReader } from '@/modules/parser/statement/statement-reader';
+import { StatementReader, StatementReaderContext } from '@/modules/parser/statement/statement-reader';
 import { Bean } from '@/util/beans';
 import { StatementItemReader } from './statement-item-reader';
 import { StatementList } from './statement-list';
@@ -13,20 +11,20 @@ export class StatementReaderImpl extends Bean implements StatementReader {
     this.itemReaders = itemReaders;
   }
 
-  read(c: ParserContext, context: StatementContext): Statement | Invalid | undefined {
+  read(c: StatementReaderContext): Statement | Invalid | undefined {
     for (const itemReader of this.itemReaders) {
-      const result = itemReader.read(c, context);
+      const result = itemReader.read(c);
       if (result) {
         return result;
       }
     }
   }
 
-  readList(c: ParserContext, context: StatementContext): StatementList {
+  readList(c: StatementReaderContext): StatementList {
     const outList: Statement[] = [];
     let error = false;
-    while (c.current) {
-      const val = this.read(c, context);
+    while (c.tokenReader.current) {
+      const val = this.read(c);
       if (val === INVALID) {
         error = true;
         continue;
@@ -34,14 +32,10 @@ export class StatementReaderImpl extends Bean implements StatementReader {
       if (!val) {
         if (!error) {
           error = true;
-          const t = c.current!;
-          c.addError({
-            level: ERROR,
-            message: `Unexpected ${t}`,
-            pos: t.pos,
-          });
+          const t = c.tokenReader.current!;
+          c.parseErrors.addError(`Unexpected ${t}`, t.pos);
         }
-        c.consume();
+        c.tokenReader.consume();
         continue;
       }
       error = false;

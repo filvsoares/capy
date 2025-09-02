@@ -15,7 +15,6 @@ export class GlobalVariable extends Symbol {
 
   debugPrint(out: string[], prefix: string): void {
     super.debugPrint(out, prefix);
-    out.push(`${prefix}  name: ${this.name}\n`);
     out.push(`${prefix}  type: `);
     this.type.debugPrint(out, `${prefix}  `);
     out.push(`${prefix}  initExpr: `);

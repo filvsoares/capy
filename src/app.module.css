@@ -22,17 +22,22 @@
   flex-grow: 1;
 }
 
-.editor {
+.editor, .terminal {
   font-family: 'Inconsolata', monospace;
   line-height: 1.5;
 }
 
 .parserOutput {
-  height: 50%;
-  flex-grow: 1;
+  height: 1px;
+  flex-grow: 2;
 }
 
 .codegenOutput {
-  height: 50%;
+  height: 1px;
+  flex-grow: 2;
+}
+
+.terminalOutput {
+  height: 1px;
   flex-grow: 1;
 }

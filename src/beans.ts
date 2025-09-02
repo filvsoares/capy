@@ -9,7 +9,6 @@ const beanDeclarations: () => Promise<{ declareBeans: () => void }>[] = () => [
   // parser
   import('@/modules/parser/expression/_beans'),
   import('@/modules/parser/global-variable/_beans'),
-  import('@/modules/parser/impexp/_beans'),
   import('@/modules/parser/method/_beans'),
   import('@/modules/parser/operation/_beans'),
   import('@/modules/parser/parser/_beans'),

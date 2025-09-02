@@ -1,9 +1,8 @@
 import { Invalid } from '@/base';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
 import { Bean } from '@/util/beans';
 import { Type } from './type';
 import { TypeItemReader } from './type-item-reader';
-import { TypeReader } from './type-reader';
+import { TypeReader, TypeReaderContext } from './type-reader';
 
 export class TypeReaderImpl extends Bean implements TypeReader {
   constructor(private itemReaders: TypeItemReader[]) {
@@ -11,7 +10,7 @@ export class TypeReaderImpl extends Bean implements TypeReader {
     this.itemReaders = itemReaders;
   }
 
-  read(c: ParserContext): Type | Invalid | undefined {
+  read(c: TypeReaderContext): Type | Invalid | undefined {
     for (const itemReader of this.itemReaders) {
       const result = itemReader.read(c);
       if (result) {

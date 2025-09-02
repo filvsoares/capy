@@ -1,10 +1,16 @@
 import { Invalid } from '@/base';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
+import { CurrentModule } from '@/modules/parser/parser/current-module';
+import { ParserData } from '@/modules/parser/parser/parser-data';
+import { TokenReader } from '@/modules/parser/parser/token-reader';
 import { declareBeanInterface } from '@/util/beans';
+import { Context } from '@/util/context';
+import { ParseErrors } from '@/util/parse-errors';
 import { Type } from './type';
 
+export type TypeReaderContext = Context<ParserData & TokenReader & ParseErrors & CurrentModule>;
+
 export interface TypeReader {
-  read(c: ParserContext): Type | Invalid | undefined;
+  read(c: TypeReaderContext): Type | Invalid | undefined;
   isAssignable(type: Type, assignTo: Type): boolean;
 }
 

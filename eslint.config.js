@@ -52,7 +52,6 @@ export default defineConfig([
             rule('codegen', 'statement', ['codegen', 'expression']),
             rule('parser', 'expression', ['parser', 'tokenizer', 'type']),
             rule('parser', 'global-variable', ['expression', 'parser', 'tokenizer', 'type']),
-            rule('parser', 'impexp', ['parser', 'tokenizer', 'type']),
             rule('parser', 'method', ['expression', 'operation', 'parser', 'statement', 'tokenizer', 'type']),
             rule('parser', 'operation', ['expression', 'parser', 'tokenizer', 'type']),
             rule('parser', 'parser', ['tokenizer']),

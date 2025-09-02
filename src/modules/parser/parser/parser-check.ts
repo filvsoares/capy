@@ -1,13 +1,10 @@
-import { ParseError } from '@/base';
-import { Symbol } from '@/modules/parser/parser/symbol';
+import { ParserData } from '@/modules/parser/parser/parser-data';
 import { declareBeanInterface } from '@/util/beans';
+import { Context } from '@/util/context';
+import { ParseErrors } from '@/util/parse-errors';
 
 export interface ParserCheck {
-  checkOutputs(
-    mainModuleName: string,
-    outputs: { [moduleName: string]: { [symbolName: string]: Symbol } },
-    errors: ParseError[]
-  ): void;
+  checkOutputs(c: Context<ParserData & ParseErrors>): void;
 }
 
 export const parserCheck = declareBeanInterface<ParserCheck>('ParserCheck');

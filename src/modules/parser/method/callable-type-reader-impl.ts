@@ -1,13 +1,13 @@
 import { CallableType } from '@/modules/parser/method/callable-type';
 import { CallableTypeReader } from '@/modules/parser/method/callable-type-reader';
-import { ParserContext } from '@/modules/parser/parser/parser-context';
+import { tokenReader } from '@/modules/parser/parser/token-reader';
 import { Bracket } from '@/modules/parser/tokenizer/bracket';
 import { VOID } from '@/modules/parser/type/simple-type';
 import { Type } from '@/modules/parser/type/type';
 import { TypeItemReader } from '@/modules/parser/type/type-item-reader';
-import { TypeReader } from '@/modules/parser/type/type-reader';
+import { TypeReader, TypeReaderContext } from '@/modules/parser/type/type-reader';
 import { Bean } from '@/util/beans';
-import { combinePos, ERROR, INVALID, Invalid } from '../../../base';
+import { combinePos, INVALID, Invalid } from '../../../base';
 import { Operator } from '../tokenizer/operator';
 import { ArgumentReader } from './argument-reader';
 
@@ -16,32 +16,27 @@ export class CallableTypeReaderImpl extends Bean implements TypeItemReader, Call
     super();
   }
 
-  read(c: ParserContext): CallableType | Invalid | undefined {
-    const t1 = c.current;
+  read(c: TypeReaderContext): CallableType | Invalid | undefined {
+    const t1 = c.tokenReader.current;
     if (!Bracket.matches(t1, '(')) {
       return;
     }
-    c.consume();
+    c.tokenReader.consume();
 
     let returnType: Type = VOID;
 
-    const c1 = c.derive(t1.tokenList);
-    const args = this.argumentReader.readList(c1);
+    const args = this.argumentReader.readList(c.with(tokenReader(t1.tokenList)));
 
-    const t2 = c.current;
+    const t2 = c.tokenReader.current;
     if (Operator.matches(t2, ':')) {
-      c.consume();
+      c.tokenReader.consume();
 
       const _returnType = this.typeReader.read(c);
       if (_returnType === INVALID) {
         return INVALID;
       }
       if (!_returnType) {
-        c.addError({
-          level: ERROR,
-          message: `Expected type`,
-          pos: t2.pos,
-        });
+        c.parseErrors.addError(`Expected type`, t2.pos);
         return INVALID;
       }
       returnType = _returnType;

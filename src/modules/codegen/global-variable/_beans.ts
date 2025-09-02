@@ -1,6 +1,7 @@
 import { symbolProcessor } from '@/modules/codegen/codegen/symbol-processor';
 import { expressionItemProcessor } from '@/modules/codegen/expression/expression-item-processor';
-import { declareBean } from '@/util/beans';
+import { expressionProcessor } from '@/modules/codegen/expression/expression-processor';
+import { declareBean, single } from '@/util/beans';
 
 export function declareBeans() {
   declareBean({
@@ -13,7 +14,7 @@ export function declareBeans() {
   declareBean({
     name: 'GlobalVariableSymbolProcessor',
     provides: [symbolProcessor],
-    dependencies: [],
+    dependencies: [single(expressionProcessor)],
     loadModule: () => import('./global-variable-symbol-processor'),
     factory: (m, deps) => new m.GlobalVariableSymbolProcessor(...deps),
   });
