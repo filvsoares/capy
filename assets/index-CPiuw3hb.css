@@ -1,0 +1,124 @@
+body {
+  margin: 0px;
+  font-size: 16px;
+  font-family: sans-serif;
+}
+
+*,
+:after,
+:before {
+  box-sizing: border-box;
+}
+._container_oodac_1 {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+  padding: 8px;
+  column-gap: 8px;
+}
+
+._code_oodac_10,
+._result_oodac_11 {
+  width: 1px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  row-gap: 8px;
+}
+
+._editorContainer_oodac_20 {
+  height: 100%;
+  flex-grow: 1;
+}
+
+._editor_oodac_20, ._terminal_oodac_25 {
+  font-family: 'Inconsolata', monospace;
+  line-height: 1.5;
+}
+
+._parserOutput_oodac_30 {
+  height: 1px;
+  flex-grow: 2;
+}
+
+._codegenOutput_oodac_35 {
+  height: 1px;
+  flex-grow: 2;
+}
+
+._terminalOutput_oodac_40 {
+  height: 1px;
+  flex-grow: 1;
+}
+._tile_c1qfn_1 {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+}
+
+._header_c1qfn_9 {
+  background-color: #f0f0f0;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+._content_c1qfn_15 {
+  height: 0px;
+  flex-grow: 1;
+}
+._toolButton_1dqrl_1 {
+  border-radius: 4px;
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  padding: 0px 32px;
+  font-size: 16px;
+  cursor: pointer;
+  column-gap: 8px;
+  user-select: none;
+}
+
+._toolButton_1dqrl_1[data-variant='run'] {
+  background-color: #0d0;
+  font-weight: bold;
+  color: #fff;
+}
+
+._toolButton_1dqrl_1[data-variant='run']:hover {
+  background-color: #0c0;
+}
+
+._toolButton_1dqrl_1[data-variant='run']:active {
+  padding: 2px 31px 0px 33px;
+  background-color: #0b0;
+}
+
+
+._toolButton_1dqrl_1[data-variant='normal'] {
+  border: 1px solid #ccc;
+  background-color: #eee;
+  color: #000;
+}
+
+._toolButton_1dqrl_1[data-variant='normal']:hover {
+  border: 1px solid #ccc;
+  background-color: #ddd;
+}
+
+._toolButton_1dqrl_1[data-variant='normal']:active {
+  padding: 2px 31px 0px 33px;
+  background-color: #ccc;
+}
+._toolbar_u8g8q_1 {
+  height: 36px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  display: flex;
+  justify-items: flex-start;
+  align-items: stretch;
+  row-gap: 8px;
+}
