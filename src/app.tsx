@@ -18,7 +18,7 @@
  * @file App component.
  */
 
-import { Play, RefreshCcw } from 'feather-icons-react';
+import { Play, Plus, RefreshCcw } from 'feather-icons-react';
 import { useRef, useState } from 'react';
 import AceEditor from 'react-ace';
 import classes from './app.module.css';
@@ -27,6 +27,7 @@ import { Tile } from './ui/tile';
 import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 
+import { Tab, TabPanel, useTabManager } from '@/ui/tab-panel';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
@@ -70,24 +71,27 @@ export default function App() {
     setCompileResult(r);
   };
 
+  const tabManager = useTabManager();
+
+  const ref = useRef(0);
+  const [tabs, setTabs] = useState<{ title: string }[]>([]);
+
   return (
     <div className={classes.container}>
       <div className={classes.code}>
         <Toolbar>
           <ToolButton icon={RefreshCcw} text='Reset' onClick={onResetClick} />
-        </Toolbar>
-        <Tile className={classes.editorContainer} title='Code editor'>
-          <AceEditor
-            mode='typescript'
-            theme='github_light_default'
-            value={content}
-            onChange={onContentChange}
-            width='100%'
-            height='100%'
-            fontSize={16}
-            className={classes.editor}
+          <ToolButton
+            icon={Plus}
+            text='Add Tab'
+            onClick={() => setTabs((prv) => [...prv, { title: 'Tab ' + ++ref.current }])}
           />
-        </Tile>
+        </Toolbar>
+        <TabPanel manager={tabManager} className={classes.editorContainer}>
+          {tabs.map((e, i) => (
+            <Tab key={i} title={e.title} />
+          ))}
+        </TabPanel>
       </div>
 
       <div className={classes.result}>

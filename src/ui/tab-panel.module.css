@@ -1,0 +1,19 @@
+.container {
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  flex-direction: row;
+  height: 32px;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.headerButton {
+  padding: 16px 0px;
+  border-right: 1px solid #ccc;
+}
