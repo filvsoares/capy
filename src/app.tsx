@@ -18,8 +18,8 @@
  * @file App component.
  */
 
-import { Play, Plus, RefreshCcw } from 'feather-icons-react';
-import { useRef, useState } from 'react';
+import { Play, RefreshCcw } from 'feather-icons-react';
+import { useCallback, useRef, useState } from 'react';
 import AceEditor from 'react-ace';
 import classes from './app.module.css';
 import { compile, CompileResult } from './compiler';
@@ -27,7 +27,9 @@ import { Tile } from './ui/tile';
 import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 
-import { Tab, TabPanel, useTabManager } from '@/ui/tab-panel';
+import { EditorTab, EditorTabType, editorTabTypePart } from '@/ui/editor-tab';
+import { registeredComponent } from '@/ui/register-manager';
+import { TabPanel, tabTypePart, useTabManager, useTabsChangedListener } from '@/ui/tab-panel';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
@@ -46,51 +48,46 @@ function hello(p: string): string {
 }
 `;
 
+export const codeEditor = registeredComponent(tabTypePart, editorTabTypePart);
+
 export default function App() {
-  const [content, setContent] = useState(() => localStorage.getItem('sourceCode') ?? initialCode);
   const [compileResult, setCompileResult] = useState<CompileResult>();
 
-  const saveTimeoutIdRef = useRef<number>();
-
-  const onContentChange = (value: string) => {
-    setContent(value);
-    clearTimeout(saveTimeoutIdRef.current);
-    saveTimeoutIdRef.current = setTimeout(() => {
-      console.log('Saved!');
-      localStorage.setItem('sourceCode', value);
-    }, 5000);
-  };
+  const editorTabRef = useRef<EditorTabType>();
 
   const onResetClick = async () => {
-    setContent(initialCode);
+    editorTabRef.current?.setValue(initialCode);
     localStorage.setItem('sourceCode', initialCode);
   };
-
   const onRunClick = async () => {
-    const r = await compile(content, { debugTree: true });
+    const r = await compile(editorTabRef.current?.getValue() ?? '', { debugTree: true });
     setCompileResult(r);
   };
 
   const tabManager = useTabManager();
+  const { getByInstance: tmGetByInstance } = tabManager;
 
-  const ref = useRef(0);
-  const [tabs, setTabs] = useState<{ title: string }[]>([]);
+  useTabsChangedListener(
+    tabManager,
+    useCallback(() => {
+      const editorTab = tmGetByInstance(codeEditor);
+      if (editorTab !== editorTabRef.current) {
+        editorTabRef.current = editorTab;
+        if (editorTab) {
+          editorTab.setValue(initialCode);
+        }
+      }
+    }, [tmGetByInstance])
+  );
 
   return (
     <div className={classes.container}>
       <div className={classes.code}>
         <Toolbar>
           <ToolButton icon={RefreshCcw} text='Reset' onClick={onResetClick} />
-          <ToolButton
-            icon={Plus}
-            text='Add Tab'
-            onClick={() => setTabs((prv) => [...prv, { title: 'Tab ' + ++ref.current }])}
-          />
         </Toolbar>
         <TabPanel manager={tabManager} className={classes.editorContainer}>
-          {tabs.map((e, i) => (
-            <Tab key={i} title={e.title} />
-          ))}
+          <EditorTab src={codeEditor} title='main' />
         </TabPanel>
       </div>
 

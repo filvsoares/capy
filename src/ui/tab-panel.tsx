@@ -1,8 +1,18 @@
-import { createContext, CSSProperties, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  CSSProperties,
+  ReactNode,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import {
-  componentsChangedListener,
-  registeredComponentType,
+  registeredAnonymousComponent,
+  RegisteredComponent,
+  registeredTypePart,
   RegisterManager,
   useRegisteredComponent,
   useRegisterManager,
@@ -24,18 +34,32 @@ export type TabPanelProps = {
   children?: ReactNode;
 };
 
-export const tab = registeredComponentType<{ title: string }>('tab');
+export type TabTypePart = { title: string };
+export const tabTypePart = registeredTypePart<TabTypePart>('tab');
+export const tab = registeredAnonymousComponent(tabTypePart);
+
+export const tabsChangedListenerTypePart = registeredTypePart<() => void>('tabsChangedListener');
+export const tabsChangedListener = registeredAnonymousComponent(tabsChangedListenerTypePart);
+
+export function useTabsChangedListener(manager: TabManager, callback: () => void) {
+  useRegisteredComponent(manager, tabsChangedListener, callback);
+  useLayoutEffect(() => {
+    callback();
+  }, [callback]);
+}
 
 export function TabPanel({ manager, className = '', style, children }: TabPanelProps) {
+  const { getByType } = manager;
+
   const [tabHeaders, setTabHeaders] = useState<{ title: string }[]>([]);
 
-  const { getByType } = manager;
-  const onComponentsChanged = useCallback(() => {
-    console.log('onComponentsChanged');
-    setTabHeaders(getByType(tab));
-  }, [getByType]);
-
-  useRegisteredComponent(manager, componentsChangedListener, onComponentsChanged);
+  useTabsChangedListener(
+    manager,
+    useCallback(() => {
+      console.log('onTabsChanged');
+      setTabHeaders(getByType(tabTypePart));
+    }, [getByType])
+  );
 
   return (
     <TabContext.Provider value={manager}>
@@ -53,9 +77,23 @@ export function TabPanel({ manager, className = '', style, children }: TabPanelP
   );
 }
 
-export function Tab({ title }: { title: string }) {
+export type TabProps<T> = {
+  title: string;
+  src: RegisteredComponent<TabTypePart & T>;
+  children: ReactNode;
+  extend: (data: TabTypePart) => TabTypePart & T;
+};
+
+export function AbstractTab<T>({ title, src, extend, children }: TabProps<T>) {
   const manager = useContext(TabContext)!;
-  const data = useMemo(() => ({ title }), [title]);
-  useRegisteredComponent(manager, tab, data);
-  return <></>;
+  const { getByType } = manager;
+  const data = useMemo(() => extend({ title }), [title, extend]);
+  useRegisteredComponent(manager, src, data);
+  useLayoutEffect(() => {
+    getByType(tabsChangedListenerTypePart).forEach((l) => l());
+    return () => {
+      getByType(tabsChangedListenerTypePart).forEach((l) => l());
+    };
+  }, [getByType]);
+  return children;
 }
