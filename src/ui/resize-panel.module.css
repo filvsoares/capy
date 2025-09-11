@@ -1,0 +1,25 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.item {
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  width: 0px;
+  min-width: 20px;
+}
+
+.item[data-last='true'] {
+  flex-grow: 1;
+}
+
+.handle {
+  user-select: none;
+  width: 8px;
+  cursor: col-resize;
+  flex-grow: 0;
+  flex-shrink: 0;
+}

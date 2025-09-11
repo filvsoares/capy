@@ -29,6 +29,7 @@ import { EditorTab, EditorTabType, editorTabTypePart } from '@/ui/editor-tab';
 import { registeredComponent } from '@/ui/register-manager';
 import { TabPanel, tabTypePart, useTabManager, useTabsChangedListener } from '@/ui/tab-panel';
 
+import { ResizePanel, resizePanelItem } from '@/ui/resize-panel';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
@@ -95,34 +96,42 @@ export default function App() {
 
   return (
     <div className={classes.container}>
-      <div className={classes.code}>
-        <Toolbar>
-          <ToolButton icon={RefreshCcw} text='Reset' onClick={onResetClick} />
-        </Toolbar>
-        <TabPanel manager={tm1} className={classes.editorContainer}>
-          <EditorTab src={codeEditor} title='main' mode='ace/mode/typescript' theme='ace/theme/github_light_default' />
-        </TabPanel>
-      </div>
-
-      <div className={classes.result}>
-        <Toolbar>
-          <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
-        </Toolbar>
-        <TabPanel manager={tm2} className={classes.editorContainer}>
-          <EditorTab
-            src={parserResult}
-            title='Abstract Syntax Tree'
-            mode='ace/mode/yaml'
-            theme='ace/theme/github_light_default'
-          />
-          <EditorTab
-            src={codegenResult}
-            title='Generated Code'
-            mode='ace/mode/javascript'
-            theme='ace/theme/github_light_default'
-          />
-        </TabPanel>
-      </div>
+      <Toolbar>
+        <ToolButton icon={RefreshCcw} text='Reset' onClick={onResetClick} />
+        <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
+      </Toolbar>
+      <ResizePanel className={classes.area}>
+        {[
+          resizePanelItem(
+            { initialSize: 300 },
+            <TabPanel manager={tm1} className={classes.editorContainer}>
+              <EditorTab
+                src={codeEditor}
+                title='main'
+                mode='ace/mode/typescript'
+                theme='ace/theme/github_light_default'
+              />
+            </TabPanel>
+          ),
+          resizePanelItem(
+            {},
+            <TabPanel manager={tm2} className={classes.editorContainer}>
+              <EditorTab
+                src={parserResult}
+                title='Abstract Syntax Tree'
+                mode='ace/mode/yaml'
+                theme='ace/theme/github_light_default'
+              />
+              <EditorTab
+                src={codegenResult}
+                title='Generated Code'
+                mode='ace/mode/javascript'
+                theme='ace/theme/github_light_default'
+              />
+            </TabPanel>
+          ),
+        ]}
+      </ResizePanel>
     </div>
   );
 }
