@@ -22,3 +22,22 @@ declare module '*.module.css' {
   const content: Record<string, string>;
   export default content;
 }
+
+declare module 'ace-builds/src-noconflict/ace' {
+  /**
+   * Ace Editor type.
+   * https://ajaxorg.github.io/ace-api-docs/classes/ace.Editor-1.html
+   */
+  export type Editor = {
+    setValue: (val: string, cursorPosition?: number) => void;
+    getValue: () => string;
+    setShowPrintMargin: (val: boolean) => void;
+    setReadOnly: (val: boolean) => void;
+    session: {
+      setMode: (val: string) => void;
+    };
+    setTheme: (val: string) => void;
+  };
+
+  export const edit: (val: HTMLElement | string) => Editor;
+}

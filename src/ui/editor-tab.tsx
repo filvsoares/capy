@@ -1,13 +1,13 @@
 import { AbstractTab, TabTypePart, tabTypePart } from '@/ui/tab-panel';
-import AceEditor from 'react-ace';
 
 import { registeredAnonymousComponent, RegisteredComponent, registeredTypePart } from '@/ui/register-manager';
-import { useCallback, useRef, useState } from 'react';
+import * as ace from 'ace-builds/src-noconflict/ace';
+import { useCallback, useLayoutEffect, useRef } from 'react';
+
 import classes from './editor-tab.module.css';
 
 export type EditorTabTypePart = {
-  getValue(): string;
-  setValue(s: string): void;
+  getEditor(): ace.Editor;
 };
 export const editorTabTypePart = registeredTypePart<EditorTabTypePart>('editorTab');
 
@@ -18,33 +18,32 @@ export const editorTab = registeredAnonymousComponent(tabTypePart, editorTabType
 export type EditorTabProps = {
   title: string;
   src?: RegisteredComponent<TabTypePart & EditorTabTypePart>;
+  mode?: string;
+  theme?: string;
 };
 
-export function EditorTab({ title, src = editorTab }: EditorTabProps) {
-  const [value, setValue] = useState<string>('');
+export function EditorTab({ title, src = editorTab, mode, theme }: EditorTabProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<ace.Editor>();
 
-  const valueRef = useRef<string>();
-  valueRef.current = value;
-  const getValue = useCallback(() => valueRef.current!, []);
+  const getEditor = useCallback(() => editorRef.current!, []);
+  const extend = useCallback((data: TabTypePart) => ({ ...data, getEditor }), [getEditor]);
 
-  const onContentChange = (value: string) => {
-    setValue(value);
-  };
+  useLayoutEffect(() => {
+    editorRef.current = ace.edit(containerRef.current!);
+  }, []);
 
-  const extend = useCallback((data: TabTypePart) => ({ ...data, getValue, setValue }), [getValue]);
+  useLayoutEffect(() => {
+    if (theme) {
+      editorRef.current!.setTheme(theme);
+    }
+  }, [theme]);
 
-  return (
-    <AbstractTab title={title} src={src} extend={extend}>
-      <AceEditor
-        mode='typescript'
-        value={value}
-        onChange={onContentChange}
-        theme='github_light_default'
-        width='100%'
-        height='100%'
-        fontSize={16}
-        className={classes.editor}
-      />
-    </AbstractTab>
-  );
+  useLayoutEffect(() => {
+    if (mode) {
+      editorRef.current!.session.setMode(mode);
+    }
+  }, [mode]);
+
+  return <AbstractTab title={title} src={src} extend={extend} containerRef={containerRef} className={classes.editor} />;
 }

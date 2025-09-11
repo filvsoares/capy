@@ -19,17 +19,16 @@
  */
 
 import { Play, RefreshCcw } from 'feather-icons-react';
-import { useCallback, useRef, useState } from 'react';
-import AceEditor from 'react-ace';
+import { useCallback, useRef } from 'react';
 import classes from './app.module.css';
-import { compile, CompileResult } from './compiler';
-import { Tile } from './ui/tile';
+import { compile } from './compiler';
 import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 
 import { EditorTab, EditorTabType, editorTabTypePart } from '@/ui/editor-tab';
 import { registeredComponent } from '@/ui/register-manager';
 import { TabPanel, tabTypePart, useTabManager, useTabsChangedListener } from '@/ui/tab-panel';
+
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
@@ -49,35 +48,49 @@ function hello(p: string): string {
 `;
 
 export const codeEditor = registeredComponent(tabTypePart, editorTabTypePart);
+export const parserResult = registeredComponent(tabTypePart, editorTabTypePart);
+export const codegenResult = registeredComponent(tabTypePart, editorTabTypePart);
 
 export default function App() {
-  const [compileResult, setCompileResult] = useState<CompileResult>();
-
-  const editorTabRef = useRef<EditorTabType>();
+  const codeEditorTabRef = useRef<EditorTabType>();
+  const parserResultTabRef = useRef<EditorTabType>();
+  const codegenResultTabRef = useRef<EditorTabType>();
 
   const onResetClick = async () => {
-    editorTabRef.current?.setValue(initialCode);
+    codeEditorTabRef.current?.getEditor().setValue(initialCode);
     localStorage.setItem('sourceCode', initialCode);
   };
   const onRunClick = async () => {
-    const r = await compile(editorTabRef.current?.getValue() ?? '', { debugTree: true });
-    setCompileResult(r);
+    const r = await compile(codeEditorTabRef.current?.getEditor().getValue() ?? '', { debugTree: true });
+    parserResultTabRef.current?.getEditor().setValue(r.parserOutput);
+    codegenResultTabRef.current?.getEditor().setValue(r.codegenOutput ?? '');
   };
 
-  const tabManager = useTabManager();
-  const { getByInstance: tmGetByInstance } = tabManager;
+  const tm1 = useTabManager();
+  const { getByInstance: tm1GetByInstance } = tm1;
+
+  const tm2 = useTabManager();
+  const { getByInstance: tm2GetByInstance } = tm2;
 
   useTabsChangedListener(
-    tabManager,
+    tm1,
     useCallback(() => {
-      const editorTab = tmGetByInstance(codeEditor);
-      if (editorTab !== editorTabRef.current) {
-        editorTabRef.current = editorTab;
-        if (editorTab) {
-          editorTab.setValue(initialCode);
+      const codeEditorTab = tm1GetByInstance(codeEditor);
+      if (codeEditorTab !== codeEditorTabRef.current) {
+        codeEditorTabRef.current = codeEditorTab;
+        if (codeEditorTab) {
+          codeEditorTab.getEditor().setValue(initialCode);
         }
       }
-    }, [tmGetByInstance])
+    }, [tm1GetByInstance])
+  );
+
+  useTabsChangedListener(
+    tm2,
+    useCallback(() => {
+      parserResultTabRef.current = tm2GetByInstance(parserResult);
+      codegenResultTabRef.current = tm2GetByInstance(codegenResult);
+    }, [tm2GetByInstance])
   );
 
   return (
@@ -86,8 +99,8 @@ export default function App() {
         <Toolbar>
           <ToolButton icon={RefreshCcw} text='Reset' onClick={onResetClick} />
         </Toolbar>
-        <TabPanel manager={tabManager} className={classes.editorContainer}>
-          <EditorTab src={codeEditor} title='main' />
+        <TabPanel manager={tm1} className={classes.editorContainer}>
+          <EditorTab src={codeEditor} title='main' mode='ace/mode/typescript' theme='ace/theme/github_light_default' />
         </TabPanel>
       </div>
 
@@ -95,33 +108,20 @@ export default function App() {
         <Toolbar>
           <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
         </Toolbar>
-        <Tile className={classes.parserOutput} title='Abstract Syntax Tree'>
-          <AceEditor
-            mode='yaml'
-            theme='github_light_default'
-            value={compileResult?.parserOutput ?? ''}
-            readOnly={true}
-            width='100%'
-            height='100%'
-            fontSize={16}
-            className={classes.editor}
+        <TabPanel manager={tm2} className={classes.editorContainer}>
+          <EditorTab
+            src={parserResult}
+            title='Abstract Syntax Tree'
+            mode='ace/mode/yaml'
+            theme='ace/theme/github_light_default'
           />
-        </Tile>
-        <Tile className={classes.codegenOutput} title='Generated Code'>
-          <AceEditor
-            mode='javascript'
-            theme='github_light_default'
-            value={compileResult?.codegenOutput ?? ''}
-            readOnly={true}
-            width='100%'
-            height='100%'
-            fontSize={16}
-            className={classes.editor}
+          <EditorTab
+            src={codegenResult}
+            title='Generated Code'
+            mode='ace/mode/javascript'
+            theme='ace/theme/github_light_default'
           />
-        </Tile>
-        <Tile className={classes.terminalOutput} title='Terminal'>
-          <div className={classes.terminal}>{compileResult?.terminalOutput}</div>
-        </Tile>
+        </TabPanel>
       </div>
     </div>
   );
