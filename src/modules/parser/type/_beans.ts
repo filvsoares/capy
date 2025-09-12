@@ -17,11 +17,4 @@ export function declareBeans() {
     loadModule: () => import('./type-reader-impl'),
     factory: (m, deps) => new m.TypeReaderImpl(...deps),
   });
-  declareBean({
-    name: 'SimpleTypeReader',
-    provides: [typeItemReader],
-    dependencies: [],
-    loadModule: () => import('./simple-type-reader'),
-    factory: (m, deps) => new m.SimpleTypeReader(...deps),
-  });
 }

@@ -3,7 +3,7 @@ import { declareAllBeans } from '@/beans';
 import { codegen } from '@/modules/codegen/codegen/codegen';
 import { ModuleInput } from '@/modules/parser/parser/module-input';
 import { parser, ParserResult } from '@/modules/parser/parser/parser';
-import { getBeans } from '@/util/beans';
+import { getSingleBean } from '@/util/beans';
 
 export type CompileResult = {
   parserOutput: string;
@@ -14,8 +14,8 @@ export type CompileResult = {
 
 export async function compile(sourceCode: string, { debugTree }: { debugTree?: boolean }): Promise<CompileResult> {
   await declareAllBeans();
-  const _parser = (await getBeans(parser))[0];
-  const _codegen = (await getBeans(codegen))[0];
+  const _parser = await getSingleBean(parser);
+  const _codegen = await getSingleBean(codegen);
 
   const errors: ParseError[] = [];
   const out: string[] = [];
@@ -23,7 +23,7 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
   let p: ParserResult | undefined;
 
   try {
-    p = _parser.parse('main', [new ModuleInput('main', sourceCode)]);
+    p = await _parser.parse('main', [new ModuleInput('main', sourceCode)]);
     errors.push(...p.errors);
   } catch (err: any) {
     errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });

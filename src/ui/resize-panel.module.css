@@ -1,7 +1,14 @@
 .container {
   display: flex;
-  flex-direction: row;
   align-items: stretch;
+}
+
+.container[data-direction='row'] {
+  flex-direction: row;
+}
+
+.container[data-direction='row-reverse'] {
+  flex-direction: row-reverse;
 }
 
 .item {
@@ -16,10 +23,24 @@
   flex-grow: 1;
 }
 
-.handle {
-  user-select: none;
-  width: 8px;
-  cursor: col-resize;
+.separator {
+  box-sizing: content-box;
+  width: 0px;
+  border-left: 1px solid #ccc;
   flex-grow: 0;
   flex-shrink: 0;
+}
+
+.handle {
+  user-select: none;
+  width: 9px;
+  cursor: col-resize;
+  margin-left: -4px;
+  margin-right: -5px;
+  position: relative;
+  z-index: 1000;
+}
+
+.handle:hover {
+  background-color: #00000033;
 }

@@ -102,3 +102,5 @@ export type ParseError = {
   pos: Pos;
   message: string;
 };
+
+export type OptionalPromise<T> = T | Promise<T>;

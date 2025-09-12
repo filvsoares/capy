@@ -6,6 +6,8 @@ const beanDeclarations: () => Promise<{ declareBeans: () => void }>[] = () => [
   import('@/modules/codegen/method/_beans'),
   import('@/modules/codegen/operation/_beans'),
   import('@/modules/codegen/statement/_beans'),
+  // libs
+  import('@/modules/libs/io/_beans'),
   // parser
   import('@/modules/parser/expression/_beans'),
   import('@/modules/parser/global-variable/_beans'),
@@ -15,6 +17,7 @@ const beanDeclarations: () => Promise<{ declareBeans: () => void }>[] = () => [
   import('@/modules/parser/statement/_beans'),
   import('@/modules/parser/tokenizer/_beans'),
   import('@/modules/parser/type/_beans'),
+  import('@/modules/parser/use/_beans'),
 ];
 
 let declareAllBeansPromise: Promise<void> | undefined;

@@ -13,7 +13,7 @@ export type ParserResult = {
 };
 
 export interface Parser {
-  parse(mainModuleName: string, inputs: ModuleInput[]): ParserResult;
+  parse(mainModuleName: string, inputs: ModuleInput[]): Promise<ParserResult>;
   findSymbol(c: Context<ParserData & CurrentModule>, symbolName: string): Symbol | undefined;
   replaceSymbol(c: Context<ParserData & CurrentModule>, newSymbol: Symbol): void;
 }

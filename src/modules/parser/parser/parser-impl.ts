@@ -42,7 +42,7 @@ export class ParserImpl extends Bean implements Parser {
     super();
   }
 
-  parseModule(c: Context<ParserData & ParseErrors>, moduleName: string) {
+  async parseModule(c: Context<ParserData & ParseErrors>, moduleName: string) {
     if (c.parserData.getOutput(moduleName)) {
       return;
     }
@@ -55,11 +55,11 @@ export class ParserImpl extends Bean implements Parser {
     const r = this.tokenizer.process(input.sourceCode);
     c.parseErrors.errors.push(...r.errors);
 
-    const symbols = this.readToplevelList(c.with(tokenReader(r.tokenList)).with(currentModule(moduleName)));
+    const symbols = await this.readToplevelList(c.with(tokenReader(r.tokenList)).with(currentModule(moduleName)));
     c.parserData.putOutput(moduleName, symbols);
   }
 
-  parse(mainModuleName: string, _inputs: ModuleInput[]): ParserResult {
+  async parse(mainModuleName: string, _inputs: ModuleInput[]): Promise<ParserResult> {
     const inputs: { [moduleName: string]: ModuleInput } = {};
     for (const input of _inputs) {
       inputs[input.name] = input;
@@ -69,7 +69,7 @@ export class ParserImpl extends Bean implements Parser {
     const tasks: (() => void)[] = [];
 
     const c = createContext({}).with(parserData(mainModuleName, inputs, outputs, tasks)).with(parseErrors([]));
-    this.parseModule(c, mainModuleName);
+    await this.parseModule(c, mainModuleName);
 
     while (tasks.length > 0) {
       const _tasks = tasks.splice(0, tasks.length);
@@ -104,10 +104,10 @@ export class ParserImpl extends Bean implements Parser {
     return INVALID;
   }
 
-  private readToplevelList(c: ToplevelReaderContext) {
+  private async readToplevelList(c: ToplevelReaderContext) {
     const symbols: { [name: string]: Symbol } = {};
     while (c.tokenReader.current) {
-      const val = this.readToplevel(c);
+      const val = await this.readToplevel(c);
       if (val instanceof Symbol) {
         if (symbols[val.name]) {
           c.parseErrors.addError(`Symbol "${val.name}" already defined`, val.pos);

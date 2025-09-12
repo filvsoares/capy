@@ -14,9 +14,13 @@ export function resizePanelItem(opts: ResizePanelItemOpts, children: ReactNode):
   return { ...opts, children };
 }
 
-export type ResizePanelProps = { children: ResizePanelItem[]; className?: string };
+export type ResizePanelProps = {
+  children: ResizePanelItem[];
+  className?: string;
+  direction?: 'row' | 'row-reverse';
+};
 
-export function ResizePanel({ children, className = '' }: ResizePanelProps) {
+export function ResizePanel({ children, className = '', direction = 'row' }: ResizePanelProps) {
   const prvChildrenRef = useRef<ResizePanelItem[]>();
   const itemNodesRef = useRef<{ [index: number]: HTMLDivElement | null }>({});
 
@@ -25,9 +29,9 @@ export function ResizePanel({ children, className = '' }: ResizePanelProps) {
     for (let i = 0; i < children.length; i++) {
       val.push(
         <div
+          key={`${i}c`}
           className={`${classes.item}`}
           data-last={i == children.length - 1}
-          key={`${i}c`}
           ref={(node) => {
             itemNodesRef.current[i] = node;
             return () => {
@@ -44,7 +48,11 @@ export function ResizePanel({ children, className = '' }: ResizePanelProps) {
           const initialCoord = e.clientX;
           const initialWidth = itemNodesRef.current[index]!.clientWidth;
           const onMouseMove = (e: MouseEvent) => {
-            itemNodesRef.current[index]!.style.width = e.clientX - initialCoord + initialWidth + 'px';
+            let delta = e.clientX - initialCoord;
+            if (direction === 'row-reverse') {
+              delta = -delta;
+            }
+            itemNodesRef.current[index]!.style.width = initialWidth + delta + 'px';
           };
           const onMouseUp = () => {
             document.removeEventListener('mousemove', onMouseMove);
@@ -54,11 +62,14 @@ export function ResizePanel({ children, className = '' }: ResizePanelProps) {
           document.addEventListener('mouseup', onMouseUp);
         };
 
-        val.push(<div className={classes.handle} key={`${i}h`} onMouseDown={onMouseDown} />);
+        val.push(
+          <div className={classes.separator} key={`${i}s`} />,
+          <div className={classes.handle} key={`${i}h`} onMouseDown={onMouseDown} />
+        );
       }
     }
     return val;
-  }, [children]);
+  }, [children, direction]);
 
   useLayoutEffect(() => {
     for (let i = 0; i < children.length; i++) {
@@ -77,5 +88,9 @@ export function ResizePanel({ children, className = '' }: ResizePanelProps) {
     prvChildrenRef.current = children;
   });
 
-  return <div className={`${classes.container} ${className}`}>{actualChildren}</div>;
+  return (
+    <div className={`${classes.container} ${className}`} data-direction={direction}>
+      {actualChildren}
+    </div>
+  );
 }

@@ -19,15 +19,14 @@
  */
 
 import { Play, RefreshCcw } from 'feather-icons-react';
-import { useCallback, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import classes from './app.module.css';
 import { compile } from './compiler';
 import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 
-import { EditorTab, EditorTabType, editorTabTypePart } from '@/ui/editor-tab';
-import { registeredComponent } from '@/ui/register-manager';
-import { TabPanel, tabTypePart, useTabManager, useTabsChangedListener } from '@/ui/tab-panel';
+import { Editor, EditorHandle } from '@/ui/editor';
+import { tab, TabPanel } from '@/ui/tab-panel';
 
 import { ResizePanel, resizePanelItem } from '@/ui/resize-panel';
 import 'ace-builds/src-noconflict/mode-javascript';
@@ -48,86 +47,72 @@ function hello(p: string): string {
 }
 `;
 
-export const codeEditor = registeredComponent(tabTypePart, editorTabTypePart);
-export const parserResult = registeredComponent(tabTypePart, editorTabTypePart);
-export const codegenResult = registeredComponent(tabTypePart, editorTabTypePart);
-
 export default function App() {
-  const codeEditorTabRef = useRef<EditorTabType>();
-  const parserResultTabRef = useRef<EditorTabType>();
-  const codegenResultTabRef = useRef<EditorTabType>();
+  const codeEditorTabRef = useRef<EditorHandle>(null);
+  const parserResultTabRef = useRef<EditorHandle>(null);
+  const codegenResultTabRef = useRef<EditorHandle>(null);
+
+  useLayoutEffect(() => {
+    codeEditorTabRef.current!.getEditor().setValue(initialCode);
+  }, []);
 
   const onResetClick = async () => {
-    codeEditorTabRef.current?.getEditor().setValue(initialCode);
+    codeEditorTabRef.current!.getEditor().setValue(initialCode);
     localStorage.setItem('sourceCode', initialCode);
   };
   const onRunClick = async () => {
     const r = await compile(codeEditorTabRef.current?.getEditor().getValue() ?? '', { debugTree: true });
-    parserResultTabRef.current?.getEditor().setValue(r.parserOutput);
-    codegenResultTabRef.current?.getEditor().setValue(r.codegenOutput ?? '');
+    parserResultTabRef.current!.getEditor().setValue(r.parserOutput);
+    codegenResultTabRef.current!.getEditor().setValue(r.codegenOutput ?? '');
   };
-
-  const tm1 = useTabManager();
-  const { getByInstance: tm1GetByInstance } = tm1;
-
-  const tm2 = useTabManager();
-  const { getByInstance: tm2GetByInstance } = tm2;
-
-  useTabsChangedListener(
-    tm1,
-    useCallback(() => {
-      const codeEditorTab = tm1GetByInstance(codeEditor);
-      if (codeEditorTab !== codeEditorTabRef.current) {
-        codeEditorTabRef.current = codeEditorTab;
-        if (codeEditorTab) {
-          codeEditorTab.getEditor().setValue(initialCode);
-        }
-      }
-    }, [tm1GetByInstance])
-  );
-
-  useTabsChangedListener(
-    tm2,
-    useCallback(() => {
-      parserResultTabRef.current = tm2GetByInstance(parserResult);
-      codegenResultTabRef.current = tm2GetByInstance(codegenResult);
-    }, [tm2GetByInstance])
-  );
 
   return (
     <div className={classes.container}>
-      <Toolbar>
+      <Toolbar className={classes.toolbar}>
         <ToolButton icon={RefreshCcw} text='Reset' onClick={onResetClick} />
         <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
       </Toolbar>
-      <ResizePanel className={classes.area}>
+      <ResizePanel className={classes.area} direction='row-reverse'>
         {[
           resizePanelItem(
             { initialSize: 300 },
-            <TabPanel manager={tm1} className={classes.editorContainer}>
-              <EditorTab
-                src={codeEditor}
-                title='main'
-                mode='ace/mode/typescript'
-                theme='ace/theme/github_light_default'
-              />
+            <TabPanel stretch>
+              {[
+                tab(
+                  { title: 'Abstract Syntax Tree' },
+                  <Editor
+                    stretch
+                    handle={parserResultTabRef}
+                    mode='ace/mode/yaml'
+                    theme='ace/theme/github_light_default'
+                  />
+                ),
+                tab(
+                  { title: 'Generated Code' },
+                  <Editor
+                    stretch
+                    handle={codegenResultTabRef}
+                    mode='ace/mode/javascript'
+                    theme='ace/theme/github_light_default'
+                  />
+                ),
+              ]}
             </TabPanel>
           ),
           resizePanelItem(
             {},
-            <TabPanel manager={tm2} className={classes.editorContainer}>
-              <EditorTab
-                src={parserResult}
-                title='Abstract Syntax Tree'
-                mode='ace/mode/yaml'
-                theme='ace/theme/github_light_default'
-              />
-              <EditorTab
-                src={codegenResult}
-                title='Generated Code'
-                mode='ace/mode/javascript'
-                theme='ace/theme/github_light_default'
-              />
+            <TabPanel stretch>
+              {[
+                tab(
+                  { title: 'main' },
+                  <Editor
+                    stretch
+                    handle={codeEditorTabRef}
+                    mode='ace/mode/typescript'
+                    theme='ace/theme/github_light_default'
+                  />
+                ),
+              ]}
             </TabPanel>
           ),
         ]}

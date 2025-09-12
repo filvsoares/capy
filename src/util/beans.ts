@@ -18,6 +18,7 @@ type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (
 type WithInterfaces<T extends BeanInterface<any>[]> = UnionToIntersection<InterfaceOf<T[number]>>;
 
 type BeanContainer<Module extends {} = any> = {
+  name: string;
   bean?: Bean;
   key: symbol;
   dependencies: BeanDependencySpec[];
@@ -39,31 +40,65 @@ type DependenciesOf<L extends BeanDependencySpec[]> = { [I in keyof L]: Dependen
 export function list<T>(i: BeanInterface<T>): BeanDependencySpec<(Bean & T)[]> {
   return {
     load: (loader) => {
-      for (const bc of registry[i.key] ?? []) {
-        loader.load(bc);
+      const containers = registry[i.key] ?? {};
+      for (const name in containers) {
+        loader.load(containers[name]);
       }
     },
     resolve: () => {
-      const result = (registry[i.key] ?? [])
-        .map((bc) => internalGetBean(bc))
-        .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-      return result as (Bean & T)[];
+      const containers = registry[i.key] ?? {};
+      return Object.keys(containers)
+        .map((name) => internalGetBean(containers[name]))
+        .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0)) as (Bean & T)[];
     },
   };
 }
 
-export function single<T>(i: BeanInterface<T>): BeanDependencySpec<Bean & T> {
+export function one<T>(i: BeanInterface<T>, name?: string): BeanDependencySpec<(Bean & T) | null> {
   return {
     load: (loader) => {
-      for (const bc of registry[i.key] ?? []) {
-        loader.load(bc);
+      if (name) {
+        const container = (registry[i.key] ?? {})?.[name];
+        if (container) {
+          loader.load(container);
+        }
+      } else {
+        const containers = registry[i.key] ?? {};
+        for (const name in containers) {
+          loader.load(containers[name]);
+        }
       }
     },
     resolve: () => {
-      const result = (registry[i.key] ?? [])
-        .map((bc) => internalGetBean(bc))
-        .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-      return result[0] as Bean & T;
+      if (name) {
+        const container = (registry[i.key] ?? {})?.[name];
+        return container ? (internalGetBean(container) as Bean & T) : null;
+      } else {
+        const containers = registry[i.key] ?? {};
+        const names = Object.keys(containers);
+        if (names.length > 1) {
+          throw new Error(
+            `Several beans declared for interface '${i.key.description}' ('${names.join(
+              `', '`
+            )}') but one has been requested.`
+          );
+        }
+        return internalGetBean(containers[names[0]]) as Bean & T;
+      }
+    },
+  };
+}
+
+export function single<T>(i: BeanInterface<T>, name?: string): BeanDependencySpec<Bean & T> {
+  const { load, resolve } = one(i, name);
+  return {
+    load,
+    resolve() {
+      const result = resolve();
+      if (!result) {
+        throw new Error(`No beans declared for interface '${i.key.description}'${name ? ` and name '${name}'` : ''}`);
+      }
+      return result;
     },
   };
 }
@@ -76,7 +111,7 @@ async function loadAndResolve<T>(spec: BeanDependencySpec<T>): Promise<T> {
 }
 
 const registry: {
-  [key: symbol]: BeanContainer[];
+  [key: symbol]: { [name: string]: BeanContainer };
 } = {};
 
 class BeanLoader {
@@ -90,7 +125,7 @@ class BeanLoader {
     this.processedBCs.add(bc.key);
     if (!bc.module) {
       if (!bc.loadModulePromise) {
-        console.log(`Loading "${bc.key.description}"...`);
+        console.log(`Loading "${bc.name}"...`);
         bc.loadModulePromise = (async () => {
           await Promise.resolve();
           bc.module = await bc.loadModule();
@@ -126,6 +161,14 @@ export async function getBeans<T>(i: BeanInterface<T>): Promise<(Bean & T)[]> {
   return await loadAndResolve(list(i));
 }
 
+export async function getOneBean<T>(i: BeanInterface<T>, name?: string): Promise<(Bean & T) | null> {
+  return await loadAndResolve(one(i, name));
+}
+
+export async function getSingleBean<T>(i: BeanInterface<T>, name?: string): Promise<Bean & T> {
+  return await loadAndResolve(single(i, name));
+}
+
 export function declareBean<
   Provides extends BeanInterface[],
   Dependencies extends BeanDependencySpec[],
@@ -144,7 +187,8 @@ export function declareBean<
   factory: (module: Module, dependencies: DependenciesOf<Dependencies>) => Bean & WithInterfaces<Provides>;
 }) {
   const bc: BeanContainer<Module> = {
-    key: Symbol(name),
+    name,
+    key: Symbol(),
     dependencies,
     loadModule,
     factory: factory as (module: Module, dependencies: any[]) => Bean,
@@ -152,8 +196,11 @@ export function declareBean<
   for (const provide of provides) {
     let registryKey = registry[provide.key];
     if (!registryKey) {
-      registry[provide.key] = registryKey = [];
+      registry[provide.key] = registryKey = {};
     }
-    registryKey.push(bc);
+    if (registryKey[name]) {
+      throw new Error(`Bean with interface '${provide.key.description}' and name '${name}' already declared`);
+    }
+    registryKey[name] = bc;
   }
 }
