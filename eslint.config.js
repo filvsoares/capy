@@ -47,11 +47,11 @@ export default defineConfig([
               allow: [['bean', { module: 'parser' }]],
             },
             {
-              from: [
+              from: [['bean', { module: 'libs' }]],
+              allow: [
                 ['bean', { module: 'codegen' }],
                 ['bean', { module: 'parser' }],
               ],
-              allow: [['bean', { module: 'libs' }]],
             },
             rule('codegen', 'expression', ['codegen']),
             rule('codegen', 'global-variable', ['codegen', 'expression']),

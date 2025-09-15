@@ -7,6 +7,7 @@ const beanDeclarations: () => Promise<{ declareBeans: () => void }>[] = () => [
   import('@/modules/codegen/operation/_beans'),
   import('@/modules/codegen/statement/_beans'),
   // libs
+  import('@/modules/libs/base/_beans'),
   import('@/modules/libs/io/_beans'),
   // parser
   import('@/modules/parser/expression/_beans'),

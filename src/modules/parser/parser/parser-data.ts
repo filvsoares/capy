@@ -5,31 +5,37 @@ import { ContextValue } from '@/util/context';
 export type ParserData = ContextValue<
   'parserData',
   {
-    mainModuleName: string;
     getInput(moduleName: string): ModuleInput | undefined;
-    getOutput(moduleName: string): { [symbolName: string]: Symbol } | undefined;
-    putOutput(moduleName: string, symbols: { [symbolName: string]: Symbol }): void;
+    addInput(input: ModuleInput): void;
+    processModule(moduleName: string): void;
+    findSymbol(moduleName: string, symbolName: string): Symbol | undefined;
+    replaceSymbol(obj: Symbol): void;
     addTask(task: () => void): void;
   }
 >;
 
 export function parserData(
-  mainModuleName: string,
   inputs: { [moduleName: string]: ModuleInput },
+  modulesToProcess: string[],
   outputs: { [moduleName: string]: { [symbolName: string]: Symbol } },
   tasks: (() => void)[]
 ): ParserData {
   return {
     parserData: {
-      mainModuleName,
-      getInput(moduleName: string): ModuleInput | undefined {
+      getInput(moduleName) {
         return inputs[moduleName];
       },
-      getOutput(moduleName: string): { [symbolName: string]: Symbol } | undefined {
-        return outputs[moduleName];
+      addInput(input) {
+        inputs[input.name] = input;
       },
-      putOutput(moduleName: string, symbols: { [symbolName: string]: Symbol }) {
-        outputs[moduleName] = symbols;
+      processModule(moduleName) {
+        modulesToProcess.push(moduleName);
+      },
+      findSymbol(moduleName, symbolName) {
+        return outputs[moduleName]?.[symbolName];
+      },
+      replaceSymbol(obj) {
+        outputs[obj.module][obj.name] = obj;
       },
       addTask(task) {
         tasks.push(task);

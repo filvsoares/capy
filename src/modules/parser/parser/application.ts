@@ -2,7 +2,7 @@ import { Base, INTERNAL } from '@/base';
 import { Symbol } from '@/modules/parser/parser/symbol';
 
 export class Application extends Base {
-  constructor(public mainModuleName: string, public symbols: Symbol[]) {
+  constructor(public symbols: Symbol[]) {
     super(INTERNAL);
   }
 

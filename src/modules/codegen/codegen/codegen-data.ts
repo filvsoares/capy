@@ -6,23 +6,23 @@ export type CodegenData = ContextValue<
   'codegenData',
   {
     application: Application;
-    modules: { [moduleName: string]: { [symbolName: string]: CgSymbol } };
+    symbols: { [moduleName: string]: { [symbolName: string]: CgSymbol } };
     getSymbolJsName(moduleName: string, symbolName: string): string;
   }
 >;
 
 export function codegenData(
   application: Application,
-  modules: { [moduleName: string]: { [symbolName: string]: CgSymbol } }
+  symbols: { [moduleName: string]: { [symbolName: string]: CgSymbol } }
 ): CodegenData {
   return {
     codegenData: {
       application,
-      modules,
+      symbols,
       getSymbolJsName(moduleName, symbolName) {
-        const symbol = modules[moduleName]?.[symbolName];
+        const symbol = symbols[moduleName]?.[symbolName];
         if (!symbol) {
-          throw new Error(`Symbol ${moduleName}/${symbolName} not found`);
+          throw new Error(`Symbol ${symbolName} not found`);
         }
         return symbol.jsName;
       },

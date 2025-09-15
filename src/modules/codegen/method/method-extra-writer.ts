@@ -6,8 +6,6 @@ import { Context } from '@/util/context';
 
 export class MethodExtraWriter extends Bean implements CodegenExtraWriter {
   writeExtra(c: Context<CodegenWriter & CodegenData>, indent: string): void {
-    c.codegenWriter.write(
-      `${indent}${c.codegenData.getSymbolJsName(c.codegenData.application.mainModuleName, 'start')}();\n`
-    );
+    c.codegenWriter.write(`${indent}${c.codegenData.getSymbolJsName('main', 'start')}();\n`);
   }
 }

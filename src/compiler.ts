@@ -23,7 +23,7 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
   let p: ParserResult | undefined;
 
   try {
-    p = await _parser.parse('main', [new ModuleInput('main', sourceCode)]);
+    p = await _parser.parse([new ModuleInput('main', sourceCode)]);
     errors.push(...p.errors);
   } catch (err: any) {
     errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
@@ -46,7 +46,7 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
       `  ${codegenOutput[codegenOutput.length - 1].replaceAll('\n', '\n  ').trimEnd()}` +
       `\n}\n`;
 
-    const app = new Function(...codegenOutput);
+    /*const app = new Function(...codegenOutput);
     const terminalLines: string[] = [];
     const nativeMethods = {
       'main.print'(s: string) {
@@ -58,7 +58,7 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
     } catch (err: any) {
       terminalLines.push(err.stack);
     }
-    terminalOutput = terminalLines.join('\n');
+    terminalOutput = terminalLines.join('\n');*/
   }
 
   if (errors.length === 0) {

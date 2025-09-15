@@ -1,7 +1,6 @@
-import { combinePos, fallbackPos, Invalid, INVALID } from '@/base';
+import { combinePos, fallbackPos, INVALID } from '@/base';
 import { ExpressionReader } from '@/modules/parser/expression/expression-reader';
 import { GlobalVariable } from '@/modules/parser/global-variable/global-variable';
-import { Symbol } from '@/modules/parser/parser/symbol';
 import { tokenReader } from '@/modules/parser/parser/token-reader';
 import { ToplevelReader, ToplevelReaderContext } from '@/modules/parser/parser/toplevel-reader';
 import { Identifier } from '@/modules/parser/tokenizer/identifier';
@@ -17,7 +16,7 @@ export class GlobalVariableReader extends Bean implements ToplevelReader {
     super();
   }
 
-  read(c: ToplevelReaderContext): Symbol | Invalid | undefined {
+  async read(c: ToplevelReaderContext) {
     const t1 = c.tokenReader.current;
     if (!Keyword.matches(t1, 'var')) {
       return;

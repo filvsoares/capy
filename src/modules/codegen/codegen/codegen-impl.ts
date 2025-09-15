@@ -1,13 +1,13 @@
 import { CgSymbol } from '@/modules/codegen/codegen/cg-symbol';
 import { Codegen } from '@/modules/codegen/codegen/codegen';
-import { CodegenData, codegenData } from '@/modules/codegen/codegen/codegen-data';
+import { codegenData } from '@/modules/codegen/codegen/codegen-data';
 import { CodegenExtraWriter } from '@/modules/codegen/codegen/codegen-extra-writer';
 import { codegenWriter } from '@/modules/codegen/codegen/codegen-writer';
 import { SymbolProcessor } from '@/modules/codegen/codegen/symbol-processor';
 import { Application } from '@/modules/parser/parser/application';
 import { Symbol } from '@/modules/parser/parser/symbol';
 import { Bean } from '@/util/beans';
-import { Context, createContext } from '@/util/context';
+import { createContext } from '@/util/context';
 
 export class CodegenImpl extends Bean implements Codegen {
   constructor(private symbolProcessors: SymbolProcessor[], private codegenExtraWriters: CodegenExtraWriter[]) {
@@ -60,9 +60,5 @@ export class CodegenImpl extends Bean implements Codegen {
     }
 
     return ['nativeMethods', out.join('')];
-  }
-
-  getMainModuleName(c: Context<CodegenData>): string {
-    return c.codegenData.application.mainModuleName;
   }
 }

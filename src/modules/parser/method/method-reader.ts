@@ -1,4 +1,4 @@
-import { fallbackPos, INVALID, Invalid } from '@/base';
+import { fallbackPos, INVALID } from '@/base';
 import { ArgumentVariable } from '@/modules/parser/method/argument-variable';
 import { CallableTypeReader } from '@/modules/parser/method/callable-type-reader';
 import { CapyMethod } from '@/modules/parser/method/capy-method';
@@ -6,7 +6,6 @@ import { methodData } from '@/modules/parser/method/method-data';
 import { NativeMethod } from '@/modules/parser/method/native-method';
 import { UnresolvedMethod } from '@/modules/parser/method/unresolved-method';
 import { Parser } from '@/modules/parser/parser/parser';
-import { Symbol } from '@/modules/parser/parser/symbol';
 import { tokenReader } from '@/modules/parser/parser/token-reader';
 import { ToplevelReader, ToplevelReaderContext } from '@/modules/parser/parser/toplevel-reader';
 import { StatementReader } from '@/modules/parser/statement/statement-reader';
@@ -26,7 +25,7 @@ export class MethodReader extends Bean implements ToplevelReader {
     super();
   }
 
-  read(c: ToplevelReaderContext): Symbol | Invalid | undefined {
+  async read(c: ToplevelReaderContext) {
     const t1 = c.tokenReader.current;
     const isNative = Keyword.matches(t1, 'native');
     const isFunction = Keyword.matches(t1, 'function');
@@ -89,8 +88,7 @@ export class MethodReader extends Bean implements ToplevelReader {
       }
       const statementList = this.statementReader.readList(c1);
 
-      this.parser.replaceSymbol(
-        c,
+      c.parserData.replaceSymbol(
         new CapyMethod(c.currentModule, t2.name, type, c1.methodData.items, statementList, t2.pos)
       );
     });

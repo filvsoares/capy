@@ -23,6 +23,11 @@ declare module '*.module.css' {
   export default content;
 }
 
+declare module '*?raw' {
+  const content: string;
+  export default content;
+}
+
 declare module 'ace-builds/src-noconflict/ace' {
   /**
    * Ace Editor type.

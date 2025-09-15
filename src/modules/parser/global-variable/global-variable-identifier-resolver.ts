@@ -14,7 +14,7 @@ export class GlobalVariableIdentifierResolver extends Bean implements Identifier
   }
 
   resolveIdentifier(c: ExpressionReaderContext, obj: Identifier): Expression | Invalid | undefined {
-    const symbol = this.parser.findSymbol(c, obj.name);
+    const symbol = c.parserData.findSymbol(c.currentModule, obj.name);
     if (symbol instanceof GlobalVariable) {
       return new GlobalVariableReference(symbol.module, symbol.name, symbol.type, obj.pos);
     }

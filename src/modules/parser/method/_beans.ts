@@ -4,7 +4,7 @@ import { operationProcessor } from '@/modules/parser/expression/operation-proces
 import { argumentReader } from '@/modules/parser/method/argument-reader';
 import { callableTypeReader } from '@/modules/parser/method/callable-type-reader';
 import { parser } from '@/modules/parser/parser/parser';
-import { parserCheck } from '@/modules/parser/parser/parser-check';
+import { parserHook } from '@/modules/parser/parser/parser-hook';
 import { toplevelReader } from '@/modules/parser/parser/toplevel-reader';
 import { statementItemReader } from '@/modules/parser/statement/statement-item-reader';
 import { statementReader } from '@/modules/parser/statement/statement-reader';
@@ -36,7 +36,7 @@ export function declareBeans() {
   });
   declareBean({
     name: 'MethodParserCheck',
-    provides: [parserCheck],
+    provides: [parserHook],
     dependencies: [],
     loadModule: () => import('./method-parser-check'),
     factory: (m, deps) => new m.MethodParserCheck(...deps),

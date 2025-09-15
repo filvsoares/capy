@@ -14,7 +14,7 @@ export class MethodIdentifierResolver extends Bean implements IdentifierResolver
   }
 
   resolveIdentifier(c: ExpressionReaderContext, obj: Identifier): Expression | Invalid | undefined {
-    const symbol = this.parser.findSymbol(c, obj.name);
+    const symbol = c.parserData.findSymbol(c.currentModule, obj.name);
     if (symbol instanceof Method) {
       return new MethodLiteral(symbol.module, symbol.name, symbol.type, obj.pos);
     }
