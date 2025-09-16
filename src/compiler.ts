@@ -1,8 +1,8 @@
 import { ERROR, INTERNAL, ParseError } from '@/base';
 import { declareAllBeans } from '@/beans';
-import { codegen } from '@/modules/codegen/codegen/codegen';
-import { ModuleInput } from '@/modules/parser/parser/module-input';
-import { parser, ParserResult } from '@/modules/parser/parser/parser';
+import { codegen } from '@/modules/codegen/codegen';
+import { ModuleInput } from '@/modules/parser/module-input';
+import { parser, ParserResult } from '@/modules/parser/parser';
 import { getSingleBean } from '@/util/beans';
 
 export type CompileResult = {

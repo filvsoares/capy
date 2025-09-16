@@ -5,10 +5,10 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
-function rule(module, from, allow) {
+function rule(from, allow) {
   return {
-    from: [['bean', { module, component: from }]],
-    allow: allow.map((e) => ['bean', { module, component: e }]),
+    from: [['bean', { component: from }]],
+    allow: allow.map((e) => ['bean', { component: e }]),
   };
 }
 
@@ -42,32 +42,21 @@ export default defineConfig([
         {
           default: 'disallow',
           rules: [
-            {
-              from: [['bean', { module: 'codegen' }]],
-              allow: [['bean', { module: 'parser' }]],
-            },
-            {
-              from: [['bean', { module: 'libs' }]],
-              allow: [
-                ['bean', { module: 'codegen' }],
-                ['bean', { module: 'parser' }],
-              ],
-            },
-            rule('codegen', 'expression', ['codegen']),
-            rule('codegen', 'global-variable', ['codegen', 'expression']),
-            rule('codegen', 'method', ['codegen', 'expression', 'statement']),
-            rule('codegen', 'operation', ['codegen', 'expression']),
-            rule('codegen', 'statement', ['codegen', 'expression']),
-            rule('libs', 'io', ['base']),
-            rule('parser', 'expression', ['parser', 'tokenizer', 'type']),
-            rule('parser', 'global-variable', ['expression', 'parser', 'tokenizer', 'type']),
-            rule('parser', 'method', ['expression', 'operation', 'parser', 'statement', 'tokenizer', 'type']),
-            rule('parser', 'operation', ['expression', 'parser', 'tokenizer', 'type']),
-            rule('parser', 'parser', ['tokenizer']),
-            rule('parser', 'statement', ['expression', 'parser', 'tokenizer']),
-            rule('parser', 'tokenizer', []),
-            rule('parser', 'type', ['parser', 'tokenizer']),
-            rule('parser', 'use', ['parser', 'tokenizer']),
+            rule('expression', ['codegen']),
+            rule('global-variable', ['codegen', 'expression']),
+            rule('method', ['codegen', 'expression', 'statement']),
+            rule('operation', ['codegen', 'expression']),
+            rule('statement', ['codegen', 'expression']),
+            rule('io', ['base']),
+            rule('expression', ['parser', 'tokenizer', 'type']),
+            rule('global-variable', ['expression', 'parser', 'tokenizer', 'type']),
+            rule('method', ['expression', 'operation', 'parser', 'statement', 'tokenizer', 'type']),
+            rule('operation', ['expression', 'parser', 'tokenizer', 'type']),
+            rule('parser', ['tokenizer']),
+            rule('statement', ['expression', 'parser', 'tokenizer']),
+            rule('tokenizer', []),
+            rule('type', ['parser', 'tokenizer']),
+            rule('use', ['parser', 'tokenizer']),
           ],
         },
       ],

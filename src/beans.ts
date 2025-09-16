@@ -1,24 +1,16 @@
 const beanDeclarations: () => Promise<{ declareBeans: () => void }>[] = () => [
-  // codegen
-  import('@/modules/codegen/codegen/_beans'),
-  import('@/modules/codegen/expression/_beans'),
-  import('@/modules/codegen/global-variable/_beans'),
-  import('@/modules/codegen/method/_beans'),
-  import('@/modules/codegen/operation/_beans'),
-  import('@/modules/codegen/statement/_beans'),
-  // libs
-  import('@/modules/libs/base/_beans'),
-  import('@/modules/libs/io/_beans'),
-  // parser
-  import('@/modules/parser/expression/_beans'),
-  import('@/modules/parser/global-variable/_beans'),
-  import('@/modules/parser/method/_beans'),
-  import('@/modules/parser/operation/_beans'),
-  import('@/modules/parser/parser/_beans'),
-  import('@/modules/parser/statement/_beans'),
-  import('@/modules/parser/tokenizer/_beans'),
-  import('@/modules/parser/type/_beans'),
-  import('@/modules/parser/use/_beans'),
+  import('@/modules/codegen/_beans'),
+  import('@/modules/expression/_beans'),
+  import('@/modules/global-variable/_beans'),
+  import('@/modules/lib-io/_beans'),
+  import('@/modules/library/_beans'),
+  import('@/modules/method/_beans'),
+  import('@/modules/operation/_beans'),
+  import('@/modules/parser/_beans'),
+  import('@/modules/statement/_beans'),
+  import('@/modules/tokenizer/_beans'),
+  import('@/modules/type/_beans'),
+  import('@/modules/use/_beans'),
 ];
 
 let declareAllBeansPromise: Promise<void> | undefined;
