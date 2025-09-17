@@ -13,7 +13,7 @@ export class MethodCallProcessor extends Bean implements ExpressionItemProcessor
     if (!(obj instanceof MethodCall)) {
       return;
     }
-    const result = [...this.expressionProcessor.processExpression(c, obj.operand), '('];
+    const result = ['await ', ...this.expressionProcessor.processExpression(c, obj.operand), '('];
     for (let i = 0; i < obj.argList.length; i++) {
       if (i > 0) {
         result.push(', ');

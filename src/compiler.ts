@@ -3,25 +3,19 @@ import { declareAllBeans } from '@/beans';
 import { codegen } from '@/modules/codegen/codegen';
 import { ModuleInput } from '@/modules/parser/module-input';
 import { parser, ParserResult } from '@/modules/parser/parser';
-import { runner, RunnerController } from '@/modules/runner/runner';
 import { getSingleBean } from '@/util/beans';
 
 export type CompileResult = {
   parserOutput: string;
-  codegenOutput?: string;
-  terminalOutput?: string;
+  codegenPrettyOutput: string;
+  codegenOutput: string;
   errors: ParseError[];
 };
 
-export async function compile(
-  sourceCode: string,
-  controller: RunnerController,
-  { debugTree }: { debugTree?: boolean }
-): Promise<CompileResult> {
+export async function compile(sourceCode: string, { debugTree }: { debugTree?: boolean }): Promise<CompileResult> {
   await declareAllBeans();
   const _parser = await getSingleBean(parser);
   const _codegen = await getSingleBean(codegen);
-  const _runner = await getSingleBean(runner);
 
   const errors: ParseError[] = [];
   const out: string[] = [];
@@ -35,7 +29,7 @@ export async function compile(
     errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
   }
 
-  let codegenOutput: string | undefined;
+  let codegenOutput = '';
   if (errors.length === 0) {
     try {
       codegenOutput = _codegen.generateCode(p!.application);
@@ -44,11 +38,9 @@ export async function compile(
     }
   }
 
-  let codegenPrettyOutput: string | undefined;
-  let terminalOutput: string | undefined;
+  let codegenPrettyOutput = '';
   if (codegenOutput) {
     codegenPrettyOutput = `function app(args) {\n` + `  ${codegenOutput.replaceAll('\n', '\n  ').trimEnd()}` + `\n}\n`;
-    await _runner.run(codegenOutput, controller);
   }
 
   if (errors.length === 0) {
@@ -76,7 +68,7 @@ export async function compile(
   return {
     errors,
     parserOutput: out.join(''),
-    codegenOutput: codegenPrettyOutput,
-    terminalOutput,
+    codegenOutput,
+    codegenPrettyOutput,
   };
 }

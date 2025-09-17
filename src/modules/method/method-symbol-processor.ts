@@ -46,7 +46,7 @@ export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
       .map((v) => v.jsName)
       .join(', ');
 
-    c.codegenWriter.write(`${indent}const ${obj.jsName} = (${args}) => {\n`);
+    c.codegenWriter.write(`${indent}const ${obj.jsName} = async (${args}) => {\n`);
 
     if (stack.length > argCount) {
       c.codegenWriter.write(

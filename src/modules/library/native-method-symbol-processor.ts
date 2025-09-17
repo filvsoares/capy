@@ -23,7 +23,7 @@ export class NativeMethodSymbolProcessor extends Bean implements SymbolProcessor
     const _cgLibraryData = cgLibraryData.requireFrom(c);
     let libJsName = _cgLibraryData.libJsNames[obj.symbol.module];
     if (!libJsName) {
-      libJsName = c.codegenData.reserveJsName(obj.symbol.module);
+      libJsName = _cgLibraryData.libJsNames[obj.symbol.module] = c.codegenData.reserveJsName(obj.symbol.module);
       _cgLibraryData.loadLibraryWriter!.write(`const ${libJsName} = await args.loadLibrary('${obj.symbol.module}');\n`);
     }
     c.codegenWriter.write(`${indent}const ${obj.jsName} = ${libJsName}['${obj.symbol.name}'];\n`);

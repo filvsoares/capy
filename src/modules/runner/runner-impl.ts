@@ -16,10 +16,6 @@ export class RunnerImpl extends Bean implements Runner {
 
     const AsyncFunction = async function () {}.constructor;
     const app = AsyncFunction('args', code);
-    try {
-      await app(args);
-    } catch (err: any) {
-      console.error(err);
-    }
+    await app(args);
   }
 }

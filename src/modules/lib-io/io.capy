@@ -1,1 +1,3 @@
 export native function print(s: string);
+export native function println(s: string);
+export native function readln(): string;

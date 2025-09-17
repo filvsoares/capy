@@ -28,8 +28,9 @@ import { Toolbar } from './ui/toolbar';
 import { Editor, EditorHandle } from '@/ui/editor';
 import { allocateTabId, Tab, tab, TabPanel } from '@/ui/tab-panel';
 
-import { RunnerController } from '@/modules/runner/runner';
+import { runner, RunnerController } from '@/modules/runner/runner';
 import { ResizePanel, resizePanelItem } from '@/ui/resize-panel';
+import { getSingleBean } from '@/util/beans';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
@@ -37,14 +38,10 @@ import 'ace-builds/src-noconflict/theme-github_light_default';
 
 const initialCode = `use "lib:io";
 
-var world: string = "World";
-
 function start() {
-    print(hello(world));
-}
-
-function hello(p: string): string {
-    return "Hello, " + p + "!";
+    print("Your name: ");
+    var name: string = readln();
+    println("Hello, " + name + "!");
 }
 `;
 
@@ -83,6 +80,16 @@ export default function App() {
     localStorage.setItem('sourceCode', initialCode);
   };
   const onRunClick = async () => {
+    const r = await compile(codeEditorTabRef.current?.getEditor().getValue() ?? '', {
+      debugTree: true,
+    });
+    parserResultTabRef.current!.getEditor().setValue(r.parserOutput);
+    codegenResultTabRef.current!.getEditor().setValue(r.codegenPrettyOutput);
+
+    if (r.errors.length > 0) {
+      return;
+    }
+
     const controller: RunnerController = {
       createTab(title, content) {
         setRunnerTabs((prv) => [
@@ -91,11 +98,8 @@ export default function App() {
         ]);
       },
     };
-    const r = await compile(codeEditorTabRef.current?.getEditor().getValue() ?? '', controller, {
-      debugTree: true,
-    });
-    parserResultTabRef.current!.getEditor().setValue(r.parserOutput);
-    codegenResultTabRef.current!.getEditor().setValue(r.codegenOutput ?? '');
+    const _runner = await getSingleBean(runner);
+    await _runner.run(r.codegenOutput, controller);
   };
 
   return (
