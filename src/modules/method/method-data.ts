@@ -1,5 +1,4 @@
 import { LocalVariable } from '@/modules/method/local-variable';
-import { Identifier } from '@/modules/tokenizer/identifier';
 import { Type } from '@/modules/type/type';
 import { declareExtraKey } from '@/util/extra';
 
@@ -29,10 +28,10 @@ export class MethodData {
     return index;
   }
 
-  find(ref: Identifier): number | undefined {
+  find(name: string): number | undefined {
     let current: MethodData | null = this;
     while (current) {
-      const result = this.itemsByName[ref.name];
+      const result = this.itemsByName[name];
       if (result !== undefined) {
         return result;
       }

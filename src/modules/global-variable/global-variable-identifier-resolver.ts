@@ -13,10 +13,10 @@ export class GlobalVariableIdentifierResolver extends Bean implements Identifier
     super();
   }
 
-  resolveIdentifier(c: ExpressionReaderContext, obj: Identifier): Expression | Invalid | undefined {
-    const symbol = c.parserData.findSymbol(c.currentModule, obj.name);
+  resolveIdentifier(c: ExpressionReaderContext, name: string, origin: Identifier): Expression | Invalid | undefined {
+    const symbol = c.parserData.findSymbol(c.currentModule, name);
     if (symbol instanceof GlobalVariable) {
-      return new GlobalVariableReference(symbol.module, symbol.name, symbol.type, obj.pos);
+      return new GlobalVariableReference(symbol.module, symbol.name, symbol.type, origin.pos);
     }
   }
 }

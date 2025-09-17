@@ -47,7 +47,7 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
       return obj;
     }
     if (obj instanceof Identifier) {
-      return this.resolveIdentifier(c, obj);
+      return this.resolveIdentifier(c, obj.name, obj);
     }
     if (obj instanceof Number) {
       return new NumberLiteral(obj.value, obj.pos);
@@ -270,14 +270,14 @@ export class ExpressionReaderImpl extends Bean implements ExpressionReader {
     return outList;
   }
 
-  resolveIdentifier(c: ExpressionReaderContext, obj: Identifier): Expression | Invalid {
+  resolveIdentifier(c: ExpressionReaderContext, name: string, origin: Identifier): Expression | Invalid {
     for (const p of this.identifierResolvers) {
-      const result = p.resolveIdentifier(c, obj);
+      const result = p.resolveIdentifier(c, name, origin);
       if (result) {
         return result;
       }
     }
-    c.parseErrors.addError(`Could not resolve identifier "${obj.name}"`, obj.pos);
+    c.parseErrors.addError(`Could not resolve identifier "${name}"`, origin.pos);
     return INVALID;
   }
 }

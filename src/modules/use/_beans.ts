@@ -1,3 +1,4 @@
+import { expressionReader } from '@/modules/expression/expression-reader';
 import { identifierResolver } from '@/modules/expression/identifier-resolver';
 import { parser } from '@/modules/parser/parser';
 import { parserHook } from '@/modules/parser/parser-hook';
@@ -16,7 +17,7 @@ export function declareBeans() {
   declareBean({
     name: 'ImportedSymbolIdentifierResolver',
     provides: [identifierResolver],
-    dependencies: [],
+    dependencies: [single(expressionReader)],
     loadModule: () => import('./imported-symbol-identifier-resolver'),
     factory: (m, deps) => new m.ImportedSymbolIdentifierResolver(...deps),
   });

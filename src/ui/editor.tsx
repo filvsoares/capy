@@ -30,6 +30,7 @@ export function Editor({ mode, handle, theme, style, stretch }: EditorProps) {
   const getEditor = useCallback(() => editorRef.current!, []);
 
   useLayoutEffect(() => {
+    console.log('create ace');
     editorRef.current = ace.edit(containerRef.current!);
   }, []);
 

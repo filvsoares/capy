@@ -6,7 +6,10 @@ import { Bean, getOneBean } from '@/util/beans';
 
 export class LibraryUseProvider extends Bean implements UseProvider {
   async processUse(s: string, c: ToplevelReaderContext): Promise<string | undefined> {
-    const lib = await getOneBean(library, `Library:${s}`);
+    if (!s.startsWith('lib:')) {
+      return;
+    }
+    const lib = await getOneBean(library, `Library(${s})`);
     if (!lib) {
       return;
     }

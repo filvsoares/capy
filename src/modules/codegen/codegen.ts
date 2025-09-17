@@ -9,7 +9,7 @@ export type CodegenContext = {
 };
 
 export interface Codegen {
-  generateCode(application: Application): string[];
+  generateCode(application: Application): string;
 }
 
 export const codegen = declareBeanInterface<Codegen>('Codegen');

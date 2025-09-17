@@ -5,7 +5,7 @@ import { Identifier } from '@/modules/tokenizer/identifier';
 import { declareBeanInterface } from '@/util/beans';
 
 export interface IdentifierResolver {
-  resolveIdentifier(c: ExpressionReaderContext, obj: Identifier): Expression | Invalid | undefined;
+  resolveIdentifier(c: ExpressionReaderContext, name: string, origin: Identifier): Expression | Invalid | undefined;
 }
 
 export const identifierResolver = declareBeanInterface<IdentifierResolver>('IdentifierResolver');

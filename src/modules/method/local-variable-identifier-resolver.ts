@@ -15,15 +15,15 @@ export class LocalVariableIdentifierResolver extends Bean implements IdentifierR
     super();
   }
 
-  resolveIdentifier(c: ExpressionReaderContext, obj: Identifier): Expression | Invalid | undefined {
+  resolveIdentifier(c: ExpressionReaderContext, name: string, origin: Identifier): Expression | Invalid | undefined {
     const md = methodData.optionalFrom(c);
     if (!md) {
       return;
     }
-    const index = md.find(obj);
+    const index = md.find(name);
     if (index !== undefined) {
       const dep = md.items[index];
-      return new LocalVariableReference(index, dep.name, dep.type, obj.pos);
+      return new LocalVariableReference(index, dep.name, dep.type, origin.pos);
     }
   }
 }

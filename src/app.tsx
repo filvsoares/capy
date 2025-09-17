@@ -19,22 +19,23 @@
  */
 
 import { Play, RefreshCcw } from 'feather-icons-react';
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import classes from './app.module.css';
 import { compile } from './compiler';
 import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 
 import { Editor, EditorHandle } from '@/ui/editor';
-import { tab, TabPanel } from '@/ui/tab-panel';
+import { allocateTabId, Tab, tab, TabPanel } from '@/ui/tab-panel';
 
+import { RunnerController } from '@/modules/runner/runner';
 import { ResizePanel, resizePanelItem } from '@/ui/resize-panel';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/mode-yaml';
 import 'ace-builds/src-noconflict/theme-github_light_default';
 
-const initialCode = `native function print(s: string);
+const initialCode = `use "lib:io";
 
 var world: string = "World";
 
@@ -47,10 +48,31 @@ function hello(p: string): string {
 }
 `;
 
+function Custom({ element }: { element?: HTMLElement }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const container = containerRef.current!;
+    if (element) {
+      container.appendChild(element);
+      return () => {
+        container.removeChild(element);
+      };
+    }
+  });
+
+  return <div style={{ width: '100%', height: '100%' }} ref={containerRef} />;
+}
+
+const codeEditorTabId = allocateTabId();
+const parserResultTabId = allocateTabId();
+const codegenResultTabId = allocateTabId();
+
 export default function App() {
   const codeEditorTabRef = useRef<EditorHandle>(null);
   const parserResultTabRef = useRef<EditorHandle>(null);
   const codegenResultTabRef = useRef<EditorHandle>(null);
+
+  const [runnerTabs, setRunnerTabs] = useState<Tab[]>([]);
 
   useLayoutEffect(() => {
     codeEditorTabRef.current!.getEditor().setValue(initialCode);
@@ -61,7 +83,17 @@ export default function App() {
     localStorage.setItem('sourceCode', initialCode);
   };
   const onRunClick = async () => {
-    const r = await compile(codeEditorTabRef.current?.getEditor().getValue() ?? '', { debugTree: true });
+    const controller: RunnerController = {
+      createTab(title, content) {
+        setRunnerTabs((prv) => [
+          ...prv.filter((e) => e.title !== title),
+          tab({ id: allocateTabId(), title, show: true }, <Custom element={content} />),
+        ]);
+      },
+    };
+    const r = await compile(codeEditorTabRef.current?.getEditor().getValue() ?? '', controller, {
+      debugTree: true,
+    });
     parserResultTabRef.current!.getEditor().setValue(r.parserOutput);
     codegenResultTabRef.current!.getEditor().setValue(r.codegenOutput ?? '');
   };
@@ -75,11 +107,11 @@ export default function App() {
       <ResizePanel className={classes.area} direction='row-reverse'>
         {[
           resizePanelItem(
-            { initialSize: 300 },
+            { initialSize: 800 },
             <TabPanel stretch>
               {[
                 tab(
-                  { title: 'Abstract Syntax Tree' },
+                  { id: parserResultTabId, title: 'Abstract Syntax Tree' },
                   <Editor
                     stretch
                     handle={parserResultTabRef}
@@ -88,7 +120,7 @@ export default function App() {
                   />
                 ),
                 tab(
-                  { title: 'Generated Code' },
+                  { id: codegenResultTabId, title: 'Generated Code' },
                   <Editor
                     stretch
                     handle={codegenResultTabRef}
@@ -96,6 +128,7 @@ export default function App() {
                     theme='ace/theme/github_light_default'
                   />
                 ),
+                ...runnerTabs,
               ]}
             </TabPanel>
           ),
@@ -104,7 +137,7 @@ export default function App() {
             <TabPanel stretch>
               {[
                 tab(
-                  { title: 'main' },
+                  { id: codeEditorTabId, title: 'main' },
                   <Editor
                     stretch
                     handle={codeEditorTabRef}

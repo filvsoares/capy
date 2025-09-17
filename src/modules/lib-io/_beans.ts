@@ -3,7 +3,7 @@ import { declareBean } from '@/util/beans';
 
 export function declareBeans() {
   declareBean({
-    name: 'Library:io',
+    name: 'Library(lib:io)',
     provides: [library],
     dependencies: [],
     loadModule: () => import('./io'),

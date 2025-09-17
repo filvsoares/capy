@@ -1,4 +1,4 @@
-import { codegenExtraWriter } from '@/modules/codegen/codegen-extra-writer';
+import { codegenHook } from '@/modules/codegen/codegen-hook';
 import { symbolProcessor } from '@/modules/codegen/symbol-processor';
 import { expressionItemProcessor } from '@/modules/expression/expression-item-processor';
 import { expressionProcessor } from '@/modules/expression/expression-processor';
@@ -98,7 +98,7 @@ export function declareBeans() {
   });
   declareBean({
     name: 'MethodExtraWriter',
-    provides: [codegenExtraWriter],
+    provides: [codegenHook],
     dependencies: [],
     loadModule: () => import('./method-extra-writer'),
     factory: (m, deps) => new m.MethodExtraWriter(...deps),

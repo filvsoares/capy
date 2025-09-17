@@ -1,1 +1,1 @@
-native function print(s: string);
+export native function print(s: string);

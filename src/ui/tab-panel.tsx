@@ -1,16 +1,23 @@
-import { CSSProperties, ReactNode, useMemo, useState } from 'react';
+import { CSSProperties, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import classes from './tab-panel.module.css';
 
 export type TabOpts = {
+  id: number;
   title: string;
+  show?: any;
 };
 
 export type Tab = TabOpts & {
   children: ReactNode;
 };
 
-export function tab(opts: TabOpts, children: ReactNode) {
+let id = 0;
+export function allocateTabId() {
+  return id++;
+}
+
+export function tab(opts: TabOpts, children: ReactNode): Tab {
   return { ...opts, children };
 }
 
@@ -22,7 +29,22 @@ export type TabPanelProps = {
 };
 
 export function TabPanel({ className = '', style, stretch, children }: TabPanelProps) {
-  const [showingTabIndex, setShowingTabIndex] = useState(0);
+  const prvTabsRef = useRef<{ [id: string]: Tab }>({});
+
+  const [showingTabId, setShowingTabId] = useState(children[0]?.id);
+
+  useLayoutEffect(() => {
+    const tabs: { [id: string]: Tab } = {};
+    for (const tab of children) {
+      tabs[tab.id] = tab;
+      const prvTab = prvTabsRef.current[tab.id];
+
+      if (tab.show && tab.show !== prvTab?.show) {
+        setShowingTabId(tab.id);
+      }
+    }
+    prvTabsRef.current = tabs;
+  }, [children]);
 
   const actualStyle = useMemo(
     () => ({
@@ -37,17 +59,17 @@ export function TabPanel({ className = '', style, stretch, children }: TabPanelP
       <div className={classes.header}>
         {children.map((e, i) => (
           <div
-            key={i}
+            key={e.id}
             className={classes.headerButton}
-            data-selected={i === showingTabIndex}
-            onClick={() => setShowingTabIndex(i)}>
+            data-selected={e.id === showingTabId}
+            onClick={() => setShowingTabId(e.id)}>
             {e.title}
           </div>
         ))}
         <div className={classes.headerFreeSpace} />
       </div>
       {children.map((e, i) => (
-        <div key={i} className={classes.tab} style={{ display: i === showingTabIndex ? '' : 'none' }}>
+        <div key={e.id} className={classes.tab} style={{ display: e.id === showingTabId ? '' : 'none' }}>
           {e.children}
         </div>
       ))}

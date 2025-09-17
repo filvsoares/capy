@@ -6,21 +6,12 @@ import { CapyMethod } from '@/modules/method/capy-method';
 import { CgLocalVariable } from '@/modules/method/cg-local-variable';
 import { MethodData, methodData } from '@/modules/method/cg-method-data';
 import { LocalVariable } from '@/modules/method/local-variable';
-import { NativeMethod } from '@/modules/method/native-method';
 import { StatementProcessor } from '@/modules/statement/statement-processor';
 import { Bean } from '@/util/beans';
 
 export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
   constructor(private statementProcessor: StatementProcessor) {
     super();
-  }
-
-  processNativeMethod(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined {
-    if (!(obj.symbol instanceof NativeMethod)) {
-      return;
-    }
-    c.codegenWriter.write(`${indent}const ${obj.jsName} = nativeMethods['${obj.symbol.module}.${obj.symbol.name}'];\n`);
-    return true;
   }
 
   private getLocalVariableJsName(obj: LocalVariable, usedJsNames: Set<string>) {
@@ -77,9 +68,6 @@ export class MethodSymbolProcessor extends Bean implements SymbolProcessor {
   }
 
   processSymbol(c: CodegenContext, obj: CgSymbol, indent: string): boolean | undefined {
-    if (this.processNativeMethod(c, obj, indent)) {
-      return true;
-    }
     if (this.processCapyMethod(c, obj, indent)) {
       return true;
     }

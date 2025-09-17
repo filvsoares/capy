@@ -3,7 +3,6 @@ import { ArgumentVariable } from '@/modules/method/argument-variable';
 import { CallableTypeReader } from '@/modules/method/callable-type-reader';
 import { CapyMethod } from '@/modules/method/capy-method';
 import { MethodData, methodData } from '@/modules/method/method-data';
-import { NativeMethod } from '@/modules/method/native-method';
 import { UnresolvedMethod } from '@/modules/method/unresolved-method';
 import { Parser } from '@/modules/parser/parser';
 import { TokenReader } from '@/modules/parser/token-reader';
@@ -12,8 +11,6 @@ import { StatementReader } from '@/modules/statement/statement-reader';
 import { Bracket } from '@/modules/tokenizer/bracket';
 import { Identifier } from '@/modules/tokenizer/identifier';
 import { Keyword } from '@/modules/tokenizer/keyword';
-import { Separator } from '@/modules/tokenizer/separator';
-import { Token } from '@/modules/tokenizer/token';
 import { Bean } from '@/util/beans';
 
 export class MethodReader extends Bean implements ToplevelReader {
@@ -27,21 +24,10 @@ export class MethodReader extends Bean implements ToplevelReader {
 
   async read(c: ToplevelReaderContext) {
     const t1 = c.tokenReader.current;
-    const isNative = Keyword.matches(t1, 'native');
-    const isFunction = Keyword.matches(t1, 'function');
-    if (!isNative && !isFunction) {
+    if (!Keyword.matches(t1, 'function')) {
       return;
     }
     c.tokenReader.consume();
-
-    if (isNative) {
-      const t2 = c.tokenReader.current;
-      if (!Keyword.matches(t2, 'function')) {
-        c.parseErrors.addError(`Expected "function"`, fallbackPos(t2?.pos, t1.pos));
-        return INVALID;
-      }
-      c.tokenReader.consume();
-    }
 
     const t2 = c.tokenReader.current;
     if (!Identifier.matches(t2)) {
@@ -61,24 +47,12 @@ export class MethodReader extends Bean implements ToplevelReader {
     }
 
     const t4 = c.tokenReader.current;
-    let tokenList: Token[] | undefined;
-    if (isNative) {
-      if (!Separator.matches(t4, ';')) {
-        c.parseErrors.addError(`Expected ";" but found ${t4}`, fallbackPos(t4?.pos, type.pos));
-        return INVALID;
-      }
-    } else {
-      if (!Bracket.matches(t4, '{')) {
-        c.parseErrors.addError(`Expected "{" but found ${t4}`, fallbackPos(t4?.pos, type.pos));
-        return INVALID;
-      }
-      tokenList = t4.tokenList;
+
+    if (!Bracket.matches(t4, '{')) {
+      c.parseErrors.addError(`Expected "{" but found ${t4}`, fallbackPos(t4?.pos, type.pos));
+      return INVALID;
     }
     c.tokenReader.consume();
-
-    if (isNative) {
-      return new NativeMethod(c.currentModule, t2.name, type, t2.pos);
-    }
 
     c.parserData.addTask(() => {
       const _methodData = new MethodData(null, type.returnType);
@@ -90,7 +64,7 @@ export class MethodReader extends Bean implements ToplevelReader {
       const c1 = {
         ...c,
         ...methodData.wrap(_methodData),
-        tokenReader: new TokenReader(tokenList!),
+        tokenReader: new TokenReader(t4.tokenList),
       };
       const statementList = this.statementReader.readList(c1);
 

@@ -3,6 +3,7 @@ import { declareAllBeans } from '@/beans';
 import { codegen } from '@/modules/codegen/codegen';
 import { ModuleInput } from '@/modules/parser/module-input';
 import { parser, ParserResult } from '@/modules/parser/parser';
+import { runner, RunnerController } from '@/modules/runner/runner';
 import { getSingleBean } from '@/util/beans';
 
 export type CompileResult = {
@@ -12,10 +13,15 @@ export type CompileResult = {
   errors: ParseError[];
 };
 
-export async function compile(sourceCode: string, { debugTree }: { debugTree?: boolean }): Promise<CompileResult> {
+export async function compile(
+  sourceCode: string,
+  controller: RunnerController,
+  { debugTree }: { debugTree?: boolean }
+): Promise<CompileResult> {
   await declareAllBeans();
   const _parser = await getSingleBean(parser);
   const _codegen = await getSingleBean(codegen);
+  const _runner = await getSingleBean(runner);
 
   const errors: ParseError[] = [];
   const out: string[] = [];
@@ -29,7 +35,7 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
     errors.push({ level: ERROR, message: err.stack, pos: INTERNAL });
   }
 
-  let codegenOutput: string[] | undefined;
+  let codegenOutput: string | undefined;
   if (errors.length === 0) {
     try {
       codegenOutput = _codegen.generateCode(p!.application);
@@ -41,24 +47,8 @@ export async function compile(sourceCode: string, { debugTree }: { debugTree?: b
   let codegenPrettyOutput: string | undefined;
   let terminalOutput: string | undefined;
   if (codegenOutput) {
-    codegenPrettyOutput =
-      `function app(${codegenOutput.slice(0, -1).join(', ')}) {\n` +
-      `  ${codegenOutput[codegenOutput.length - 1].replaceAll('\n', '\n  ').trimEnd()}` +
-      `\n}\n`;
-
-    /*const app = new Function(...codegenOutput);
-    const terminalLines: string[] = [];
-    const nativeMethods = {
-      'main.print'(s: string) {
-        terminalLines.push(s);
-      },
-    };
-    try {
-      app(nativeMethods);
-    } catch (err: any) {
-      terminalLines.push(err.stack);
-    }
-    terminalOutput = terminalLines.join('\n');*/
+    codegenPrettyOutput = `function app(args) {\n` + `  ${codegenOutput.replaceAll('\n', '\n  ').trimEnd()}` + `\n}\n`;
+    await _runner.run(codegenOutput, controller);
   }
 
   if (errors.length === 0) {
