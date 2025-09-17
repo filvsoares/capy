@@ -25,7 +25,7 @@ export function Editor({ mode, handle, theme, style, stretch }: EditorProps) {
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<ace.Editor>();
+  const editorRef = useRef<ace.Editor>(undefined);
 
   const getEditor = useCallback(() => editorRef.current!, []);
 

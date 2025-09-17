@@ -3,9 +3,10 @@ import { CSSProperties, ReactNode, useLayoutEffect, useMemo, useRef, useState } 
 import classes from './tab-panel.module.css';
 
 export type TabOpts = {
-  id: number;
+  id: string;
   title: string;
   show?: any;
+  onShow?(): void;
 };
 
 export type Tab = TabOpts & {
@@ -14,7 +15,7 @@ export type Tab = TabOpts & {
 
 let id = 0;
 export function allocateTabId() {
-  return id++;
+  return String(id++);
 }
 
 export function tab(opts: TabOpts, children: ReactNode): Tab {
@@ -33,18 +34,35 @@ export function TabPanel({ className = '', style, stretch, children }: TabPanelP
 
   const [showingTabId, setShowingTabId] = useState(children[0]?.id);
 
-  useLayoutEffect(() => {
+  const tabs = useMemo(() => {
     const tabs: { [id: string]: Tab } = {};
     for (const tab of children) {
       tabs[tab.id] = tab;
-      const prvTab = prvTabsRef.current[tab.id];
+    }
+    return tabs;
+  }, [children]);
+
+  const tabsRef = useRef(tabs);
+  tabsRef.current = tabs;
+
+  useLayoutEffect(() => {
+    for (const id in tabs) {
+      const tab = tabs[id];
+      const prvTab = prvTabsRef.current[id];
 
       if (tab.show && tab.show !== prvTab?.show) {
-        setShowingTabId(tab.id);
+        setShowingTabId(id);
       }
     }
     prvTabsRef.current = tabs;
-  }, [children]);
+  }, [tabs]);
+
+  useLayoutEffect(() => {
+    const tab = tabsRef.current[showingTabId];
+    if (tab) {
+      tab.onShow?.();
+    }
+  }, [showingTabId]);
 
   const actualStyle = useMemo(
     () => ({

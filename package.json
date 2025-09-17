@@ -7,7 +7,7 @@
     "start": "vite",
     "build": "tsc && vite build",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d build --dotfiles --nojekyll",
     "lint": "eslint",
     "lint:fix": "eslint src --fix",
     "tsc": "tsc",
@@ -23,13 +23,13 @@
     "@xterm/xterm": "^5.5.0",
     "ace-builds": "^1.43.3",
     "feather-icons-react": "^0.9.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
-    "@types/react": "^18.0.14",
-    "@types/react-dom": "^18.0.5",
+    "@types/react": "^19.1.1",
+    "@types/react-dom": "^19.1.1",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
     "@vitejs/plugin-react": "^4.2.1",

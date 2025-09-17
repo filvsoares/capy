@@ -21,7 +21,7 @@ export type ResizePanelProps = {
 };
 
 export function ResizePanel({ children, className = '', direction = 'row' }: ResizePanelProps) {
-  const prvChildrenRef = useRef<ResizePanelItem[]>();
+  const prvChildrenRef = useRef<ResizePanelItem[]>(undefined);
   const itemNodesRef = useRef<{ [index: number]: HTMLDivElement | null }>({});
 
   const actualChildren = useMemo(() => {

@@ -22,7 +22,12 @@ export class LibraryIO extends Bean implements Library {
           width: '100%',
           height: '100%',
         });
-        data.term = new Terminal();
+        data.term = new Terminal({
+          cursorBlink: true,
+          fontFamily: 'Inconsolata, monospace',
+          fontSize: 16,
+          theme: { background: '#FFF', foreground: '#000', cursor: '#000' },
+        });
 
         const fitAddon = new FitAddon();
         data.term.loadAddon(fitAddon);
@@ -32,7 +37,7 @@ export class LibraryIO extends Bean implements Library {
 
         data.term.open(data.div);
 
-        c.createTab('Terminal', data.div);
+        c.createTab('Terminal', data.div, { onShow: () => data.term!.focus() });
       }
       return data.term;
     };
@@ -59,11 +64,19 @@ export class LibraryIO extends Bean implements Library {
                   term!.write('\b \b');
                 }
                 break;
+
               case '\r':
                 term!.write('\r\n');
                 handler.dispose();
                 resolve(input);
                 break;
+
+              case '\u001b[A':
+              case '\u001b[B':
+              case '\u001b[C':
+              case '\u001b[D':
+                break;
+
               default:
                 input += data;
                 term!.write(data);

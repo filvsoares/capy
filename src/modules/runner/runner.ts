@@ -1,7 +1,7 @@
 import { declareBeanInterface } from '@/util/beans';
 
 export interface RunnerController {
-  createTab(title: string, content: HTMLElement): void;
+  createTab(title: string, content: HTMLElement, opts?: { onShow?: () => void }): void;
 }
 
 export interface Runner {

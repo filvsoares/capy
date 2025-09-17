@@ -26,9 +26,10 @@ import { ToolButton } from './ui/tool-button';
 import { Toolbar } from './ui/toolbar';
 
 import { Editor, EditorHandle } from '@/ui/editor';
-import { allocateTabId, Tab, tab, TabPanel } from '@/ui/tab-panel';
+import { allocateTabId, Tab, tab, TabOpts, TabPanel } from '@/ui/tab-panel';
 
 import { runner, RunnerController } from '@/modules/runner/runner';
+import { Overlay } from '@/ui/overlay';
 import { ResizePanel, resizePanelItem } from '@/ui/resize-panel';
 import { getSingleBean } from '@/util/beans';
 import 'ace-builds/src-noconflict/mode-javascript';
@@ -39,9 +40,24 @@ import 'ace-builds/src-noconflict/theme-github_light_default';
 const initialCode = `use "lib:io";
 
 function start() {
+
+    println("---------");
+    println("WELCOME!!");
+    println("---------");
+    println("");
+
     print("Your name: ");
-    var name: string = readln();
-    println("Hello, " + name + "!");
+    var name1: string = readln();
+    println("Hello, " + name1 + "!");
+
+    print("Other name: ");
+    var name2: string = readln();
+    println(makeGoodbyeText(name1, name2));
+
+}
+
+function makeGoodbyeText(a: string, b: string): string {
+    return "Goodbye, " + a + " and " + b + "!";
 }
 `;
 
@@ -61,13 +77,20 @@ function Custom({ element }: { element?: HTMLElement }) {
 }
 
 const codeEditorTabId = allocateTabId();
-const parserResultTabId = allocateTabId();
-const codegenResultTabId = allocateTabId();
+
+const _parserResultTab: TabOpts = { id: allocateTabId(), title: 'Abstract Syntax Tree', show: 0 };
+const _codegenResultTab: TabOpts = { id: allocateTabId(), title: 'Generated Code' };
+
+const _initialSize = window.innerWidth * 0.4;
 
 export default function App() {
   const codeEditorTabRef = useRef<EditorHandle>(null);
   const parserResultTabRef = useRef<EditorHandle>(null);
   const codegenResultTabRef = useRef<EditorHandle>(null);
+
+  const [loading, setLoading] = useState(false);
+
+  const [parserResultTab, setParserResultTab] = useState(_parserResultTab);
 
   const [runnerTabs, setRunnerTabs] = useState<Tab[]>([]);
 
@@ -80,21 +103,28 @@ export default function App() {
     localStorage.setItem('sourceCode', initialCode);
   };
   const onRunClick = async () => {
-    const r = await compile(codeEditorTabRef.current?.getEditor().getValue() ?? '', {
-      debugTree: true,
-    });
-    parserResultTabRef.current!.getEditor().setValue(r.parserOutput);
-    codegenResultTabRef.current!.getEditor().setValue(r.codegenPrettyOutput);
+    let r;
+    setLoading(true);
+    try {
+      r = await compile(codeEditorTabRef.current?.getEditor().getValue() ?? '', {
+        debugTree: true,
+      });
+      parserResultTabRef.current!.getEditor().setValue(r.parserOutput);
+      codegenResultTabRef.current!.getEditor().setValue(r.codegenPrettyOutput);
 
-    if (r.errors.length > 0) {
-      return;
+      if (r.errors.length > 0) {
+        setParserResultTab((prv) => ({ ...prv, show: prv.show + 1 }));
+        return;
+      }
+    } finally {
+      setLoading(false);
     }
 
     const controller: RunnerController = {
-      createTab(title, content) {
+      createTab(title, content, { onShow } = {}) {
         setRunnerTabs((prv) => [
           ...prv.filter((e) => e.title !== title),
-          tab({ id: allocateTabId(), title, show: true }, <Custom element={content} />),
+          tab({ id: allocateTabId(), title, show: true, onShow }, <Custom element={content} />),
         ]);
       },
     };
@@ -104,6 +134,7 @@ export default function App() {
 
   return (
     <div className={classes.container}>
+      {loading && <Overlay />}
       <Toolbar className={classes.toolbar}>
         <ToolButton icon={RefreshCcw} text='Reset' onClick={onResetClick} />
         <ToolButton variant='run' icon={Play} text='Run!' onClick={onRunClick} />
@@ -111,11 +142,11 @@ export default function App() {
       <ResizePanel className={classes.area} direction='row-reverse'>
         {[
           resizePanelItem(
-            { initialSize: 800 },
+            { initialSize: _initialSize },
             <TabPanel stretch>
               {[
                 tab(
-                  { id: parserResultTabId, title: 'Abstract Syntax Tree' },
+                  parserResultTab,
                   <Editor
                     stretch
                     handle={parserResultTabRef}
@@ -124,7 +155,7 @@ export default function App() {
                   />
                 ),
                 tab(
-                  { id: codegenResultTabId, title: 'Generated Code' },
+                  _codegenResultTab,
                   <Editor
                     stretch
                     handle={codegenResultTabRef}
